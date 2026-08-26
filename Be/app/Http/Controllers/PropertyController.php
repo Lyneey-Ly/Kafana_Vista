@@ -65,6 +65,14 @@ class PropertyController extends Controller
 
         $properties = $query->latest()->get();
 
+        // Auto-sync status operasional jika approval_status sudah 'active'
+        $properties->transform(function ($item) {
+            if (in_array(strtolower($item->approval_status ?? ''), ['active', 'approved']) && $item->status === 'Menunggu Verifikasi') {
+                $item->status = 'Tersedia';
+            }
+            return $item;
+        });
+
         return response()->json([
             'message' => 'Success fetch and filter properties',
             'count'   => $properties->count(),
@@ -96,6 +104,14 @@ class PropertyController extends Controller
         }
 
         $properties = $query->latest()->get();
+
+        // Auto-sync status operasional jika approval_status sudah 'active'
+        $properties->transform(function ($item) {
+            if (in_array(strtolower($item->approval_status ?? ''), ['active', 'approved']) && $item->status === 'Menunggu Verifikasi') {
+                $item->status = 'Tersedia';
+            }
+            return $item;
+        });
 
         return response()->json([
             'message' => 'Success fetch admin properties',
@@ -174,7 +190,7 @@ class PropertyController extends Controller
             'rules'               => $request->rules,
             'description'         => $request->description,
             'template_perjanjian' => $templateText,
-            'status'              => $request->status ?? 'Tersedia',
+            'status'              => $request->status ?? 'Menunggu Verifikasi',
             'is_paid_slot'        => $isPaidSlot,
             'approval_status'     => $approvalStatus,
             'main_image'          => $imagePath,
@@ -208,6 +224,11 @@ class PropertyController extends Controller
 
         if (!$property) {
             return response()->json(['message' => 'Property not found'], 404);
+        }
+
+        // Auto-sync status jika approval_status sudah 'active'
+        if (in_array(strtolower($property->approval_status ?? ''), ['active', 'approved']) && $property->status === 'Menunggu Verifikasi') {
+            $property->status = 'Tersedia';
         }
 
         return response()->json([
@@ -293,9 +314,14 @@ class PropertyController extends Controller
 
         $property->update($data);
 
+        $freshProperty = $property->fresh(['pemilik', 'kamars']);
+        if (in_array(strtolower($freshProperty->approval_status ?? ''), ['active', 'approved']) && $freshProperty->status === 'Menunggu Verifikasi') {
+            $freshProperty->status = 'Tersedia';
+        }
+
         return response()->json([
             'message' => 'Property updated successfully!',
-            'data'    => $property->fresh(['pemilik', 'kamars'])
+            'data'    => $freshProperty
         ], 200);
     }
 

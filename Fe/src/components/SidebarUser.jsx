@@ -17,7 +17,6 @@ import {
   Menu,
   X,
   Loader2,
-  Sparkles,
   Building2,
   User,
   ExternalLink
@@ -109,7 +108,7 @@ export default function SidebarUser({ children }) {
     } catch (err) {
       console.error('Gagal membuka dokumen sewa:', err);
       navigate('/riwayattransaksi');
-    }  {
+    } finally {
       setLoadingDoc(false);
       setIsOpen(false);
     }
@@ -249,10 +248,6 @@ export default function SidebarUser({ children }) {
                 <p className="text-[10px] text-[#D7C4B0]/70 truncate">
                   {userProfile?.email || 'user@kafanavista.com'}
                 </p>
-                <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-[#B38E5D]/15 border border-[#B38E5D]/30 text-[#B38E5D] text-[9px] font-semibold rounded-full">
-                  <Sparkles className="w-2.5 h-2.5" />
-                  <span>Penghuni VIP</span>
-                </div>
               </div>
             )}
 
@@ -395,10 +390,6 @@ export default function SidebarUser({ children }) {
             <div className="min-w-0 flex-1">
               <h2 className="text-xs font-bold text-white truncate">{userProfile?.nama || userProfile?.name || 'Penghuni Kafana'}</h2>
               <p className="text-[10px] text-[#D7C4B0]/70 truncate">{userProfile?.email || 'user@kafanavista.com'}</p>
-              <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-[#B38E5D]/20 border border-[#B38E5D]/30 text-[#B38E5D] text-[9px] font-semibold rounded-full">
-                <Sparkles className="w-2.5 h-2.5" />
-                <span>Penghuni VIP</span>
-              </div>
             </div>
           </div>
         </div>

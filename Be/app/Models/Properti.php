@@ -33,6 +33,10 @@ class Properti extends Model
         'public_facilities',
         'rules',
         'template_perjanjian',
+        'payment_status',  // <-- Bukti transakcja gateway (paid / settlement / pending)
+        'transaction_id',  // <-- ID transakcja Midtrans
+        'order_id',        // <-- Order ID Midtrans (PUB-PROP-{id}-{timestamp})
+        'payment_type',    // <-- Metod pembayaran gateway (Visa, QRIS, VA, etc.)
     ];
 
     protected $casts = [

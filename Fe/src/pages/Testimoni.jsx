@@ -32,6 +32,7 @@ export default function Testimoni() {
   const [review, setReview] = useState('');
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
+  const [editingId, setEditingId] = useState(null); // ID testimoni yang sedang diedit
 
   // Helper untuk Memproses URL Foto Profil User
   const getAvatarUrl = (avatarPath) => {
@@ -48,13 +49,11 @@ export default function Testimoni() {
   // Fetch Identitas User Saat Ini
   const fetchCurrentUser = async () => {
     try {
-      // Ambil data user dari localStorage jika ada
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         setCurrentUser(JSON.parse(storedUser));
       }
       
-      // Ambil data user resmi dari backend (endpoint /api/profile)
       const res = await API.get('/profile');
       if (res.data?.data) {
         setCurrentUser(res.data.data);
@@ -93,18 +92,78 @@ export default function Testimoni() {
     currentUser && testimonis.some((item) => Number(item.user_id || item.user?.id) === Number(currentUser.id))
   );
 
-  // Submit Form Testimoni Baru
+  // Helper Buka Modal Tambah Testimoni Baru
+  const handleOpenCreateModal = () => {
+    setEditingId(null);
+    setReview('');
+    setRating(5);
+    setShowModal(true);
+  };
+
+  // Helper Buka Modal Edit Testimoni
+  const handleOpenEditModal = (item) => {
+    setEditingId(item.id);
+    setReview(item.review || item.ulasan || item.comment || '');
+    setRating(Number(item.rating || 5));
+    setShowModal(true);
+  };
+
+  // Helper Tutup Modal & Reset Form
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setReview('');
+    setRating(5);
+  };
+
+  // Handler Hapus Testimoni
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: 'Hapus Testimoni?',
+      text: 'Ulasan yang dihapus tidak dapat dikembalikan.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await API.delete(`/testimonis/${id}`);
+        Swal.fire({
+          title: 'Terhapus!',
+          text: 'Testimoni Anda berhasil dihapus.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        fetchTestimonis();
+      } catch (err) {
+        console.error('Gagal menghapus testimoni:', err);
+        Swal.fire({
+          title: 'Gagal Hapus',
+          text: err.response?.data?.message || 'Gagal menghapus testimoni.',
+          icon: 'error',
+          confirmButtonColor: '#261C19'
+        });
+      }
+    }
+  };
+
+  // Submit Form Testimoni (Tambah Baru & Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (hasSubmitted) {
+    if (!editingId && hasSubmitted) {
       Swal.fire({
         title: 'Batas Tercapai',
         text: 'Anda sudah pernah memberikan testimoni. Setiap akun hanya diperbolehkan memberikan 1 testimoni.',
         icon: 'warning',
         confirmButtonColor: '#261C19'
       });
-      setShowModal(false);
+      handleCloseModal();
       return;
     }
 
@@ -112,29 +171,37 @@ export default function Testimoni() {
 
     try {
       const payload = { review, rating };
-      const res = await API.post('/testimonis', payload);
 
-      Swal.fire({
-        title: 'Berhasil!',
-        text: res.data?.message || 'Terima kasih atas ulasan Anda!',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      if (editingId) {
+        // PERBARUI TESTIMONI (EDIT)
+        const res = await API.put(`/testimonis/${editingId}`, payload);
+        Swal.fire({
+          title: 'Berhasil!',
+          text: res.data?.message || 'Testimoni Anda berhasil diperbarui!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        // TAMBAH TESTIMONI BARU
+        const res = await API.post('/testimonis', payload);
+        Swal.fire({
+          title: 'Berhasil!',
+          text: res.data?.message || 'Terima kasih atas ulasan Anda!',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
 
-      // Reset Form & Tutup Modal
-      setReview('');
-      setRating(5);
-      setShowModal(false);
-
-      // Refresh Data Testimoni
+      handleCloseModal();
       fetchTestimonis();
     } catch (err) {
-      console.error('Gagal mengirim testimoni:', err);
-      const errorMsg = err.response?.data?.message || 'Gagal mengirim ulasan, silakan coba lagi.';
+      console.error('Gagal menyimpan testimoni:', err);
+      const errorMsg = err.response?.data?.message || 'Gagal menyimpan ulasan, silakan coba lagi.';
       
       Swal.fire({
-        title: 'Gagal Mengirim',
+        title: 'Gagal Menyimpan',
         text: errorMsg,
         icon: 'error',
         confirmButtonColor: '#261C19'
@@ -183,7 +250,7 @@ export default function Testimoni() {
 
             {/* TOMBOL TULIS TESTIMONI / TESTIMONI TERKIRIM */}
             <button
-              onClick={() => !hasSubmitted && setShowModal(true)}
+              onClick={() => !hasSubmitted && handleOpenCreateModal()}
               disabled={hasSubmitted}
               className={`px-6 py-3.5 rounded-2xl text-xs font-extrabold uppercase tracking-widest transition shadow-lg flex items-center justify-center gap-2 flex-shrink-0 ${
                 hasSubmitted
@@ -246,10 +313,13 @@ export default function Testimoni() {
                 const avatarRaw = item.user?.foto || item.user?.avatar || item.user?.photo || item.user?.profile_photo_path || item.foto;
                 const avatarUrl = getAvatarUrl(avatarRaw);
 
+                // Cek apakah testimoni ini milik user yang sedang login
+                const isOwner = currentUser && Number(item.user_id || item.user?.id) === Number(currentUser.id);
+
                 return (
                   <div
                     key={item.id}
-                    className="bg-white p-6 rounded-3xl border border-[#E5D7C5] shadow-xs hover:shadow-md transition-all space-y-4 flex flex-col justify-between"
+                    className="bg-white p-6 rounded-3xl border border-[#E5D7C5] shadow-xs hover:shadow-md transition-all space-y-4 flex flex-col justify-between relative group"
                   >
                     <div className="space-y-3">
                       {/* CARD HEADER USER INFO */}
@@ -264,7 +334,31 @@ export default function Testimoni() {
                             <span className="text-[10px] text-slate-400 font-medium">Verified User</span>
                           </div>
                         </div>
-                        <div className="flex gap-0.5">{renderStars(item.rating)}</div>
+
+                        {/* RATING STARS & ACTION BUTTONS */}
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex gap-0.5">{renderStars(item.rating)}</div>
+
+                          {/* ACTION BUTTONS (EDIT & DELETE) JIKA PEMILIK TESTIMONI */}
+                          {isOwner && (
+                            <div className="flex items-center gap-1.5 pt-1">
+                              <button
+                                onClick={() => handleOpenEditModal(item)}
+                                className="px-2 py-1 rounded-lg text-amber-700 hover:bg-amber-100/70 bg-amber-50 border border-amber-200/80 transition text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                                title="Edit Testimoni"
+                              >
+                                ✏️ <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item.id)}
+                                className="px-2 py-1 rounded-lg text-rose-700 hover:bg-rose-100/70 bg-rose-50 border border-rose-200/80 transition text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                                title="Hapus Testimoni"
+                              >
+                                🗑️ <span>Hapus</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* REVIEW TEXT */}
@@ -275,7 +369,9 @@ export default function Testimoni() {
 
                     {/* CARD FOOTER */}
                     <div className="text-[10px] text-slate-400 font-medium flex justify-between items-center pt-2">
-                      <span className="text-[#C5A059] font-bold">Kafana Vista User</span>
+                      <span className="text-[#C5A059] font-bold">
+                        {isOwner ? ' Testimoni Anda' : 'Kafana Vista User'}
+                      </span>
                       <span>
                         {item.created_at
                           ? new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -291,19 +387,23 @@ export default function Testimoni() {
         </div>
       </div>
 
-      {/* MODAL FORM TULIS TESTIMONI */}
-      {showModal && !hasSubmitted && (
+      {/* MODAL FORM TULIS / EDIT TESTIMONI */}
+      {showModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white max-w-lg w-full rounded-3xl p-6 md:p-8 border border-[#E5D7C5] shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
             
             {/* MODAL HEADER */}
             <div className="flex justify-between items-center border-b border-slate-100 pb-4">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#C5A059] block">Beri Penilaian Platform</span>
-                <h3 className="text-lg font-extrabold text-[#261C19]">Tulis Ulasan & Kesan</h3>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#C5A059] block">
+                  {editingId ? 'Edit Ulasan Anda' : 'Beri Penilaian Platform'}
+                </span>
+                <h3 className="text-lg font-extrabold text-[#261C19]">
+                  {editingId ? 'Perbarui Testimoni' : 'Tulis Ulasan & Kesan'}
+                </h3>
               </div>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={handleCloseModal}
                 className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center transition cursor-pointer"
               >
                 ✕
@@ -361,7 +461,7 @@ export default function Testimoni() {
               <div className="flex gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={handleCloseModal}
                   className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
                 >
                   Batal
@@ -374,8 +474,10 @@ export default function Testimoni() {
                   {submitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Mengirim...</span>
+                      <span>Proses...</span>
                     </>
+                  ) : editingId ? (
+                    '💾 Simpan Perubahan'
                   ) : (
                     '🚀 Kirim Testimoni'
                   )}

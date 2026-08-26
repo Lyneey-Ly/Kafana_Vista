@@ -1,24 +1,49 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  User,
+  Wallet,
+  TrendingUp,
+  CreditCard,
+  Landmark,
+  Receipt,
+  Settings,
+  ShieldCheck,
+  Megaphone,
+  UserCheck
+} from 'lucide-react';
 
-const SUPERADMIN_ROUTES = ['overview', 'approval', 'administrators', 'users', 'revenue', 'revenue-analytics', 'bank-accounts', 'finance-tracker', 'transactions', 'settings'];
+const SUPERADMIN_ROUTES = [
+  'overview',
+  'approval',
+  'administrators',
+  'users',
+  'revenue',
+  'revenue-analytics',
+  'bank-accounts',
+  'finance-tracker',
+  'transactions',
+  'settings'
+];
 
 export default function SidebarSuperAdmin({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
-    { key: 'overview', label: 'Dashboard Utama', icon: '📊', path: '/superadmin/overview' },
-    { key: 'administrators', label: 'Kelola Pengelola', icon: '👥', path: '/superadmin/administrators' },
-    { key: 'users', label: 'Monitoring User', icon: '👤', path: '/superadmin/users' },
-    { key: 'revenue', label: 'Pendapatan Admin', icon: '💰', path: '/superadmin/revenue' },
-    { key: 'revenue-analytics', label: 'Analitik Pendapatan', icon: '📈', path: '/superadmin/revenue-analytics' },
-    { key: 'finance-tracker', label: 'Finance Tracker', icon: '💳', path: '/superadmin/finance-tracker' },
-    { key: 'bank-accounts', label: 'Rekening Bank', icon: '🏦', path: '/superadmin/bank-accounts' },
-    { key: 'transactions', label: 'Semua Transaksi', icon: '🧾', path: '/superadmin/transactions' },
-    { key: 'settings', label: 'Pengaturan Website', icon: '⚙️', path: '/superadmin/settings' },
-    { key: 'verifikasi', label: 'Verifikasi Properti', icon: '✅', path: '/VerifikasiPropertiSuperAdmin' },
-    { key: 'iklan', label: 'Kelola Iklan Banner', icon: '📢', path: '/KelolaIklanSuperAdmin' },
-    { key: 'profile-requests', label: 'Verifikasi Profil Admin', icon: '🛂', path: '/SuperAdminProfileRequests' },
+    { key: 'overview', label: 'Dashboard Utama', icon: LayoutDashboard, path: '/superadmin/overview' },
+    { key: 'administrators', label: 'Kelola Pengelola', icon: Users, path: '/superadmin/administrators' },
+    { key: 'users', label: 'Monitoring User', icon: User, path: '/superadmin/users' },
+    { key: 'revenue', label: 'Pendapatan Admin', icon: Wallet, path: '/superadmin/revenue' },
+    { key: 'revenue-analytics', label: 'Analitik Pendapatan', icon: TrendingUp, path: '/superadmin/revenue-analytics' },
+    { key: 'finance-tracker', label: 'Finance Tracker', icon: CreditCard, path: '/superadmin/finance-tracker' },
+    { key: 'bank-accounts', label: 'Rekening Bank', icon: Landmark, path: '/superadmin/bank-accounts' },
+    { key: 'transactions', label: 'Semua Transaksi', icon: Receipt, path: '/superadmin/transactions' },
+    { key: 'settings', label: 'Pengaturan Website', icon: Settings, path: '/superadmin/settings' },
+    { key: 'verifikasi', label: 'Verifikasi Properti', icon: ShieldCheck, path: '/VerifikasiPropertiSuperAdmin' },
+    { key: 'iklan', label: 'Kelola Iklan Banner', icon: Megaphone, path: '/KelolaIklanSuperAdmin' },
+    { key: 'profile-requests', label: 'Verifikasi Profil Admin', icon: UserCheck, path: '/SuperAdminProfileRequests' },
   ];
 
   const getActiveTab = () => {
@@ -28,7 +53,6 @@ export default function SidebarSuperAdmin({ children }) {
     if (path === '/SuperAdminProfileRequests') return 'profile-requests';
     if (path === '/VerifikasiPropertiSuperAdmin') return 'verifikasi';
 
-    // Halaman berbasis route: /superadmin/{key}
     const match = path.match(/^\/superadmin\/([^/]+)/);
     if (match && SUPERADMIN_ROUTES.includes(match[1])) {
       return match[1];
@@ -59,7 +83,9 @@ export default function SidebarSuperAdmin({ children }) {
             </div>
             <div>
               <h1 className="font-bold text-sm tracking-tight">KAFANA VISTA</h1>
-              <p className="text-[10px] text-[#D7C4B0] uppercase tracking-wider">Superadmin Panel</p>
+              <p className="text-[10px] text-[#D7C4B0] uppercase tracking-wider font-semibold flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-[#B38E5D]" /> Superadmin Panel
+              </p>
             </div>
           </div>
         </div>
@@ -67,18 +93,19 @@ export default function SidebarSuperAdmin({ children }) {
         {/* Navigation Menu */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
+            const Icon = item.icon;
             const isActive = activeTab === item.key;
             return (
               <button
                 key={item.key}
                 onClick={() => handleNavigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-[#B38E5D] text-white shadow-lg shadow-[#B38E5D]/30'
+                    ? 'bg-[#B38E5D] text-white shadow-lg shadow-[#B38E5D]/30 border-l-4 border-amber-200'
                     : 'text-[#D7C4B0]/80 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <span className="text-base">{item.icon}</span>
+                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#B38E5D]'}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -88,8 +115,8 @@ export default function SidebarSuperAdmin({ children }) {
         {/* Footer / User Info */}
         <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3 px-2 py-2 bg-white/5 rounded-xl">
-            <div className="w-9 h-9 bg-[#B38E5D] rounded-full flex items-center justify-center text-sm font-bold">
-              🛡️
+            <div className="w-9 h-9 bg-[#B38E5D] rounded-full flex items-center justify-center text-white shadow-md">
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-white truncate">Super Administrator</p>

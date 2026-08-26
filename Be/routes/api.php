@@ -18,7 +18,7 @@ use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\SuperAdminNotificationController;
-use App\Http\Controllers\VendorAdController; // <-- IMPORT BARU
+use App\Http\Controllers\VendorAdController;
 use App\Http\Middleware\EnsureIsAdmin; 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WishlistController;
@@ -45,6 +45,9 @@ Route::get('/vendor-ads/active', [VendorAdController::class, 'getActiveAds']);
 // --- ENDPOINT PUBLIK SITE SETTINGS (Dibaca Footer) ---
 Route::get('/site-settings', [SiteSettingController::class, 'index']);
 
+// --- ENDPOINT WEBHOOK MIDTRANS (Dibaca oleh Midtrans IPN, diaccessible public) ---
+Route::post('/midtrans/webhook', [PembayaranController::class, 'handleMidtransWebhook']);
+
 /*
 |--------------------------------------------------------------------------
 | ROUTE PROTECTED (Wajib Bearer Token)
@@ -70,7 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pembayaran/bayar', [PembayaranController::class, 'bayar']);
     Route::get('/customer/finance/track', [FinanceController::class, 'trackFinanceCustomer']);
     
+    // --- TESTIMONI USER (CRUD) ---
     Route::post('/testimonis', [TestimoniController::class, 'store']);
+    Route::put('/testimonis/{id}', [TestimoniController::class, 'update']);    // <-- DITAMBAHKAN
+    Route::delete('/testimonis/{id}', [TestimoniController::class, 'destroy']); // <-- DITAMBAHKAN
+    
     Route::post('/reviews', [ReviewController::class, 'store']);
     
     Route::post('/complaints', [ComplaintController::class, 'store']);
@@ -195,7 +202,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/vendor-ads', [VendorAdController::class, 'index']);
             Route::post('/vendor-ads', [VendorAdController::class, 'store']);
             Route::get('/vendor-ads/{id}', [VendorAdController::class, 'show']);
-            Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']); // Post dipakai untuk kirim multipart/form-data
+            Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
             Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
 
             // --- NOTIFIKASI SUPERADMIN (POLLING) ---

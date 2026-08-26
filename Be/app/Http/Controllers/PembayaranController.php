@@ -328,8 +328,17 @@ class PembayaranController extends Controller
             return response()->json(['message' => 'Properti tidak ditemukan'], 404);
         }
 
-        $properti->approval_status = 'active';
-        $properti->is_paid_slot = true; 
+        $transactionStatus = strtolower(trim($request->input('transaction_status', '')));
+        $successStatuses   = ['settlement', 'capture', 'success', 'approved', 'paid'];
+
+        // Ambil & simpan bukti transakcja Midtrans otomatis
+        $orderId      = $request->input('order_id');
+        $transactionId = $request->input('transaction_id') ?? $request->input('tran_id') ?? $request->input('transactionId') ?? null;
+        $paymentType  = $request->input('payment_type') ?? $request->input('paymentType') ?? 'Gateway';
+
+        $properti->transaction_id = $transactionId;
+        $properti->order_id       = $orderId;
+        $properti->payment_type   = $paymentType;
 
         // Catat biaya slot yang dibayar (fallback: nilai site settings / 150000)
         if (!$properti->slot_fee || (float)$properti->slot_fee <= 0) {
@@ -337,12 +346,106 @@ class PembayaranController extends Controller
             $properti->slot_fee = $setting ? (float)$setting->property_extra_fee : 150000;
         }
 
+        // PERBAIKAN BUG: HANYA catat tagihan sebagai dibayar — JANGAN set aktif/approved!
+        // Superadmin wajib verifikan secara manual sebelum properti dipublikasi/aktif.
+        if (in_array($transactionStatus, $successStatuses)) {
+            $properti->payment_status  = 'paid';
+            $properti->is_paid_slot    = true;
+            $properti->approval_status = 'waiting_verification';  // <-- TERLEWATI PENINJAUAN SUPERADMIN
+            $properti->status          = 'Menunggu Verifikasi';
+        } else {
+            $properti->payment_status  = 'pending';
+            $properti->approval_status = 'pending_payment';
+        }
+
         $properti->save();
 
+        if (in_array($transactionStatus, $successStatuses)) {
+            // NOTIFIKASI: SuperAdmin harus verifikan pembayaran slot properti
+            try {
+                SuperAdminNotificationService::send(
+                    'property_approval',
+                    'Pembayran Gateway Diterima — Menunggu Verifikasi',
+                    'Pemilik "' . ($properti->title ?? 'Properti') . '" selesaikan pembayaran slot publikasi via Gateway. Harap verifikasi manual ter dan publish.',
+                    '/superadmin/approval'
+                );
+            } catch (\Throwable $th) {
+                Log::warning('Gagal kiri notifikasi SuperAdmin: ' . $th->getMessage());
+            }
+        }
+
         return response()->json([
-            'message' => 'Status pembayaran properti berhasil diperbarui menjadi Aktif/Lunas.',
+            'message' => 'Pembayran Gateway diterima. Properti kini dalam status Menunggu Verifikasi Superadmin.',
             'data'    => $properti
         ], 200);
+    }
+
+    /**
+     * Webhook Midtrans IPN / Webhook URL — HANYA catat tagihan sebagai dibayar,
+     * JIDAK set approved/aktif otomatis (Superadmin wajib manual approve).
+     */
+    public function handleMidtransWebhook(Request $request)
+    {
+        // Midtrans IPN kirim POST form-encoded: order_id, status_code, transaction_id, ...
+        Log::info('Midtrans Webhook Payload', $request->all());
+
+        $orderId = $request->input('merchant_order_id') ?? $request->input('order_id');
+        if (!$orderId) {
+            return response()->json(['message' => 'order_id tidak didapatkam'], 400);
+        }
+
+        // Format order id: PUB-PROP-{propertyId}-{timestamp}
+        $propertyId = null;
+        $matches = [];
+        if (preg_match('/^PUB-PROP-(\d+)/', (string) $orderId, $matches)) {
+            $propertyId = (int) $matches[1];
+        }
+
+        $properti = $propertyId ? Properti::find($propertyId) : null;
+        if (!$properti) {
+            return response()->json(['message' => 'Properti tidak ditemukan'], 404);
+        }
+
+        $statusCode        = trim((string) $request->input('status_code', ''));
+        $transactionStatus = strtolower(trim($request->input('transaction_status', '')));
+        $isSuccess = in_array($statusCode, ['00', '10', '20']) // Midtrans: 00/10 payment successful, 20 paid out
+            || $transactionStatus === 'settlement'
+            || $transactionStatus === 'capture'
+            || $transactionStatus === 'success';
+
+        if ($isSuccess) {
+            $properti->transaction_id = $request->input('transaction_id') ?? $request->input('tran_id');
+            $properti->order_id       = $orderId;
+            $properti->payment_type   = $request->input('payment_type') ?? $request->input('payment_method') ?? 'Gateway';
+            $properti->payment_status = 'settlement';
+            $properti->is_paid_slot   = true;
+
+            // PERMANENT: JIDAK auto-approved! Superadmin has to approve manual.
+            $properti->approval_status = 'waiting_verification';
+            $properti->status          = 'Menunggu Verifikasi';
+
+            if (!$properti->slot_fee || (float)$properti->slot_fee <= 0) {
+                $setting = \App\Models\SiteSetting::first();
+                $properti->slot_fee = $setting ? (float)$setting->property_extra_fee : 150000;
+            }
+
+            $properti->save();
+
+            try {
+                SuperAdminNotificationService::send(
+                    'property_approval',
+                    'Webhook Midtrans: Pembayran Slot Status',
+                    'Pembayran via Midtrans diterima — Menunggu Verifikasi Superadmin.',
+                    '/superadmin/approval'
+                );
+            } catch (\Throwable $th) {
+                Log::warning('Gagal kirim notif SuperAdmin: ' . $th->getMessage());
+            }
+
+            return response()->json(['message' => 'Webhook processed — payment recorded, approval pending.'], 200);
+        }
+
+        return response()->json(['message' => 'Webhook diterima — tidak succes (no change).'], 200);
     }
 
     public function uploadProof(Request $request, $id)

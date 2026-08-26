@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SignatureCanvas from 'react-signature-canvas';
 import API from '../api'; 
@@ -18,13 +18,17 @@ export default function DokumenSewa() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   
+  // STATE FILTER & SEARCH
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'pending' | 'signed' | 'sah'
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [sigMode, setSigMode] = useState('draw'); 
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
 
   const storageBaseUrl = import.meta.env.VITE_STORAGE_BASE_URL || 'http://localhost:8000/storage';
 
-  // 🌟 HELPER UNTUK MEMINIMALKAN ERROR URL TTD (BASE64 VS FILE PATH)
+  // 🌟 HELPER UNTUK MEMINIMALKAN ERROR URL TTD
   const getSignatureUrl = (sig) => {
     if (!sig) return '';
     if (sig.startsWith('data:image') || sig.startsWith('http://') || sig.startsWith('https://')) {
@@ -63,6 +67,32 @@ export default function DokumenSewa() {
   useEffect(() => {
     fetchAllUserDokumen();
   }, [fetchAllUserDokumen]);
+
+  // =========================================================================
+  // 🔍 LOGIKA FILTER & PENCARIAN DOKUMEN
+  // =========================================================================
+  const filteredDokumen = useMemo(() => {
+    return listDokumen.filter(doc => {
+      const isCustomerSigned = doc.customer_signature || doc.signature;
+      const isAdminSigned = doc.admin_signature;
+      const isSah = isCustomerSigned && isAdminSigned;
+
+      // Match Status Filter
+      let matchesStatus = true;
+      if (filterStatus === 'pending') matchesStatus = !isCustomerSigned;
+      else if (filterStatus === 'signed') matchesStatus = !!isCustomerSigned;
+      else if (filterStatus === 'sah') matchesStatus = isSah;
+
+      // Match Search Query
+      const namaProperti = doc.pemesanan?.properti?.title || '';
+      const nomorKamar = doc.pemesanan?.kamar?.nomor_kamar || doc.pemesanan?.nomor_kamar || doc.kamar?.nomor_kamar || '';
+      const matchesSearch = 
+        namaProperti.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        nomorKamar.toString().toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [listDokumen, filterStatus, searchTerm]);
 
   const handleSelectDokumen = (doc) => {
     setDokumen(doc);
@@ -186,40 +216,111 @@ export default function DokumenSewa() {
             </div>
           </div>
 
-          {/* TAB PEMILIH UNIT */}
-          {listDokumen.length > 1 && (
-            <div className="bg-white p-4 rounded-2xl border border-[#E5D7C5] shadow-xs space-y-2 print:hidden">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Pilih Dokumen Unit Hunian Anda ({listDokumen.length} Unit Aktif):
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {listDokumen.map((docItem, index) => {
-                  const isSelected = dokumen?.id === docItem.id;
-                  const nomorKamarTab = docItem.pemesanan?.kamar?.nomor_kamar || docItem.pemesanan?.nomor_kamar || '-';
-                  const namaProperti = docItem.pemesanan?.properti?.title || `Unit #${index + 1}`;
-                  const isSigned = docItem.customer_signature || docItem.signature;
+          {/* FILTER & PENCARIAN DOKUMEN */}
+          {listDokumen.length > 0 && (
+            <div className="bg-white p-4 rounded-2xl border border-[#E5D7C5] shadow-xs space-y-3 print:hidden">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                
+                {/* Opsi Tab Filter */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+                  <button
+                    onClick={() => setFilterStatus('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                      filterStatus === 'all'
+                        ? 'bg-[#261C19] text-white shadow-xs'
+                        : 'bg-[#FAF6F0] text-slate-600 hover:bg-[#E5D7C5]/40'
+                    }`}
+                  >
+                    Semua ({listDokumen.length})
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus('pending')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                      filterStatus === 'pending'
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'bg-[#FAF6F0] text-amber-700 hover:bg-amber-50'
+                    }`}
+                  >
+                    ⏳ Menunggu TTD
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus('signed')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                      filterStatus === 'signed'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-[#FAF6F0] text-blue-700 hover:bg-blue-50'
+                    }`}
+                  >
+                    ✍️ Sudah TTD
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus('sah')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                      filterStatus === 'sah'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-[#FAF6F0] text-emerald-700 hover:bg-emerald-50'
+                    }`}
+                  >
+                    ✓ Sah
+                  </button>
+                </div>
 
-                  return (
-                    <button
-                      key={docItem.id}
-                      onClick={() => handleSelectDokumen(docItem)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border ${
-                        isSelected 
-                          ? 'bg-[#261C19] text-[#FAF5EF] border-[#261C19] shadow-sm' 
-                          : 'bg-[#FAF6F0] text-[#261C19] border-[#E5D7C5] hover:border-[#C5A059]'
-                      }`}
+                {/* Input Cari */}
+                <div className="relative w-full md:w-64">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Cari properti / no. kamar..."
+                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#FAF6F0] border border-[#E5D7C5] rounded-xl focus:outline-none focus:border-[#C5A059] transition"
+                  />
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">🔍</span>
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm('')} 
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
                     >
-                      <span>🏢 {namaProperti}</span>
-                      <span className="opacity-80 font-mono">(Kamar No. {nomorKamarTab})</span>
-                      {isSigned && docItem.admin_signature ? (
-                        <span className="text-emerald-400 text-[10px]">✓ Sah</span>
-                      ) : (
-                        <span className="text-amber-400 text-[10px]">⌛ Pending</span>
-                      )}
+                      ✕
                     </button>
-                  );
-                })}
+                  )}
+                </div>
               </div>
+
+              {/* LIST TOMBOL UNIT YANG DIFILTER */}
+              {filteredDokumen.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                  {filteredDokumen.map((docItem, index) => {
+                    const isSelected = dokumen?.id === docItem.id;
+                    const nomorKamarTab = docItem.pemesanan?.kamar?.nomor_kamar || docItem.pemesanan?.nomor_kamar || '-';
+                    const namaProperti = docItem.pemesanan?.properti?.title || `Unit #${index + 1}`;
+                    const isSigned = docItem.customer_signature || docItem.signature;
+
+                    return (
+                      <button
+                        key={docItem.id}
+                        onClick={() => handleSelectDokumen(docItem)}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border ${
+                          isSelected 
+                            ? 'bg-[#261C19] text-[#FAF5EF] border-[#261C19] shadow-sm' 
+                            : 'bg-[#FAF6F0] text-[#261C19] border-[#E5D7C5] hover:border-[#C5A059]'
+                        }`}
+                      >
+                        <span>🏢 {namaProperti}</span>
+                        <span className="opacity-80 font-mono">(Kamar No. {nomorKamarTab})</span>
+                        {isSigned && docItem.admin_signature ? (
+                          <span className="text-emerald-400 text-[10px]">✓ Sah</span>
+                        ) : (
+                          <span className="text-amber-400 text-[10px]">⌛ Pending</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-3 text-xs text-slate-400 italic">
+                  Tidak ada dokumen yang sesuai dengan filter/pencarian ini.
+                </div>
+              )}
             </div>
           )}
 
@@ -464,7 +565,7 @@ export default function DokumenSewa() {
                       {submitting ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Menyimpan...
+                          Menimpan...
                         </>
                       ) : (
                         'Simpan Tanda Tangan'

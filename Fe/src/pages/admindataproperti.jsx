@@ -62,6 +62,31 @@ export default function AdminDataProperti() {
   const [newRoomNumber, setNewRoomNumber] = useState('');
   const [loadingRooms, setLoadingRooms] = useState(false);
 
+  // Helper untuk menentukan status display aktual
+  const getDisplayStatus = (room) => {
+    const appStatus = (room.approval_status || '').toLowerCase();
+    const opStatus = room.status;
+
+    // Jika verifikasi SuperAdmin sudah aktif / disetujui / lunas
+    if (appStatus === 'active' || appStatus === 'approved') {
+      if (!opStatus || opStatus === 'Menunggu Verifikasi' || opStatus === 'Pending') {
+        return 'Tersedia';
+      }
+      return opStatus;
+    }
+
+    // Jika belum diverifikasi
+    if (['pending_payment', 'waiting_verification', 'pending'].includes(appStatus) || opStatus === 'Menunggu Verifikasi') {
+      return 'Menunggu Verifikasi';
+    }
+
+    if (appStatus === 'rejected') {
+      return 'Ditolak';
+    }
+
+    return opStatus || 'Tersedia';
+  };
+
   // Fetch Data dari API Backend (READ)
   const fetchProperties = useCallback(async () => {
     try {
@@ -119,6 +144,7 @@ export default function AdminDataProperti() {
   };
 
   const handleOpenEdit = (room) => {
+    const currentStatus = getDisplayStatus(room);
     setFormData({
       id: room.id,
       title: room.title || '',
@@ -130,7 +156,7 @@ export default function AdminDataProperti() {
       public_facilities: room.public_facilities || room.fasilitas_bersama || '',
       rules: room.rules || room.aturan || room.aturan_kos || '',
       description: room.description || '',
-      status: room.status || 'Tersedia',
+      status: currentStatus,
       main_image: room.main_image || '',
       lease_agreement: room.lease_agreement || room.dokumen_sewa_template || DEFAULT_LEASE_TEMPLATE
     });
@@ -157,7 +183,6 @@ export default function AdminDataProperti() {
     setIsModalOpen(true);
   };
 
-  // FIX: Menggunakan e.target.name untuk key objek
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -504,58 +529,61 @@ export default function AdminDataProperti() {
                         <td colSpan="7" className="px-6 py-8 text-center text-slate-400">Memuat data dari database...</td>
                       </tr>
                     ) : rooms.length > 0 ? (
-                      rooms.map((room) => (
-                        <tr key={room.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4">
-                            <img 
-                              src={getImageUrl(room.main_image)} 
-                              alt={room.title}
-                              className="w-12 h-12 object-cover rounded-lg border border-slate-200 bg-slate-100"
-                              onError={(e) => { e.target.onerror = null; e.target.src = NO_IMAGE_PLACEHOLDER; }}
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-slate-800">{room.title}</p>
-                            <span className="text-xs text-slate-400 max-w-[150px] truncate block">{room.address}</span>
-                          </td>
-                          <td className="px-6 py-4 text-slate-600">
-                            <span className="font-semibold">{room.type}</span> ({renderGenderLabel(room.gender_type)})
-                          </td>
-                          
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => handleOpenRoomModal(room)}
-                              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#B38E5D] border border-amber-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                              <span>Kelola ({room.kamars?.length || ''} Kamar)</span>
-                            </button>
-                          </td>
+                      rooms.map((room) => {
+                        const statusDisplay = getDisplayStatus(room);
+                        return (
+                          <tr key={room.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-6 py-4">
+                              <img 
+                                src={getImageUrl(room.main_image)} 
+                                alt={room.title}
+                                className="w-12 h-12 object-cover rounded-lg border border-slate-200 bg-slate-100"
+                                onError={(e) => { e.target.onerror = null; e.target.src = NO_IMAGE_PLACEHOLDER; }}
+                              />
+                            </td>
+                            <td className="px-6 py-4">
+                              <p className="font-bold text-slate-800">{room.title}</p>
+                              <span className="text-xs text-slate-400 max-w-[150px] truncate block">{room.address}</span>
+                            </td>
+                            <td className="px-6 py-4 text-slate-600">
+                              <span className="font-semibold">{room.type}</span> ({renderGenderLabel(room.gender_type)})
+                            </td>
+                            
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleOpenRoomModal(room)}
+                                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-[#B38E5D] border border-amber-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                <span>Kelola ({room.kamars?.length || ''} Kamar)</span>
+                              </button>
+                            </td>
 
-                          <td className="px-6 py-4 font-semibold text-[#B38E5D]">{formatRupiah(room.price_per_month)}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
-                              room.status === 'Tersedia' 
-                                ? 'bg-emerald-100 text-emerald-700' 
-                                : room.status === 'Menunggu Verifikasi' || room.status === 'Pending'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-rose-100 text-rose-700'
-                            }`}>
-                              {room.status || 'Tersedia'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button onClick={() => handleOpenEdit(room)} className="p-2 text-slate-400 hover:text-[#B38E5D] rounded transition-colors cursor-pointer" title="Edit Properti & Dokumen">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                              </button>
-                              <button onClick={() => handleDelete(room.id)} className="p-2 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer" title="Hapus">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                            <td className="px-6 py-4 font-semibold text-[#B38E5D]">{formatRupiah(room.price_per_month)}</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
+                                statusDisplay === 'Tersedia' 
+                                  ? 'bg-emerald-100 text-emerald-700' 
+                                  : statusDisplay === 'Menunggu Verifikasi' || statusDisplay === 'Pending'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-rose-100 text-rose-700'
+                              }`}>
+                                {statusDisplay}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button onClick={() => handleOpenEdit(room)} className="p-2 text-slate-400 hover:text-[#B38E5D] rounded transition-colors cursor-pointer" title="Edit Properti & Dokumen">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </button>
+                                <button onClick={() => handleDelete(room.id)} className="p-2 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer" title="Hapus">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
                         <td colSpan="7" className="px-6 py-8 text-center text-slate-400">Belum ada data kamar/properti. Silakan tambah data baru.</td>

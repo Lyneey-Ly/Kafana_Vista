@@ -31,10 +31,35 @@ export default function SidebarAdmin({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Profile Admin State (Session Storage Check)
+  // Profile Admin State
   const [adminProfile, setAdminProfile] = useState(null);
 
+  // Function untuk fetch data profil terbaru dari Backend API
+  const fetchLatestProfile = async () => {
+    const token = sessionStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch('http://localhost:8000/api/admin/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        setAdminProfile(result.data);
+        // Simpan versi terbaru ke sessionStorage
+        sessionStorage.setItem('admin', JSON.stringify(result.data));
+      }
+    } catch (e) {
+      console.error('Gagal mengambil data profil admin terbaru:', e);
+    }
+  };
+
   useEffect(() => {
+    // 1. Ambil data awal dari session storage jika ada
     const savedAdmin = sessionStorage.getItem('admin') || sessionStorage.getItem('user');
     if (savedAdmin) {
       try {
@@ -43,6 +68,26 @@ export default function SidebarAdmin({ children }) {
         console.error('Failed to parse admin session:', e);
       }
     }
+
+    // 2. Fetch data terbaru langsung dari API
+    fetchLatestProfile();
+
+    // 3. Listener saat ada event perubahan profil dari halaman Edit Profil
+    const handleProfileUpdate = () => {
+      const updatedAdmin = sessionStorage.getItem('admin') || sessionStorage.getItem('user');
+      if (updatedAdmin) {
+        try {
+          setAdminProfile(JSON.parse(updatedAdmin));
+        } catch (e) {}
+      }
+      fetchLatestProfile();
+    };
+
+    window.addEventListener('adminProfileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('adminProfileUpdated', handleProfileUpdate);
+    };
   }, []);
 
   // Handle Logout menggunakan SweetAlert2
@@ -71,7 +116,7 @@ export default function SidebarAdmin({ children }) {
     });
   };
 
-  // 🟢 DAFTAR MENU NAVIGASI DENGAN IKON SESUAI
+  // DAFTAR MENU NAVIGASI DENGAN IKON SESUAI
   const menuItems = [
     { name: 'Dashboard', path: '/admindashboard', icon: LayoutDashboard },
     { name: 'Profil Admin', path: '/adminprofile', icon: User },
@@ -84,17 +129,17 @@ export default function SidebarAdmin({ children }) {
     { name: 'Dokumen Sewa', path: '/admin/dokumen-sewa', icon: FileText },
     { name: 'Pusat Bantuan', path: '/pusatbantuanadmin', icon: HelpCircle },
     { name: 'Room Chat', path: '/AdminRoomChat', icon: MessageSquare },
-    { name: 'Room Chat', path: '/admin/riwayat-pembayaran', icon: MessageSquare },
+    { name: 'Riwayat Pembayaran', path: '/admin/riwayat-pembayaran', icon: MessageSquare },
   ];
 
   // Helper Foto Profil
   const avatarUrl = adminProfile?.foto
     ? (adminProfile.foto.startsWith('http') ? adminProfile.foto : `http://localhost:8000/storage/${adminProfile.foto}`)
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.nama || adminProfile?.name || 'Admin')}&background=B38E5D&color=fff&bold=true`;
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || adminProfile?.nama || 'Admin')}&background=B38E5D&color=fff&bold=true`;
 
   return (
     <div className="flex h-screen bg-[#FAF5EF] overflow-hidden font-sans">
-      {/* 🟢 SIDEBAR DESKTOP */}
+      {/* SIDEBAR DESKTOP */}
       <aside
         className={`hidden md:flex flex-col bg-[#261C19] text-[#FAF5EF] border-r border-[#B38E5D]/20 h-full flex-shrink-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative z-30 shadow-2xl ${
           isCollapsed ? 'w-20' : 'w-64'
@@ -124,7 +169,7 @@ export default function SidebarAdmin({ children }) {
           </button>
         </div>
 
-        {/* 👤 KARTU PROFIL ADMIN */}
+        {/* KARTU PROFIL ADMIN */}
         <div className="p-3 border-b border-[#B38E5D]/20 bg-[#1C1412]/60 backdrop-blur-md">
           <Link
             to="/adminprofile"
@@ -138,7 +183,7 @@ export default function SidebarAdmin({ children }) {
                 alt="Profile Admin"
                 className="w-10 h-10 rounded-full object-cover border-2 border-[#B38E5D] shadow-md group-hover:scale-105 transition duration-300"
                 onError={(e) => {
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.nama || 'Admin')}&background=B38E5D&color=fff`;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || adminProfile?.nama || 'Admin')}&background=B38E5D&color=fff`;
                 }}
               />
               <span className="absolute bottom-0 right-0 flex h-3 w-3">
@@ -150,28 +195,28 @@ export default function SidebarAdmin({ children }) {
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <h2 className="text-xs font-bold text-white truncate group-hover:text-[#B38E5D] transition-colors">
-                  {adminProfile?.nama || adminProfile?.name || 'Administrator'}
+                  {adminProfile?.name || adminProfile?.nama || 'Administrator'}
                 </h2>
                 <p className="text-[10px] text-[#D7C4B0]/70 truncate">
                   {adminProfile?.email || 'admin@kafanavista.com'}
                 </p>
                 <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-[#B38E5D]/15 border border-[#B38E5D]/30 text-[#B38E5D] text-[9px] font-semibold rounded-full">
                   <Sparkles className="w-2.5 h-2.5" />
-                  <span>Super Admin</span>
+                  <span>{adminProfile?.role || 'Admin'}</span>
                 </div>
               </div>
             )}
 
             {isCollapsed && (
               <div className="absolute left-full ml-3 px-3 py-2 bg-[#1C1412] text-white border border-[#B38E5D]/30 rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 pointer-events-none shadow-2xl z-50 flex flex-col">
-                <span className="font-bold text-[#B38E5D]">{adminProfile?.nama || 'Profil Admin'}</span>
+                <span className="font-bold text-[#B38E5D]">{adminProfile?.name || adminProfile?.nama || 'Profil Admin'}</span>
                 <span className="text-[10px] text-gray-300">Pengaturan Sesi Admin</span>
               </div>
             )}
           </Link>
         </div>
 
-        {/* 🟢 NAVIGASI MENU UTAMA */}
+        {/* NAVIGASI MENU UTAMA */}
         <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -224,7 +269,7 @@ export default function SidebarAdmin({ children }) {
         </div>
       </aside>
 
-      {/* 📱 MOBILE BACKDROP OVERLAY & DRAWER */}
+      {/* MOBILE BACKDROP OVERLAY & DRAWER */}
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -263,11 +308,11 @@ export default function SidebarAdmin({ children }) {
               className="w-11 h-11 rounded-full object-cover border-2 border-[#B38E5D] shadow-md"
             />
             <div className="min-w-0 flex-1">
-              <h2 className="text-xs font-bold text-white truncate">{adminProfile?.nama || adminProfile?.name || 'Administrator'}</h2>
+              <h2 className="text-xs font-bold text-white truncate">{adminProfile?.name || adminProfile?.nama || 'Administrator'}</h2>
               <p className="text-[10px] text-[#D7C4B0]/70 truncate">{adminProfile?.email || 'admin@kafanavista.com'}</p>
               <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-[#B38E5D]/20 border border-[#B38E5D]/30 text-[#B38E5D] text-[9px] font-semibold rounded-full">
                 <Sparkles className="w-2.5 h-2.5" />
-                <span>Super Admin</span>
+                <span>{adminProfile?.role || 'Admin'}</span>
               </div>
             </div>
           </div>

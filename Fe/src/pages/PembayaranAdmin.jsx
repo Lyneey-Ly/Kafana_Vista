@@ -12,7 +12,6 @@ export default function PembayaranAdmin() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [property, setProperty] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('gateway');
   const [proofFile, setProofFile] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
 
@@ -83,21 +82,41 @@ export default function PembayaranAdmin() {
 
       if (snapToken && window.snap) {
         window.snap.pay(snapToken, {
-          onSuccess: async function () {
+          onSuccess: async function (result) {
+            // Penanganan jika transaksi Kartu Kredit / Visa berstatus Fraud Challenge
+            if (result?.fraud_status === 'challenge') {
+              Swal.fire({
+                title: 'Status Pembayaran: Challenge',
+                text: 'Transaksi Kartu Kredit/Visa Anda memerlukan peninjauan keamanan oleh bank/Midtrans.',
+                icon: 'warning',
+                confirmButtonColor: '#B38E5D'
+              });
+              fetchPropertyDetail();
+              return;
+            }
+
             try {
-              await API.post(`/admin/properties/${propertyId}/gateway-success`);
+              // Kirim payload transaksi Midtrans ke server
+              await API.post(`/admin/properties/${propertyId}/gateway-success`, {
+                order_id: result?.order_id,
+                transaction_id: result?.transaction_id,
+                transaction_status: result?.transaction_status,
+                payment_type: result?.payment_type,
+                fraud_status: result?.fraud_status,
+                gross_amount: result?.gross_amount
+              });
             } catch (e) {
-              console.error('Gagal update status gateway:', e);
+              console.error('Gagal update status gateway di server:', e);
             }
             
             Swal.fire({
-              title: 'Pembayaran Berhasil!',
-              text: 'Properti Anda sekarang telah aktif dan dipublikasikan.',
+              title: 'Pembayran Gateway Berhasil!',
+              text: 'Pembayran Anda telah diterima dan properti kini dalam status Menunggu Verifikasi Superadmin.',
               icon: 'success',
               confirmButtonColor: '#B38E5D'
-            }).then(() => navigate('/admin/riwayat-pembayaran'));
+            }).then(() => fetchPropertyDetail());
           },
-          onPending: function () {
+          onPending: function (result) {
             Swal.fire({
               title: 'Instruksi Pembayaran Dibuat',
               text: 'Silakan selesaikan pembayaran sesuai nomor Virtual Account / QRIS yang tampil.',
@@ -106,10 +125,10 @@ export default function PembayaranAdmin() {
             });
             fetchPropertyDetail();
           },
-          onError: function () {
+          onError: function (result) {
             Swal.fire({
               title: 'Pembayaran Gagal',
-              text: 'Terjadi kesalahan saat memproses pembayaran.',
+              text: result?.status_message || 'Terjadi kesalahan saat memproses pembayaran.',
               icon: 'error',
               confirmButtonColor: '#B38E5D'
             });
@@ -190,7 +209,7 @@ export default function PembayaranAdmin() {
         text: 'Bukti pembayaran berhasil diunggah. Status kini Menunggu Verifikasi Superadmin.',
         icon: 'success',
         confirmButtonColor: '#B38E5D'
-      }).then(() => navigate('/admin/riwayat-pembayaran'));
+      }).then(() => fetchPropertyDetail());
     } catch (err) {
       console.error('Error Upload Proof:', err);
       Swal.fire({
@@ -214,17 +233,24 @@ export default function PembayaranAdmin() {
     );
   }
 
+  // STATUS & LOGIKA VERIFIKASI
   const rawApproval = String(property?.approval_status || '').toLowerCase().trim();
   const paymentStatusRaw = String(property?.payment_status || '').toLowerCase().trim();
   const proofUrl = property?.payment_proof || property?.bukti_pembayaran || property?.bukti_transfer || null;
 
-  const isPaidSlot = Boolean(property?.is_paid_slot) || paymentStatusRaw === 'paid';
-  
-  // PENENTUAN STATUS PERDANA BERDASARKAN PENGECEKAN DINAMIS
-  const isFirstProperty = property?.is_first_property === true || property?.is_first_property_dynamic === true || property?.slot_fee === 0;
+const isFirstProperty = property?.is_first_property === true || property?.is_first_property_dynamic === true || property?.slot_fee === 0;
+  const isPaidSlot = Boolean(property?.is_paid_slot) || ['paid', 'settlement'].includes(paymentStatusRaw);
+  const isApproved = ['approved', 'active', 'disetujui'].includes(rawApproval);
 
-  const isAlreadyPaid = isFirstProperty || isPaidSlot;
-  const isWaitingVerification = !isAlreadyPaid && (rawApproval === 'waiting_verification' || Boolean(proofUrl));
+  // Properti LUNAS DAN AKTIF hanya jika sudah bayar DAN disetujui Superadmin (atau Slot Perdana)
+  const isFullyActive = isFirstProperty || (isPaidSlot && isApproved);
+
+  // Menunggu Verifikasi jika sudah dibayar via Gateway/Manual TETAPI belum disetujui Superadmin
+  const isWaitingVerification = !isFirstProperty && !isFullyActive && (
+    isPaidSlot || 
+    Boolean(proofUrl) || 
+    ['waiting_verification', 'pending', 'pending_verification'].includes(rawApproval)
+  );
 
   const PUBLICATION_FEE = isFirstProperty ? 0 : (property?.slot_fee ?? 150000);
 
@@ -244,13 +270,13 @@ export default function PembayaranAdmin() {
           </div>
 
           <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${
-            isAlreadyPaid
+            isFullyActive
               ? 'bg-emerald-100 text-emerald-700' 
               : isWaitingVerification
               ? 'bg-amber-100 text-amber-700'
               : 'bg-rose-100 text-rose-700'
           }`}>
-            {isAlreadyPaid ? 'Lunas / Aktif' : isWaitingVerification ? 'Menunggu Verifikasi' : 'Belum Dibayar'}
+            {isFullyActive ? 'Lunas / Aktif' : isWaitingVerification ? 'Menunggu Verifikasi Superadmin' : 'Belum Dibayar'}
           </span>
         </div>
 
@@ -286,81 +312,64 @@ export default function PembayaranAdmin() {
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-base font-bold text-slate-800 mb-4">Pilih Metode Pembayaran</h2>
+          <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <h2 className="text-base font-bold text-slate-800">Metode Pembayaran</h2>
+
+            {isWaitingVerification && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-medium leading-relaxed">
+                ⏳ <strong>Pembayaran/Bukti Telah Diterima.</strong> Properti Anda sedang menunggu peninjauan dan verifikasi manual dari Superadmin sebelum dipublikasikan.
+              </div>
+            )}
 
             {PUBLICATION_FEE === 0 ? (
-               <div className="space-y-4 bg-emerald-50 p-5 rounded-xl border border-emerald-200/60">
-                 <p className="text-xs text-emerald-700 leading-relaxed font-semibold">
-                   Selamat! Properti ini merupakan Slot Perdana Anda sehingga digratiskan dari biaya publikasi. Silakan tunggu verifikasi admin, atau properti Anda akan segera aktif secara otomatis.
-                 </p>
-               </div>
+              <div className="space-y-4 bg-emerald-50 p-5 rounded-xl border border-emerald-200/60">
+                <p className="text-xs text-emerald-700 leading-relaxed font-semibold">
+                  Selamat! Properti ini merupakan Slot Perdana Anda sehingga digratiskan dari biaya publikasi. Silakan tunggu verifikasi admin, atau properti Anda akan segera aktif secara otomatis.
+                </p>
+              </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                {/* BLOK PAYMENT GATEWAY */}
+                <div className="space-y-4 bg-[#FAF5EF] p-5 rounded-xl border border-amber-200/60">
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Bayar cepat dan praktis melalui Payment Gateway Midtrans (Visa, Mastercard, QRIS, Virtual Account).
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">Visa / Mastercard</span>
+                    <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">QRIS</span>
+                    <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">BCA VA</span>
+                    <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">Mandiri</span>
+                    <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">GoPay</span>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod('gateway')}
-                    className={`py-3 px-4 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                      paymentMethod === 'gateway'
-                        ? 'bg-[#B38E5D] text-white border-[#B38E5D] shadow-md shadow-[#B38E5D]/20'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    onClick={handlePayGateway}
+                    disabled={submitting || isFullyActive || isWaitingVerification}
+                    className="w-full py-3 bg-[#B38E5D] hover:bg-[#8F6E45] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#B38E5D]/30 disabled:opacity-50 cursor-pointer mt-2"
                   >
-                    ⚡ Otomatis (QRIS / VA / E-Wallet)
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('manual')}
-                    className={`py-3 px-4 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                      paymentMethod === 'manual'
-                        ? 'bg-[#B38E5D] text-white border-[#B38E5D] shadow-md shadow-[#B38E5D]/20'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    🏛️ Transfer Manual
+                    {submitting 
+                      ? 'Membuka Gateway...' 
+                      : isFullyActive 
+                      ? 'Tagihan Telah Lunas' 
+                      : isWaitingVerification 
+                      ? 'Menunggu Verifikasi Superadmin' 
+                      : `Bayar Sekarang (${formatRupiah(PUBLICATION_FEE)})`}
                   </button>
                 </div>
 
-                {paymentMethod === 'gateway' && (
-                  <div className="space-y-4 bg-[#FAF5EF] p-5 rounded-xl border border-amber-200/60">
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Pembayaran diproses instan melalui sistem Payment Gateway Midtrans. Status listing akan langsung aktif otomatis.
+                {/* BLOK KIRIM BUKTI PEMBAYARAN MANUAL */}
+                <div className="border-t border-slate-100 pt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Kirim Bukti Pembayaran Manual</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Sudah melakukan transfer manual ke rekening pengelola? Unggah foto bukti transfer di bawah ini.
                     </p>
-
-                    <div className="flex items-center gap-2 pt-2 flex-wrap">
-                      <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">QRIS</span>
-                      <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">BCA VA</span>
-                      <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">Mandiri</span>
-                      <span className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600">GoPay</span>
-                    </div>
-
-                    <button
-                      onClick={handlePayGateway}
-                      disabled={submitting || isAlreadyPaid}
-                      className="w-full py-3 bg-[#B38E5D] hover:bg-[#8F6E45] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#B38E5D]/30 disabled:opacity-50 cursor-pointer mt-4"
-                    >
-                      {submitting ? 'Membuka Gateway...' : isAlreadyPaid ? 'Tagihan Telah Lunas' : `Bayar Sekarang (${formatRupiah(PUBLICATION_FEE)})`}
-                    </button>
                   </div>
-                )}
 
-                {paymentMethod === 'manual' && (
                   <form onSubmit={handleUploadManual} className="space-y-4">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
-                      <p className="font-bold text-slate-700">Rekening Tujuan Superadmin Kavana:</p>
-                      <div className="flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-200">
-                        <div>
-                          <p className="font-bold text-slate-800">Bank Central Asia (BCA)</p>
-                          <p className="font-mono text-sm text-[#B38E5D] font-bold">8830-1928-331</p>
-                          <p className="text-[11px] text-slate-400">a.n. PT Kavana Indonesia Properti</p>
-                        </div>
-                      </div>
-                    </div>
-
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Upload Bukti Transfer</label>
                       {proofPreview && (
                         <div className="mb-2 relative w-full h-40 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
                           <img src={proofPreview} alt="Preview Bukti Transfer" className="w-full h-full object-contain" />
@@ -370,19 +379,26 @@ export default function PembayaranAdmin() {
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
-                        className="w-full text-xs text-slate-500 cursor-pointer"
+                        disabled={submitting || isFullyActive || isWaitingVerification}
+                        className="w-full text-xs text-slate-500 cursor-pointer border border-slate-200 p-2 rounded-xl bg-slate-50 disabled:opacity-50"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      disabled={submitting || !proofFile || isAlreadyPaid}
-                      className="w-full py-3 bg-[#B38E5D] hover:bg-[#8F6E45] text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-[#B38E5D]/30 disabled:opacity-50 cursor-pointer"
+                      disabled={submitting || !proofFile || isFullyActive || isWaitingVerification}
+                      className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl transition-all shadow-md disabled:opacity-50 cursor-pointer"
                     >
-                      {submitting ? 'Mengunggah...' : isAlreadyPaid ? 'Tagihan Telah Lunas' : 'Kirim Bukti Pembayaran'}
+                      {submitting 
+                        ? 'Mengunggah...' 
+                        : isFullyActive 
+                        ? 'Tagihan Telah Lunas' 
+                        : isWaitingVerification 
+                        ? 'Menunggu Verifikasi Superadmin' 
+                        : 'Kirim Bukti Pembayaran'}
                     </button>
                   </form>
-                )}
+                </div>
               </>
             )}
           </div>

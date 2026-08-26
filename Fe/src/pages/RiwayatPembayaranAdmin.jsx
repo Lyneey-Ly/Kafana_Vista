@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api'; 
 import Swal from 'sweetalert2';
+import SidebarAdmin from '../components/SidebarAdmin';
+
 import { CheckCircle2, Clock, XCircle, Printer, RefreshCw, FileText, Image as ImageIcon, CreditCard, Sparkles } from 'lucide-react';
 
 const safeParseDate = (dateInput) => {
@@ -146,6 +148,7 @@ export default function RiwayatPembayaranAdmin() {
   });
 
   return (
+    <SidebarAdmin>
     <div className="min-h-screen bg-[#FAF5EF] text-[#2D2321] font-sans antialiased pb-20 selection:bg-[#B38E5D] selection:text-white">
       <div className="max-w-5xl mx-auto px-6 pt-8 pb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
@@ -372,5 +375,6 @@ export default function RiwayatPembayaranAdmin() {
         </div>
       )}
     </div>
+    </SidebarAdmin>
   );
 }
