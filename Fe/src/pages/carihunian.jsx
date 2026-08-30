@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import SidebarUser from '../components/SidebarUser';
 import InteractiveMap from '../components/InteractiveMap';
 import Footer from '../components/footer';
+import AdBanner from '../components/AdBanner';
 
 
 // HELPER FORMAT HARGA ANTI-CRASH
@@ -579,11 +580,17 @@ export default function CariHunian() {
                 </div>
               </div>
 
+              {/* IKLAN SIDEBAR - SLOT DINAMIS */}
+              <AdBanner placement="search_sidebar" variant="sidebar" className="mt-6" />
+
             </div>
 
             {/* CATALOG / LISTING HUNIAN (9 Kolom) */}
             <div className="lg:col-span-9 flex flex-col space-y-6">
               
+              {/* IKLAN ATAS KATALOG - SLOT DINAMIS */}
+              <AdBanner placement="catalog_top" variant="horizontal" className="mb-6" />
+
               {/* Map Toggle & Controls Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-[#E5D7C5] rounded-3xl p-5 shadow-xs">
                 <div>
@@ -645,7 +652,8 @@ export default function CariHunian() {
                   </div>
                 ) : filteredProperties.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {filteredProperties.map((item) => (
+                    {filteredProperties.map((item, itemIndex) => (
+                      <Fragment key={item.id}>
                       <div 
                         key={item.id} 
                         className="bg-white border border-[#E5D7C5] rounded-3xl shadow-sm hover:shadow-xl hover:border-[#C5A059]/50 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group overflow-hidden"
@@ -742,6 +750,16 @@ export default function CariHunian() {
                           </div>
                         </div>
                       </div>
+
+                      {/* IKLAN IN-FEED - DISISIPKAN SETELAH KARTU KE-4 */}
+                      {itemIndex === 3 && (
+                        <AdBanner
+                          placement="catalog_in_feed"
+                          variant="in-feed"
+                          className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4"
+                        />
+                      )}
+                      </Fragment>
                     ))}
                   </div>
                 ) : (

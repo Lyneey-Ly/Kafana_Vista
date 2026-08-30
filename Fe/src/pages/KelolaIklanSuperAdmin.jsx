@@ -67,7 +67,7 @@ export default function KelolaIklanSuperAdmin() {
     if (ad) {
       setEditId(ad.id);
       
-      const knownPlacements = ['home_hero', 'search_sidebar', 'footer_banner', 'catalog_top'];
+      const knownPlacements = ['home_hero', 'landing_mid', 'catalog_top', 'search_sidebar', 'catalog_in_feed', 'footer_banner'];
       const isCustom = ad.placement && !knownPlacements.includes(ad.placement);
 
       setFormData({
@@ -400,9 +400,11 @@ export default function KelolaIklanSuperAdmin() {
                     <label className="block text-xs font-bold text-slate-700 mb-1">Penempatan (Posisi di Website) <span className="text-rose-500">*</span></label>
                     <select name="placement" value={formData.placement} onChange={handleChange} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-[#B38E5D] focus:border-[#B38E5D] outline-none">
                       <option value="home_hero">Beranda Atas (Hero Slide)</option>
-                      <option value="search_sidebar">Halaman Pencarian (Sidebar)</option>
-                      <option value="catalog_top">Atas Halaman Katalog</option>
-                      <option value="footer_banner">Footer Banner (Bawah Website)</option>
+                      <option value="landing_mid">Landing Page Tengah (Di antara Section)</option>
+                      <option value="catalog_top">Atas Halaman Katalog / Cari Hunian</option>
+                      <option value="search_sidebar">Sidebar Halaman Pencarian</option>
+                      <option value="catalog_in_feed">Di Antara Grid Daftar Kost</option>
+                      <option value="footer_banner">Banner Di Atas Footer</option>
                       <option value="custom">-- Lokasi Kustom Lainnya --</option>
                     </select>
                   </div>

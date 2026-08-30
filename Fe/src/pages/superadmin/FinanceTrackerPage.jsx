@@ -218,7 +218,7 @@ export default function FinanceTrackerPage() {
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-[#D7C4B0]">
                   <th className="py-3 pr-4">Tanggal</th>
-                  <th className="py-3 pr-4">Tipe</th>
+                  <th className="py-3 pr-4">Tipe &amp; Sumber</th>
                   <th className="py-3 pr-4">Kategori</th>
                   <th className="py-3 pr-4">Deskripsi</th>
                   <th className="py-3 pr-4 text-right">Jumlah</th>
@@ -232,13 +232,20 @@ export default function FinanceTrackerPage() {
                     <td className="py-3 pr-4 whitespace-nowrap text-slate-600 font-bold">
                       {new Date(record.transaction_date + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 pr-4 whitespace-nowrap">
                       <span
                         className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
                           record.type === 'income' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
                         }`}
                       >
                         {record.type === 'income' ? 'Masuk' : 'Keluar'}
+                      </span>
+                      <span
+                        className={`ml-2 px-2 py-0.5 rounded text-[9px] font-extrabold ${
+                          record.is_system_generated ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {record.is_system_generated ? '⚙️ Sistem' : '✍️ Manual'}
                       </span>
                     </td>
                     <td className="py-3 pr-4">
@@ -265,12 +272,17 @@ export default function FinanceTrackerPage() {
                       )}
                     </td>
                     <td className="py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(record)}
-                        className="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer"
-                      >
-                        🗑️
-                      </button>
+                      {!record.is_system_generated ? (
+                        <button
+                          onClick={() => handleDelete(record)}
+                          className="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer"
+                          title="Hapus Catatan Manual"
+                        >
+                          🗑️
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">Terkunci</span>
+                      )}
                     </td>
                   </tr>
                 ))}

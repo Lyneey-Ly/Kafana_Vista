@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../api';
+import AdBanner from './AdBanner';
 
 const DEFAULT_SETTINGS = {
   site_name: 'KafanaVista',
@@ -38,6 +39,11 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#261C19] text-[#FAF5EF] rounded-2xl border border-[#B38E5D]/20 mt-16 overflow-hidden shadow-2xl">
+      {/* BANNER IKLAN DINAMIS - PALING ATAS SEBELUM NAVIGASI FOOTER */}
+      <div className="px-4 pt-4 md:px-8 md:pt-6">
+        <AdBanner placement="footer_banner" variant="horizontal" />
+      </div>
+
       {/* AREA UTAMA FOOTER (4 KOLOM) */}
       <div className="p-8 md:p-12 lg:p-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
 

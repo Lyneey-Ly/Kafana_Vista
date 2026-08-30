@@ -7,6 +7,7 @@ import Footer from '../components/footer';
 
 import SEOInfoSection from '../components/SEOInfoSection';
 import TestimonialSection from '../components/TestimoniSection';
+import AdBanner from '../components/AdBanner';
 
 // HELPER FORMAT HARGA ANTI-CRASH & ANTI-NOL TAMBAHAN
 const formatPrice = (val) => {
@@ -231,7 +232,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl border border-[#D7C4B0]/60 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition">
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#B38E5D] bg-[#FAF5EF] px-2.5 py-1 rounded">
@@ -261,6 +262,25 @@ export default function Home() {
                 <span>VISTA</span>
                 <span className="text-[9px] tracking-widest text-gray-400 font-sans">VERIFIED</span>
               </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-[#B38E5D] to-[#8F6E45] rounded-2xl p-6 shadow-lg flex flex-col justify-between space-y-4 hover:shadow-xl transition cursor-pointer"
+              onClick={() => navigate('/pasang-iklan')}
+            >
+              <div className="space-y-2 text-white">
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded inline-block">
+                  Pasang Iklan
+                </span>
+                <h4 className="text-lg font-bold">Tampilkan Brand Anda di Sini</h4>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  Jangkau ribuan pencari hunian di Bandung & Sukabumi. Proses mudah, ditinjau cepat.
+                </p>
+              </div>
+              <button className="text-xs font-bold text-[#B38E5D] hover:underline self-start flex items-center gap-1 bg-white px-3 py-1.5 rounded-full shadow-md"
+                onClick={(e) => { e.stopPropagation(); navigate('/pasang-iklan'); }}
+              >
+                Daftar Sekarang →
+              </button>
             </div>
           </div>
         </div>
@@ -445,6 +465,9 @@ export default function Home() {
             )}
           </div>
         </section>
+
+        {/* IKLAN TENGAH LANDING - ANTARA KATALOG & SECTION UNGGULAN */}
+        <AdBanner placement="landing_mid" variant="horizontal" className="my-10" />
 
         {/* STORY SECTION */}
         <section className="bg-[#2D2321] text-[#FAF5EF] rounded-2xl p-8 lg:p-12 mb-16 relative overflow-hidden shadow-2xl">

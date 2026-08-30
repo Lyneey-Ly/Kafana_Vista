@@ -11,6 +11,7 @@ import Login from './pages/login';
 import Register from './pages/register';
 import Pembayaran from './pages/pembayaran';
 import FinanceTracker from './pages/FinanceTracker';
+import PasangIklan from './pages/PasangIklan';
 import ChatRoom from './pages/roomchat';
 import KatalogProperti from './pages/katalogproperti';
 import PusatBantuan from './pages/PusatBantuan';
@@ -80,6 +81,7 @@ export default function App() {
             
             {/* User Features */}
             <Route path="/FinanceTracker" element={<FinanceTracker />} />
+            <Route path="/pasang-iklan" element={<PasangIklan />} />
             <Route path="/carihunian" element={<CariHunian />} />
             <Route path="/pembayaran" element={<Pembayaran />} />
             <Route path="/kamar/:id" element={<DetailKamar />} />
