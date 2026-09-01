@@ -155,6 +155,49 @@ class SuperAdminController extends Controller
     }
 
     /**
+     * Inspeksi Properti & Kamar milik Pemilik Kost
+     */
+    public function getAdminProperties(Request $request, $id)
+    {
+        if (!$this->isSuperAdmin($request)) {
+            return $this->denyAccess();
+        }
+
+        $admin = Administrator::find($id);
+        if (!$admin) {
+            return response()->json(['message' => 'Akun pengelola tidak ditemukan'], 404);
+        }
+
+        $properties = Properti::where('pemilik_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalRooms = 0;
+        $formattedProperties = $properties->map(function ($prop) use (&$totalRooms) {
+            // Menghitung jumlah kamar per properti
+            $roomsCount = DB::table('kamars')->where('properti_id', $prop->id)->count();
+            $totalRooms += $roomsCount;
+
+            return [
+                'id'          => $prop->id,
+                'title'       => $prop->title,
+                'status'      => $prop->status,
+                'address'     => $prop->address ?? $prop->alamat ?? '-',
+                'rooms_count' => $roomsCount,
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'total_properties' => $properties->count(),
+                'total_rooms'      => $totalRooms,
+                'properties'       => $formattedProperties,
+            ]
+        ], 200);
+    }
+
+    /**
      * 3. KELOLA DATA USER TERDAFTAR
      */
     public function getUsers(Request $request)
@@ -169,6 +212,31 @@ class SuperAdminController extends Controller
             'status' => 'success',
             'total'  => $userList->count(),
             'data'   => $userList
+        ], 200);
+    }
+
+    /**
+     * Inspeksi Riwayat Rental/Pemesanan milik User tertentu
+     */
+    public function getUserRentals(Request $request, $id)
+    {
+        if (!$this->isSuperAdmin($request)) {
+            return $this->denyAccess();
+        }
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
+        $rentals = Pemesanan::with(['properti', 'kamar', 'pembayaran'])
+            ->where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $rentals
         ], 200);
     }
 

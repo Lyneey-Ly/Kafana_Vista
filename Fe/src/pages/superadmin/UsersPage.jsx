@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import API from '../../api';
 import Swal from 'sweetalert2';
 import useSuperAdminFetch from '../../hooks/useSuperAdminFetch';
@@ -14,6 +15,34 @@ export default function UsersPage() {
   );
 
   const users = data || [];
+
+  // State Modal Detail Sewa
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [rentals, setRentals] = useState([]);
+
+  // Buka Modal & Fetch Data Sewa User
+  const handleOpenRentalDetail = async (userId) => {
+    setIsModalOpen(true);
+    setLoadingModal(true);
+    try {
+      const response = await API.get(`/admin/superadmin/users/${userId}/rentals`);
+      setSelectedUser(response.data?.user || null);
+      setRentals(response.data?.data || []);
+    } catch (err) {
+      Swal.fire('Gagal!', err.response?.data?.message || 'Gagal mengambil riwayat sewa.', 'error');
+      setIsModalOpen(false);
+    } finally {
+      setLoadingModal(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+    setRentals([]);
+  };
 
   const handleDeleteUser = async (id, name) => {
     const result = await Swal.fire({
@@ -34,6 +63,46 @@ export default function UsersPage() {
         Swal.fire('Gagal!', error.response?.data?.message || 'Terjadi kesalahan.', 'error');
       }
     }
+  };
+
+  // Helper Format Rupiah
+  const formatRupiah = (val) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(val || 0);
+  };
+
+  // Helper Badge Status Sewa
+  const renderStatusBadge = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s === 'aktif' || s === 'disetujui' || s === 'approved' || s === 'lunas') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+          Aktif
+        </span>
+      );
+    }
+    if (s === 'pending' || s === 'menunggu') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+          Pending
+        </span>
+      );
+    }
+    if (s === 'selesai') {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
+          Selesai
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+        Dibatalkan
+      </span>
+    );
   };
 
   return (
@@ -81,10 +150,16 @@ export default function UsersPage() {
                   <td className="px-6 py-4 text-xs text-slate-500">
                     {new Date(user.created_at).toLocaleDateString('id-ID')}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center flex justify-center items-center gap-2">
+                    <button
+                      onClick={() => handleOpenRentalDetail(user.id)}
+                      className="px-3 py-1.5 bg-[#FAF5EF] hover:bg-[#B38E5D] text-[#261C19] hover:text-white rounded-lg text-xs font-bold border border-[#D7C4B0] cursor-pointer transition"
+                    >
+                      👁️ Detail Sewa
+                    </button>
                     <button
                       onClick={() => handleDeleteUser(user.id, user.name)}
-                      className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold border border-rose-200 cursor-pointer"
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold border border-rose-200 cursor-pointer transition"
                     >
                       🗑️ Hapus User
                     </button>
@@ -93,6 +168,120 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* MODAL INSPEKSI RIWAYAT SEWA USER */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF5EF] w-full max-w-4xl rounded-2xl shadow-xl border border-[#D7C4B0] overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header Modal */}
+            <div className="px-6 py-4 bg-[#261C19] text-white flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-base text-[#B38E5D]">Riwayat & Inspeksi Sewa User</h3>
+                <p className="text-xs text-slate-300">Superadmin Control Panel</p>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content Modal */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              {loadingModal ? (
+                <div className="text-center py-12">
+                  <div className="inline-block w-8 h-8 border-4 border-[#B38E5D] border-t-transparent rounded-full animate-spin mb-3"></div>
+                  <p className="text-[#261C19] text-xs font-bold uppercase tracking-wider">Memuat Detail Sewa...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Summary Profile User */}
+                  <div className="bg-white p-4 rounded-xl border border-[#D7C4B0] grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Nama User</span>
+                      <p className="font-bold text-[#261C19] text-sm">{selectedUser?.name || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Email</span>
+                      <p className="font-semibold text-slate-700 text-sm">{selectedUser?.email || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Transaksi Sewa</span>
+                      <p className="font-extrabold text-[#B38E5D] text-sm">{selectedUser?.total_rentals || 0} Kali</p>
+                    </div>
+                  </div>
+
+                  {/* Tabel Daftar Sewa */}
+                  <div className="bg-white rounded-xl border border-[#D7C4B0] overflow-hidden">
+                    <div className="px-4 py-3 bg-[#261C19]/5 border-b border-[#D7C4B0]">
+                      <h4 className="font-bold text-[#261C19] text-sm">Daftar Properti & Kamar Disewa</h4>
+                    </div>
+
+                    {rentals.length === 0 ? (
+                      <p className="text-center py-8 text-xs text-slate-400 font-bold">
+                        Pengguna ini belum pernah melakukan transaksi sewa.
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs whitespace-nowrap">
+                          <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[10px]">
+                            <tr>
+                              <th className="px-4 py-3">Properti</th>
+                              <th className="px-4 py-3">Kamar</th>
+                              <th className="px-4 py-3">Tanggal / Durasi</th>
+                              <th className="px-4 py-3">Nominal Bayar</th>
+                              <th className="px-4 py-3 text-center">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {rentals.map((item) => (
+                              <tr key={item.id} className="hover:bg-slate-50 transition">
+                                <td className="px-4 py-3.5">
+                                  <p className="font-bold text-[#261C19]">{item.properti?.nama_properti || item.nama_properti || 'Properti N/A'}</p>
+                                  <p className="text-[10px] text-slate-400">{item.properti?.alamat || '-'}</p>
+                                </td>
+                                <td className="px-4 py-3.5 font-semibold text-slate-700">
+                                  {item.kamar?.nomor_kamar ? `Kamar No. ${item.kamar.nomor_kamar}` : item.kamar?.tipe_kamar || 'Tipe Standar'}
+                                </td>
+                                <td className="px-4 py-3.5 text-slate-600">
+                                  <div>
+                                    {item.tanggal_mulai ? new Date(item.tanggal_mulai).toLocaleDateString('id-ID') : '-'}
+                                    {item.tanggal_selesai && ` - ${new Date(item.tanggal_selesai).toLocaleDateString('id-ID')}`}
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono">
+                                    {item.durasi_sewa ? `${item.durasi_sewa} Bulan` : ''}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5 font-bold text-[#261C19]">
+                                  {formatRupiah(item.total_harga || item.nominal || item.harga_sewa)}
+                                </td>
+                                <td className="px-4 py-3.5 text-center">
+                                  {renderStatusBadge(item.status)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer Modal */}
+            <div className="px-6 py-3.5 bg-white border-t border-[#D7C4B0] flex justify-end">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 bg-[#261C19] text-white hover:bg-[#B38E5D] transition rounded-lg text-xs font-bold cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

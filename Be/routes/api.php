@@ -178,6 +178,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/administrators', [SuperAdminController::class, 'storeAdministrator']);
             Route::delete('/administrators/{id}', [SuperAdminController::class, 'destroyAdministrator']);
             Route::get('/users', [SuperAdminController::class, 'getUsers']);
+            Route::get('/users/{id}/rentals', [SuperAdminController::class, 'getUserRentals']);
             Route::delete('/users/{id}', [SuperAdminController::class, 'destroyUser']);
             Route::get('/admin-revenue', [SuperAdminController::class, 'adminRevenue']);
             Route::get('/transactions', [SuperAdminController::class, 'allTransactions']);
@@ -207,6 +208,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/vendor-ads/{id}/verify', [VendorAdController::class, 'verify']);
             Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
             Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
+            Route::get('/administrators/{id}/properties', [SuperAdminController::class, 'getAdminProperties']);
 
             Route::get('/notifications', [SuperAdminNotificationController::class, 'index']);
             Route::patch('/notifications/{id}/read', [SuperAdminNotificationController::class, 'markAsRead']);
