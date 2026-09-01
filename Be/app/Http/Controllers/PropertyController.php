@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Properti; 
+use App\Models\User;
 use App\Services\SuperAdminNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
@@ -333,9 +335,9 @@ class PropertyController extends Controller
     }
 
     /**
-     * Hapus data properti beserta semua file foto (utama & galeri)
+     * Hapus data properti beserta semua file foto (utama & galeri) dengan Otorisasi Super Admin
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $property = Properti::find($id);
 
@@ -343,7 +345,7 @@ class PropertyController extends Controller
             return response()->json(['message' => 'Property not found'], 404);
         }
 
-        // Cek Hak Akses
+        // Cek Hak Akses Pengguna Logged-in
         $user = Auth::guard('sanctum')->user();
         if ($user) {
             $role = strtolower($user->role ?? '');
@@ -355,10 +357,25 @@ class PropertyController extends Controller
             }
         }
 
+        // Validasi Otorisasi Password Super Admin
+        $request->validate([
+            'superadmin_password' => 'required|string',
+        ]);
+
+        $superadmin = User::whereIn('role', ['superadmin', 'super_admin'])->first();
+
+        if (!$superadmin || !Hash::check($request->superadmin_password, $superadmin->password)) {
+            return response()->json([
+                'message' => 'Verifikasi Gagal! Password Super Admin tidak valid.'
+            ], 403);
+        }
+
+        // Hapus Foto Utama
         if ($property->main_image && Storage::disk('public')->exists($property->main_image)) {
             Storage::disk('public')->delete($property->main_image);
         }
 
+        // Hapus Foto Galeri
         if ($property->gallery_images && is_array($property->gallery_images)) {
             foreach ($property->gallery_images as $path) {
                 if (Storage::disk('public')->exists($path)) {
@@ -367,8 +384,11 @@ class PropertyController extends Controller
             }
         }
 
+        // Hapus Data Properti dari Database
         $property->delete();
 
-        return response()->json(['message' => 'Property deleted successfully!'], 200);
+        return response()->json([
+            'message' => 'Berhasil! Properti berhasil dihapus oleh otorisasi Super Admin.'
+        ], 200);
     }
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
+
 import {
   LayoutDashboard,
   User,
@@ -149,6 +150,7 @@ export default function SidebarAdmin({ children }) {
       isExpanded: false,
       items: [
         { name: 'Riwayat Iklan', path: '/riwayat-iklan', icon: ListTodo },
+        { name: 'Pasang Iklan', path: '/Adminpasangiklan', icon: ListTodo },
         { name: 'Pembayaran Iklan', path: '/pembayaran-iklan', icon: Receipt },
       ]
     },

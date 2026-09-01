@@ -68,14 +68,14 @@ export default function AdminPenyewa() {
           }
         }
 
-        // Logic penentuan status visual
+        // Logic penentuan status visual (SESUAI SPESIFIKASI: H-7/7 HARI)
         let computedStatus = "Aktif";
         if (computedEndDate !== "-") {
           const today = new Date();
           const end = new Date(computedEndDate);
           const diffDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 
-          if (diffDays <= 30 && diffDays >= 0) {
+          if (diffDays <= 7 && diffDays >= 0) {
             computedStatus = "Akan Habis";
           }
         }
@@ -216,7 +216,7 @@ export default function AdminPenyewa() {
                 <h3 className="text-3xl font-black text-[#261C19] mt-1">{loading ? "..." : `${totalAktif} Orang`}</h3>
               </div>
               
-              {/* Card 2 (Akan Habis - Diubah jadi Merah/Rose) */}
+              {/* Card 2 (Akan Habis - Diubah Teks Badge ke < 7 Hari) */}
               <div 
                 onClick={() => setFilterStatus("Akan Habis")}
                 className={`bg-white p-6 rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer hover:-translate-y-1 ${
@@ -227,7 +227,7 @@ export default function AdminPenyewa() {
                   <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-rose-100 text-rose-700 rounded-full">&lt; 30 Hari</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 bg-rose-100 text-rose-700 rounded-full">&lt; 7 Hari</span>
                 </div>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Kontrak Segera Habis</p>
                 <h3 className="text-3xl font-black text-[#261C19] mt-1">{loading ? "..." : `${totalAkanHabis} Penghuni`}</h3>
@@ -359,7 +359,7 @@ export default function AdminPenyewa() {
                             {formatDateIndo(tenant.endDate)}
                           </td>
 
-                          {/* Status Badge (Akan Habis diubah jadi merah/rose) */}
+                          {/* Status Badge */}
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider inline-flex items-center gap-1.5 ${
                               tenant.status === 'Aktif' ? 'bg-emerald-100 text-emerald-800' :
@@ -473,17 +473,17 @@ export default function AdminPenyewa() {
                   </div>
 
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500 font-medium">Status Pembayaran</span>
+                    <span className="text-slate-[#500] font-medium">Status Pembayaran</span>
                     <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-md">
                       {selectedTenant.paymentStatus}
                     </span>
                   </div>
                 </div>
 
-                {/* Reminder Alert if contract near end (Diubah jadi merah/rose) */}
+                {/* Reminder Alert if contract near end (SESUAI SPESIFIKASI: 7 HARI) */}
                 {selectedTenant.status === 'Akan Habis' && (
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-medium flex items-center justify-between">
-                    <span>⚠️ Masa sewa akan berakhir kurang dari 30 hari lagi!</span>
+                    <span>⚠️ Masa sewa akan berakhir kurang dari 7 hari lagi!</span>
                   </div>
                 )}
               </div>

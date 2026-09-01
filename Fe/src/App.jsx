@@ -42,6 +42,7 @@ import PembayaranAdmin from './pages/PembayaranAdmin';
 import RiwayatPembayaranAdmin from './pages/RiwayatPembayaranAdmin';
 import KelolaIklanSuperAdmin from './pages/KelolaIklanSuperAdmin';
 import SuperAdminProfileRequests from './pages/SuperAdminProfileRequests';
+import Adminpasangiklan from './pages/Adminpasangiklan';
 
 // Super Admin Pages Import
 import SuperAdminLayout from './layouts/SuperAdminLayout';
@@ -62,6 +63,9 @@ import VerifikasiPropertiSuperAdmin from './pages/VerifikasiPropertiSuperAdmin';
 // Components Import
 import NotificationBell from './components/NotificationBell';
 import Footer from './components/footer';
+import RandomizerMakan from './pages/RandomizerMakan';
+import KalkulatorSurvival from './pages/KalkulatorSurvival';
+import ResepHematKost from './pages/ResepHematKost';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_GOOGLE_CLIENT_ID_DI_SINI";
 
@@ -77,6 +81,10 @@ export default function App() {
             <Route path="/beranda" element={<Beranda />} />
             <Route path="/landingpages" element={<LandingPage />} />
             <Route path="/katalogproperti" element={<KatalogProperti />} />
+            <Route path="/RandomizerMakan" element={<RandomizerMakan />} />
+            <Route path="/KalkulatorSurvival" element={<KalkulatorSurvival />} />
+            <Route path="/ResepHematKost" element={<ResepHematKost />} />
+
             
             {/* User Profile & Auth */}
             <Route path="/profile" element={<UserProfile />} />
@@ -116,6 +124,7 @@ export default function App() {
             <Route path="/AdminPaymentSettings" element={<AdminPaymentSettings/>} /> 
             <Route path="/pusatbantuanadmin" element={<PusatBantuanAdmin />} /> 
             <Route path="/NotificationBell" element={<NotificationBell />} />
+            <Route path="/Adminpasangiklan" element={<Adminpasangiklan />} />
 
             {/* Route Pembayaran Properti (Admin) */}
             <Route path="/PembayaranAdmin/:id" element={<PembayaranAdmin />} /> 

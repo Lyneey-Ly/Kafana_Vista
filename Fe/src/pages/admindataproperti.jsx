@@ -67,7 +67,6 @@ export default function AdminDataProperti() {
     const appStatus = (room.approval_status || '').toLowerCase();
     const opStatus = room.status;
 
-    // Jika verifikasi SuperAdmin sudah aktif / disetujui / lunas
     if (appStatus === 'active' || appStatus === 'approved') {
       if (!opStatus || opStatus === 'Menunggu Verifikasi' || opStatus === 'Pending') {
         return 'Tersedia';
@@ -75,7 +74,6 @@ export default function AdminDataProperti() {
       return opStatus;
     }
 
-    // Jika belum diverifikasi
     if (['pending_payment', 'waiting_verification', 'pending'].includes(appStatus) || opStatus === 'Menunggu Verifikasi') {
       return 'Menunggu Verifikasi';
     }
@@ -98,7 +96,8 @@ export default function AdminDataProperti() {
       Swal.fire({
         icon: 'error',
         title: 'Koneksi Gagal',
-        text: 'Gagal mengambil data properti dari server.'
+        text: 'Gagal mengambil data properti dari server.',
+        confirmButtonColor: '#B38E5D'
       });
     } finally {
       setLoading(false);
@@ -220,37 +219,82 @@ export default function AdminDataProperti() {
     setGalleryPreviews(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
+  // =========================================================================
+  // 🔒 REFACTORED: HANDLER PENGHAPUSAN DENGAN VERIFIKASI SUPER ADMIN
+  // =========================================================================
   const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: 'Hapus Properti?',
-      text: "Data properti beserta seluruh unit kamarnya akan dihapus permanen!",
+    const { value: password, isConfirmed } = await Swal.fire({
+      title: 'Otorisasi Super Admin',
+      text: 'Data properti dan seluruh kamar akan dihapus permanen. Masukkan Password Super Admin untuk melanjutkan:',
       icon: 'warning',
+      input: 'password',
+      inputPlaceholder: 'Masukkan Password Super Admin...',
+      inputAttributes: {
+        autocapitalize: 'off',
+        autocorrect: 'off'
+      },
       showCancelButton: true,
       confirmButtonColor: '#B38E5D',
       cancelButtonColor: '#e11d48',
-      confirmButtonText: 'Ya, Hapus!',
-      cancelButtonText: 'Batal'
+      confirmButtonText: 'Verifikasi & Hapus',
+      cancelButtonText: 'Batal',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Password Super Admin wajib diisi!';
+        }
+        if (value.length < 4) {
+          return 'Password minimal terdiri dari 4 karakter!';
+        }
+      }
     });
 
-    if (result.isConfirmed) {
+    if (isConfirmed && password) {
+      // Menampilkan Loading State saat memproses verifikasi
+      Swal.fire({
+        title: 'Verifikasi Otorisasi...',
+        text: 'Memproses penghapusan data properti',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       try {
-        await API.delete(`/admin/properties/${id}`);
-        setRooms(rooms.filter(room => room.id !== id));
-        
+        // Mengirimkan password/PIN Super Admin melalui data payload HTTP DELETE
+        await API.delete(`/admin/properties/${id}`, {
+          data: { superadmin_password: password }
+        });
+
+        // Update state lokal secara real-time
+        setRooms(prevRooms => prevRooms.filter(room => room.id !== id));
+
         Swal.fire({
-          title: 'Terhapus!',
-          text: 'Data properti berhasil dihapus.',
           icon: 'success',
+          title: 'Berhasil!',
+          text: 'Properti berhasil dihapus oleh otorisasi Super Admin.',
           confirmButtonColor: '#B38E5D'
         });
       } catch (err) {
         console.error("Gagal menghapus properti:", err);
-        Swal.fire({
-          title: 'Gagal!',
-          text: 'Gagal menghapus data. Pastikan Anda memiliki hak akses admin.',
-          icon: 'error',
-          confirmButtonColor: '#B38E5D'
-        });
+        const status = err.response?.status;
+        const errorMessage = err.response?.data?.message;
+
+        if (status === 401 || status === 403) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Verifikasi Gagal!',
+            text: errorMessage || 'Password Super Admin tidak valid atau Anda tidak memiliki otorisasi.',
+            confirmButtonColor: '#B38E5D'
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Sistem Error!',
+            text: errorMessage || 'Terjadi kesalahan sistem saat mencoba menghapus properti.',
+            confirmButtonColor: '#B38E5D'
+          });
+        }
       }
     }
   };
@@ -672,7 +716,6 @@ export default function AdminDataProperti() {
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label>
                     <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer">
                       <option value="Kost">Kost</option>
-                      {/* <option value="Kontrakan">Kontrakan</option> */}
                     </select>
                   </div>
                   <div>
