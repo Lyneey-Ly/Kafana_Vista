@@ -260,7 +260,7 @@ export default function Login() {
             </div>
 
             {/* Tombol Login Google */}
-            <button 
+            {/* <button 
               type="button"
               onClick={handleGoogleClick}
               disabled={loading || googleLoading}
@@ -279,7 +279,7 @@ export default function Login() {
                   Lanjutkan dengan Google
                 </>
               )}
-            </button>
+            </button> */}
 
             <div className="text-center text-xs text-gray-500 pt-4">
               <span>Belum memiliki akun? </span>

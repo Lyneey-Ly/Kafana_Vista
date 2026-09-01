@@ -5,7 +5,7 @@ import SidebarUser from '../components/SidebarUser';
 import InteractiveMap from '../components/InteractiveMap';
 import Footer from '../components/footer';
 import AdBanner from '../components/AdBanner';
-
+import Swal from 'sweetalert2';
 
 // HELPER FORMAT HARGA ANTI-CRASH
 const formatPrice = (val) => {
@@ -38,15 +38,16 @@ const formatImage = (item) => {
   return `http://127.0.0.1:8000/storage/${rawImage}`;
 };
 
-
-
-
 export default function CariHunian() {
   const navigate = useNavigate();
 
   // State Data Backend & Loading
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // 1. STATE WISHLIST & LOADING TOGGLE INDIVIDUAL
+  const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [togglingWishlistId, setTogglingWishlistId] = useState(null);
 
   // State UI Filter & Search
   const [showFilterMobile, setShowFilterMobile] = useState(false);
@@ -59,7 +60,7 @@ export default function CariHunian() {
   const [selectedPeriod, setSelectedPeriod] = useState('Semua');
   const [sortBy, setSortBy] = useState('Rekomendasi Utama');
   
-  // MAP STATE - Default disembunyikan agar tampilan awal fokus ke foto properti
+  // MAP STATE
   const [showMap, setShowMap] = useState(false); 
   const [mapSelectedProperty, setMapSelectedProperty] = useState(null);
 
@@ -70,6 +71,21 @@ export default function CariHunian() {
   const areaKota = {
     Bandung: ['Bojongsoang', 'Buahbatu', 'Coblong', 'Lembang', 'Dago'],
     Sukabumi: ['Cikole', 'Limusnunggal', 'Nanggleng', 'Baros', 'Cisaat']
+  };
+
+  // Toast Notification Swal
+  const showToast = (message, icon = 'success') => {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon,
+      title: message,
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+      background: '#261C19',
+      color: '#FAF6F0'
+    });
   };
 
   // Fallback Dummy Data jika backend mati / kosong
@@ -144,74 +160,93 @@ export default function CariHunian() {
     }
   ];
 
+  // 📥 FETCH DATA PROPERTI & INITIAL WISHLIST DARI BACKEND
   useEffect(() => {
-    const fetchProperti = async () => {
+    const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const res = await API.get('/properties');
-        const apiData = res.data?.data || res.data?.properties || (Array.isArray(res.data) ? res.data : []);
 
-        if (apiData.length === 0) {
-          setProperties(getFallbackData());
-          return;
+        // Fetch paralel untuk katalog properti dan daftar wishlist user
+        const [resProp, resWishlist] = await Promise.allSettled([
+          API.get('/properties'),
+          API.get('/wishlist')
+        ]);
+
+        // 1. Process Wishlist
+        if (resWishlist.status === 'fulfilled') {
+          const rawWishlist = resWishlist.value.data?.data || (Array.isArray(resWishlist.value.data) ? resWishlist.value.data : []);
+          const ids = rawWishlist.map(w => w.properti_id || w.properti?.id || w.id);
+          setWishlistIds(new Set(ids));
         }
 
-        const formatted = apiData.map((item, idx) => {
-          let rawFacilities = item?.facilities || item?.fasilitas || [];
-          let tagsArray = [];
-          if (typeof rawFacilities === 'string') {
-            tagsArray = rawFacilities.split(',').map(f => f.trim()).filter(Boolean);
-          } else if (Array.isArray(rawFacilities)) {
-            tagsArray = rawFacilities;
+        // 2. Process Properties
+        if (resProp.status === 'fulfilled') {
+          const apiData = resProp.value.data?.data || resProp.value.data?.properties || (Array.isArray(resProp.value.data) ? resProp.value.data : []);
+
+          if (apiData.length === 0) {
+            setProperties(getFallbackData());
+            return;
           }
-          if (tagsArray.length === 0) tagsArray = ['Wi-Fi', 'AC', 'Lengkap'];
 
-          const priceVal = item?.price_per_month ?? item?.harga ?? item?.price ?? 0;
-          const numPrice = Number(String(priceVal).replace(/[^0-9]/g, '')) || 0;
+          const formatted = apiData.map((item, idx) => {
+            let rawFacilities = item?.facilities || item?.fasilitas || [];
+            let tagsArray = [];
+            if (typeof rawFacilities === 'string') {
+              tagsArray = rawFacilities.split(',').map(f => f.trim()).filter(Boolean);
+            } else if (Array.isArray(rawFacilities)) {
+              tagsArray = rawFacilities;
+            }
+            if (tagsArray.length === 0) tagsArray = ['Wi-Fi', 'AC', 'Lengkap'];
 
-          const avgRating = item?.reviews_avg_rating ?? item?.avg_rating ?? item?.rating ?? 0;
-          const reviewsCount = item?.reviews_count ?? item?.total_reviews ?? item?.reviews ?? 0;
+            const priceVal = item?.price_per_month ?? item?.harga ?? item?.price ?? 0;
+            const numPrice = Number(String(priceVal).replace(/[^0-9]/g, '')) || 0;
 
-          const getLatLng = (location) => {
-            const loc = location.toLowerCase();
-            if (loc.includes('bojongsoang')) return { lat: -6.9745, lng: 107.6338 };
-            if (loc.includes('buahbatu')) return { lat: -6.9372, lng: 107.6547 };
-            if (loc.includes('coblong')) return { lat: -6.8915, lng: 107.6107 };
-            if (loc.includes('lembang')) return { lat: -6.8214, lng: 107.6222 };
-            if (loc.includes('dago')) return { lat: -6.8842, lng: 107.5981 };
-            if (loc.includes('nanggleng')) return { lat: -6.9342, lng: 106.9156 };
-            if (loc.includes('cikole')) return { lat: -6.9056, lng: 106.9289 };
-            if (loc.includes('limusnunggal')) return { lat: -6.9212, lng: 106.9356 };
-            if (loc.includes('baros')) return { lat: -6.9567, lng: 106.8923 };
-            if (loc.includes('cisaat')) return { lat: -6.9834, lng: 106.8745 };
-            return { lat: -6.9175 + (Math.random() - 0.5) * 0.1, lng: 107.6191 + (Math.random() - 0.5) * 0.1 };
-          };
+            const avgRating = item?.reviews_avg_rating ?? item?.avg_rating ?? item?.rating ?? 0;
+            const reviewsCount = item?.reviews_count ?? item?.total_reviews ?? item?.reviews ?? 0;
 
-          const coords = item?.latitude && item?.longitude 
-            ? { lat: Number(item.latitude), lng: Number(item.longitude) }
-            : getLatLng(item?.address || item?.alamat || item?.lokasi || 'Bandung');
+            const getLatLng = (location) => {
+              const loc = location.toLowerCase();
+              if (loc.includes('bojongsoang')) return { lat: -6.9745, lng: 107.6338 };
+              if (loc.includes('buahbatu')) return { lat: -6.9372, lng: 107.6547 };
+              if (loc.includes('coblong')) return { lat: -6.8915, lng: 107.6107 };
+              if (loc.includes('lembang')) return { lat: -6.8214, lng: 107.6222 };
+              if (loc.includes('dago')) return { lat: -6.8842, lng: 107.5981 };
+              if (loc.includes('nanggleng')) return { lat: -6.9342, lng: 106.9156 };
+              if (loc.includes('cikole')) return { lat: -6.9056, lng: 106.9289 };
+              if (loc.includes('limusnunggal')) return { lat: -6.9212, lng: 106.9356 };
+              if (loc.includes('baros')) return { lat: -6.9567, lng: 106.8923 };
+              if (loc.includes('cisaat')) return { lat: -6.9834, lng: 106.8745 };
+              return { lat: -6.9175 + (Math.random() - 0.5) * 0.1, lng: 107.6191 + (Math.random() - 0.5) * 0.1 };
+            };
 
-          return {
-            id: item?.id || idx + 1,
-            type: item?.type || item?.kategori || 'Kost',
-            gender: item?.gender_type || item?.gender || 'Campur',
-            title: item?.title || item?.nama_properti || item?.nama || 'Hunian Tanpa Nama',
-            location: item?.address || item?.alamat || item?.lokasi || 'Lokasi tidak tersedia',
-            rawPrice: numPrice,
-            price: formatPrice(priceVal),
-            period: item?.periode || item?.period || 'bulan',
-            rating: Number(avgRating).toFixed(1),
-            reviews: Number(reviewsCount),
-            image: formatImage(item),
-            tags: tagsArray,
-            isAvailable: item?.is_available !== undefined ? Boolean(item.is_available) : (item?.status !== 'Penuh'),
-            desc: item?.description || item?.deskripsi || item?.facilities || 'Tidak ada deskripsi tambahan.',
-            lat: coords.lat,
-            lng: coords.lng
-          };
-        });
+            const coords = item?.latitude && item?.longitude 
+              ? { lat: Number(item.latitude), lng: Number(item.longitude) }
+              : getLatLng(item?.address || item?.alamat || item?.lokasi || 'Bandung');
 
-        setProperties(formatted);
+            return {
+              id: item?.id || idx + 1,
+              type: item?.type || item?.kategori || 'Kost',
+              gender: item?.gender_type || item?.gender || 'Campur',
+              title: item?.title || item?.nama_properti || item?.nama || 'Hunian Tanpa Nama',
+              location: item?.address || item?.alamat || item?.lokasi || 'Lokasi tidak tersedia',
+              rawPrice: numPrice,
+              price: formatPrice(priceVal),
+              period: item?.periode || item?.period || 'bulan',
+              rating: Number(avgRating).toFixed(1),
+              reviews: Number(reviewsCount),
+              image: formatImage(item),
+              tags: tagsArray,
+              isAvailable: item?.is_available !== undefined ? Boolean(item.is_available) : (item?.status !== 'Penuh'),
+              desc: item?.description || item?.deskripsi || item?.facilities || 'Tidak ada deskripsi tambahan.',
+              lat: coords.lat,
+              lng: coords.lng
+            };
+          });
+
+          setProperties(formatted);
+        } else {
+          setProperties(getFallbackData());
+        }
       } catch {
         setProperties(getFallbackData());
       } finally {
@@ -219,10 +254,64 @@ export default function CariHunian() {
       }
     };
 
-    fetchProperti();
+    fetchInitialData();
   }, []);
 
-  // Handlers
+  // 💖 LOGIKA TOGGLE WISHLIST REAL-TIME (OPTIMISTIC UPDATE & API SYNC)
+  const handleToggleWishlist = async (e, propertiId) => {
+    e.stopPropagation(); // Mencegah modal detail terbuka saat tombol hati diklik
+
+    if (togglingWishlistId === propertiId) return; // Mencegah spaming klik
+
+    const isCurrentlyWishlist = wishlistIds.has(propertiId);
+
+    // 1. Optimistic UI Update (Ubah state warna instan)
+    setWishlistIds(prev => {
+      const next = new Set(prev);
+      if (isCurrentlyWishlist) {
+        next.delete(propertiId);
+      } else {
+        next.add(propertiId);
+      }
+      return next;
+    });
+
+    setTogglingWishlistId(propertiId);
+
+    try {
+      // 2. Kirim Request ke Backend
+      const res = await API.post('/wishlist/toggle', { properti_id: propertiId });
+      const isWishlist = res.data?.is_wishlist;
+
+      showToast(
+        isWishlist ? 'Disimpan ke Wishlist ❤️' : 'Dihapus dari Wishlist 🤍',
+        isWishlist ? 'success' : 'info'
+      );
+    } catch (err) {
+      console.error("Gagal toggle wishlist:", err);
+      
+      // 3. Rollback State jika API Gagal
+      setWishlistIds(prev => {
+        const rollback = new Set(prev);
+        if (isCurrentlyWishlist) {
+          rollback.add(propertiId);
+        } else {
+          rollback.delete(propertiId);
+        }
+        return rollback;
+      });
+
+      if (err.response?.status === 401) {
+        showToast('Silakan login untuk menyimpan favorit', 'warning');
+      } else {
+        showToast('Gagal memproses wishlist', 'error');
+      }
+    } finally {
+      setTogglingWishlistId(null);
+    }
+  };
+
+  // Handlers Filter
   const handleAreaToggle = (area) => {
     setSelectedAreas(prev => 
       prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area]
@@ -258,7 +347,7 @@ export default function CariHunian() {
 
   const handleMapPropertyClick = (property) => {
     setMapSelectedProperty(property);
-    setSelectedRoom(property); // Langsung buka detail saat pin diklik
+    setSelectedRoom(property);
   };
 
   // FILTER & SORTING LOGIC
@@ -327,9 +416,7 @@ export default function CariHunian() {
         {/* AMBIENT BACKGROUND GLOW DEKORATIF */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#C5A059]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* ========================================================================= */}
-        {/* 🌟 LUXURY SEARCH CONSOLE HEADER (STATIC) */}
-        {/* ========================================================================= */}
+        {/* LUXURY SEARCH CONSOLE HEADER */}
         <div className="bg-[#FAF6F0] border-b border-[#E5D7C5] py-5 px-4 md:px-8 shadow-xs transition-all">
           <div className="max-w-7xl mx-auto space-y-3">
             
@@ -359,7 +446,7 @@ export default function CariHunian() {
               {/* QUICK CATEGORY PILLS */}
               <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end overflow-x-auto no-scrollbar pb-1 md:pb-0">
                 <div className="bg-white border border-[#E5D7C5] p-1.5 rounded-2xl flex items-center gap-1 shadow-xs flex-shrink-0">
-                  {['Semua Properti', 'Kost', 'Kontrakan'].map((cat) => (
+                  {['Semua Properti', 'Kost', ''].map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setQuickCategory(cat)}
@@ -433,13 +520,11 @@ export default function CariHunian() {
           </div>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 🏢 SECTION 2: MAIN CONTENT & SIDEBAR */}
-        {/* ========================================================================= */}
+        {/* MAIN CONTENT & SIDEBAR */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            {/* SIDEBAR FILTER (3 Kolom) - DIPERBAIKI DENGAN SCROLL & MAX-HEIGHT */}
+            {/* SIDEBAR FILTER */}
             <div className={`lg:block lg:col-span-3 bg-white border border-[#E5D7C5] rounded-3xl p-5 sticky top-24 h-fit max-h-[85vh] overflow-y-auto no-scrollbar shadow-xs transition-all duration-300 ${
               showFilterMobile ? 'block mb-6' : 'hidden'
             }`}>
@@ -580,15 +665,15 @@ export default function CariHunian() {
                 </div>
               </div>
 
-              {/* IKLAN SIDEBAR - SLOT DINAMIS */}
+              {/* IKLAN SIDEBAR */}
               <AdBanner placement="search_sidebar" variant="sidebar" className="mt-6" />
 
             </div>
 
-            {/* CATALOG / LISTING HUNIAN (9 Kolom) */}
+            {/* CATALOG / LISTING HUNIAN */}
             <div className="lg:col-span-9 flex flex-col space-y-6">
               
-              {/* IKLAN ATAS KATALOG - SLOT DINAMIS */}
+              {/* IKLAN ATAS KATALOG */}
               <AdBanner placement="catalog_top" variant="horizontal" className="mb-6" />
 
               {/* Map Toggle & Controls Header */}
@@ -628,7 +713,7 @@ export default function CariHunian() {
                 </div>
               </div>
 
-              {/* 🗺️ MAP DIUBAH MENJADI BANNER FULL WIDTH DI ATAS KARTU */}
+              {/* MAP BANNER FULL WIDTH */}
               {showMap && (
                 <div className="w-full h-[400px] bg-white border border-[#E5D7C5] rounded-3xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 z-0 relative">
                    <InteractiveMap
@@ -643,7 +728,7 @@ export default function CariHunian() {
                 </div>
               )}
               
-              {/* Cards Grid Listing - DIUBAH MENJADI 4 BARIS (4 KOLOM) DI LAYAR BESAR */}
+              {/* CARDS LISTING HUNIAN */}
               <div className="w-full">
                 {loading ? (
                   <div className="p-20 text-center bg-white rounded-3xl border border-[#E5D7C5] space-y-4">
@@ -652,115 +737,140 @@ export default function CariHunian() {
                   </div>
                 ) : filteredProperties.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {filteredProperties.map((item, itemIndex) => (
-                      <Fragment key={item.id}>
-                      <div 
-                        key={item.id} 
-                        className="bg-white border border-[#E5D7C5] rounded-3xl shadow-sm hover:shadow-xl hover:border-[#C5A059]/50 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group overflow-hidden"
-                      >
-                        <div className="relative overflow-hidden aspect-[4/3] bg-slate-100 cursor-pointer" onClick={() => setSelectedRoom(item)}>
-                          <img 
-                            src={item.image} 
-                            alt={item.title} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            onError={handleImageError}
-                          />
-                          
-                          {/* Label Tipe Properti */}
-                          <div className="absolute top-4 left-4 flex flex-col gap-2">
-                            <span className="bg-[#261C19]/90 backdrop-blur-sm text-[#FAF5EF] text-[10px] tracking-widest font-black uppercase px-3 py-1.5 rounded-full shadow-sm w-fit">
-                              {item.type}
-                            </span>
-                          </div>
+                    {filteredProperties.map((item, itemIndex) => {
+                      const isWishlist = wishlistIds.has(item.id);
+                      const isToggling = togglingWishlistId === item.id;
 
-                          {/* Ketersediaan */}
-                          {!item.isAvailable && (
-                            <div className="absolute inset-0 bg-[#261C19]/70 backdrop-blur-[2px] flex items-center justify-center z-10">
-                              <span className="bg-rose-600 text-white text-xs font-black tracking-widest uppercase px-5 py-2.5 rounded-full shadow-lg border-2 border-white/20">
-                                SUDAH PENUH
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="font-bold text-[#C5A059] truncate pr-2">📍 {item.location}</span>
-                              <span className="font-extrabold text-[#261C19] flex-shrink-0 bg-[#FAF6F0] px-2 py-1 rounded-lg">
-                                {item.reviews > 0 ? (
-                                  <>
-                                    ★ {item.rating} <span className="text-slate-500 font-medium text-[10px]">({item.reviews} ulasan)</span>
-                                  </>
-                                ) : (
-                                  '★ Baru'
-                                )}
-                              </span>
-                            </div>
-
-                            <h4 
-                              onClick={() => setSelectedRoom(item)}
-                              className="font-extrabold text-[#261C19] text-base leading-tight group-hover:text-[#C5A059] transition-colors line-clamp-2 cursor-pointer"
-                            >
-                              {item.title}
-                            </h4>
-
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {/* Label Gender diubah jadi tag */}
-                              <span className="bg-slate-100 border border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md">
-                                🚻 {item.gender}
-                              </span>
-                              {item.tags.slice(0, 2).map((tag, idx) => (
-                                <span key={idx} className="bg-[#FAF6F0] border border-[#E5D7C5]/60 text-[#C5A059] font-bold text-[10px] px-2.5 py-1 rounded-md">
-                                  {tag}
+                      return (
+                        <Fragment key={item.id}>
+                          <div 
+                            className="bg-white border border-[#E5D7C5] rounded-3xl shadow-sm hover:shadow-xl hover:border-[#C5A059]/50 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group overflow-hidden"
+                          >
+                            <div className="relative overflow-hidden aspect-[4/3] bg-slate-100 cursor-pointer" onClick={() => setSelectedRoom(item)}>
+                              <img 
+                                src={item.image} 
+                                alt={item.title} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                onError={handleImageError}
+                              />
+                              
+                              {/* Label Tipe Properti */}
+                              <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                                <span className="bg-[#261C19]/90 backdrop-blur-sm text-[#FAF5EF] text-[10px] tracking-widest font-black uppercase px-3 py-1.5 rounded-full shadow-sm w-fit">
+                                  {item.type}
                                 </span>
-                              ))}
-                              {item.tags.length > 2 && (
-                                <span className="text-[10px] text-slate-400 font-bold self-center">+{item.tags.length - 2} lagi</span>
-                              )}
-                            </div>
-                          </div>
+                              </div>
 
-                          <div className="border-t border-slate-100 pt-4 flex flex-col gap-3 mt-auto">
-                            <div>
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1">Mulai dari</p>
-                              <p className="text-lg font-black text-[#261C19]">{item.price} <span className="text-slate-500 font-normal text-[10px]">/{item.period}</span></p>
-                            </div>
-
-                            <div className="flex gap-2 w-full">
-                              <button 
-                                onClick={() => setSelectedRoom(item)}
-                                className="flex-1 py-2.5 bg-slate-100 hover:bg-[#E5D7C5]/30 text-[#261C19] text-xs font-bold rounded-xl transition cursor-pointer border border-transparent hover:border-[#E5D7C5]"
-                              >
-                                Detail
-                              </button>
-
-                              <button 
-                                disabled={!item.isAvailable}
-                                onClick={() => handleBooking(item)}
-                                className={`flex-[2] py-2.5 rounded-xl text-[11px] tracking-widest font-extrabold uppercase transition-all duration-300 cursor-pointer ${
-                                  item.isAvailable 
-                                    ? 'bg-[#261C19] text-white hover:bg-[#C5A059] hover:text-[#261C19] shadow-md hover:shadow-lg' 
-                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                              {/* 💖 TOMBOL WISHLIST FLOATING (POJOK KANAN ATAS GAMBAR) */}
+                              <button
+                                onClick={(e) => handleToggleWishlist(e, item.id)}
+                                disabled={isToggling}
+                                title={isWishlist ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist'}
+                                className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg cursor-pointer border backdrop-blur-md ${
+                                  isWishlist
+                                    ? 'bg-white/90 border-rose-200 hover:scale-110'
+                                    : 'bg-black/30 border-white/30 text-white hover:bg-white/90 hover:text-rose-500 hover:scale-110'
                                 }`}
                               >
-                                Booking
+                                {isToggling ? (
+                                  <span className="w-4 h-4 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></span>
+                                ) : isWishlist ? (
+                                  <span className="text-base text-rose-500 drop-shadow-xs">❤️</span>
+                                ) : (
+                                  <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                  </svg>
+                                )}
                               </button>
+
+                              {/* Ketersediaan */}
+                              {!item.isAvailable && (
+                                <div className="absolute inset-0 bg-[#261C19]/70 backdrop-blur-[2px] flex items-center justify-center z-10">
+                                  <span className="bg-rose-600 text-white text-xs font-black tracking-widest uppercase px-5 py-2.5 rounded-full shadow-lg border-2 border-white/20">
+                                    SUDAH PENUH
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="font-bold text-[#C5A059] truncate pr-2">📍 {item.location}</span>
+                                  <span className="font-extrabold text-[#261C19] flex-shrink-0 bg-[#FAF6F0] px-2 py-1 rounded-lg">
+                                    {item.reviews > 0 ? (
+                                      <>
+                                        ★ {item.rating} <span className="text-slate-500 font-medium text-[10px]">({item.reviews} ulasan)</span>
+                                      </>
+                                    ) : (
+                                      '★ Baru'
+                                    )}
+                                  </span>
+                                </div>
+
+                                <h4 
+                                  onClick={() => setSelectedRoom(item)}
+                                  className="font-extrabold text-[#261C19] text-base leading-tight group-hover:text-[#C5A059] transition-colors line-clamp-2 cursor-pointer"
+                                >
+                                  {item.title}
+                                </h4>
+
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  <span className="bg-slate-100 border border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md">
+                                    🚻 {item.gender}
+                                  </span>
+                                  {item.tags.slice(0, 2).map((tag, idx) => (
+                                    <span key={idx} className="bg-[#FAF6F0] border border-[#E5D7C5]/60 text-[#C5A059] font-bold text-[10px] px-2.5 py-1 rounded-md">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {item.tags.length > 2 && (
+                                    <span className="text-[10px] text-slate-400 font-bold self-center">+{item.tags.length - 2} lagi</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="border-t border-slate-100 pt-4 flex flex-col gap-3 mt-auto">
+                                <div>
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1">Mulai dari</p>
+                                  <p className="text-lg font-black text-[#261C19]">{item.price} <span className="text-slate-500 font-normal text-[10px]">/{item.period}</span></p>
+                                </div>
+
+                                <div className="flex gap-2 w-full">
+                                  <button 
+                                    onClick={() => setSelectedRoom(item)}
+                                    className="flex-1 py-2.5 bg-slate-100 hover:bg-[#E5D7C5]/30 text-[#261C19] text-xs font-bold rounded-xl transition cursor-pointer border border-transparent hover:border-[#E5D7C5]"
+                                  >
+                                    Detail
+                                  </button>
+
+                                  <button 
+                                    disabled={!item.isAvailable}
+                                    onClick={() => handleBooking(item)}
+                                    className={`flex-[2] py-2.5 rounded-xl text-[11px] tracking-widest font-extrabold uppercase transition-all duration-300 cursor-pointer ${
+                                      item.isAvailable 
+                                        ? 'bg-[#261C19] text-white hover:bg-[#C5A059] hover:text-[#261C19] shadow-md hover:shadow-lg' 
+                                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    Booking
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* IKLAN IN-FEED - DISISIPKAN SETELAH KARTU KE-4 */}
-                      {itemIndex === 3 && (
-                        <AdBanner
-                          placement="catalog_in_feed"
-                          variant="in-feed"
-                          className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4"
-                        />
-                      )}
-                      </Fragment>
-                    ))}
+                          {/* IKLAN IN-FEED */}
+                          {itemIndex === 3 && (
+                            <AdBanner
+                              placement="catalog_in_feed"
+                              variant="in-feed"
+                              className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4"
+                            />
+                          )}
+                        </Fragment>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="bg-white p-16 text-center rounded-3xl border-2 border-dashed border-[#E5D7C5] space-y-4">
@@ -781,7 +891,7 @@ export default function CariHunian() {
           </div>
         </div>
 
-        {/* MODAL DETAIL HUNIAN - Ditingkatkan Estetikanya */}
+        {/* MODAL DETAIL HUNIAN */}
         {selectedRoom && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
@@ -793,21 +903,45 @@ export default function CariHunian() {
                   className="w-full h-full object-cover" 
                   onError={handleImageError}
                 />
+                
+                {/* 💖 TOMBOL WISHLIST FLOATING PADA MODAL DETAIL */}
+                <button
+                  onClick={(e) => handleToggleWishlist(e, selectedRoom.id)}
+                  disabled={togglingWishlistId === selectedRoom.id}
+                  title={wishlistIds.has(selectedRoom.id) ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist'}
+                  className={`absolute top-4 left-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer border backdrop-blur-md ${
+                    wishlistIds.has(selectedRoom.id)
+                      ? 'bg-white/90 border-rose-200 hover:scale-110'
+                      : 'bg-black/30 border-white/30 text-white hover:bg-white/90 hover:text-rose-500 hover:scale-110'
+                  }`}
+                >
+                  {togglingWishlistId === selectedRoom.id ? (
+                    <span className="w-4 h-4 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></span>
+                  ) : wishlistIds.has(selectedRoom.id) ? (
+                    <span className="text-lg text-rose-500">❤️</span>
+                  ) : (
+                    <svg className="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  )}
+                </button>
+
                 <button 
                   onClick={() => setSelectedRoom(null)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center font-bold hover:bg-rose-600 transition cursor-pointer border border-white/20"
+                  className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center font-bold hover:bg-rose-600 transition cursor-pointer border border-white/20 z-20"
                 >
                   ✕
                 </button>
+
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-20">
-                    <div className="flex gap-2 mb-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-[#261C19] bg-[#C5A059] px-3 py-1 rounded-full shadow-sm">
-                            {selectedRoom.type}
-                        </span>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-white bg-white/20 backdrop-blur-md border border-white/30 px-3 py-1 rounded-full">
-                            Penghuni: {selectedRoom.gender}
-                        </span>
-                    </div>
+                  <div className="flex gap-2 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#261C19] bg-[#C5A059] px-3 py-1 rounded-full shadow-sm">
+                      {selectedRoom.type}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white bg-white/20 backdrop-blur-md border border-white/30 px-3 py-1 rounded-full">
+                      Penghuni: {selectedRoom.gender}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -818,24 +952,24 @@ export default function CariHunian() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 bg-[#FAF6F0] p-4 rounded-2xl border border-[#E5D7C5]/50">
-                    <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">Rating Properti</p>
-                        <p className="text-sm font-black text-[#261C19]">
-                          {selectedRoom.reviews > 0 ? (
-                            <>
-                              ⭐ {selectedRoom.rating} <span className="font-normal text-slate-500">({selectedRoom.reviews} ulasan)</span>
-                            </>
-                          ) : (
-                            '★ Baru'
-                          )}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">Status Ketersediaan</p>
-                        <p className={`text-sm font-black ${selectedRoom.isAvailable ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {selectedRoom.isAvailable ? 'Tersedia ✅' : 'Kamar Penuh ❌'}
-                        </p>
-                    </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Rating Properti</p>
+                    <p className="text-sm font-black text-[#261C19]">
+                      {selectedRoom.reviews > 0 ? (
+                        <>
+                          ⭐ {selectedRoom.rating} <span className="font-normal text-slate-500">({selectedRoom.reviews} ulasan)</span>
+                        </>
+                      ) : (
+                        '★ Baru'
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Status Ketersediaan</p>
+                    <p className={`text-sm font-black ${selectedRoom.isAvailable ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {selectedRoom.isAvailable ? 'Tersedia ✅' : 'Kamar Penuh ❌'}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -858,29 +992,29 @@ export default function CariHunian() {
 
               </div>
 
-              {/* FOOTER MODAL (STICKY BOTTOM) */}
+              {/* FOOTER MODAL */}
               <div className="p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 flex-shrink-0">
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Harga Sewa</p>
-                    <p className="text-2xl font-black text-[#261C19]">{selectedRoom.price} <span className="text-sm font-medium text-slate-500">/{selectedRoom.period}</span></p>
-                  </div>
-
-                  <button
-                    disabled={!selectedRoom.isAvailable}
-                    onClick={() => {
-                      const roomToBook = selectedRoom;
-                      setSelectedRoom(null);
-                      handleBooking(roomToBook);
-                    }}
-                    className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm font-extrabold uppercase tracking-widest transition-all cursor-pointer ${
-                      selectedRoom.isAvailable 
-                        ? 'bg-[#261C19] hover:bg-[#C5A059] text-white hover:text-[#261C19] shadow-lg hover:shadow-xl hover:-translate-y-1' 
-                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {selectedRoom.isAvailable ? 'Lanjut Booking' : 'Unit Penuh'}
-                  </button>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Harga Sewa</p>
+                  <p className="text-2xl font-black text-[#261C19]">{selectedRoom.price} <span className="text-sm font-medium text-slate-500">/{selectedRoom.period}</span></p>
                 </div>
+
+                <button
+                  disabled={!selectedRoom.isAvailable}
+                  onClick={() => {
+                    const roomToBook = selectedRoom;
+                    setSelectedRoom(null);
+                    handleBooking(roomToBook);
+                  }}
+                  className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm font-extrabold uppercase tracking-widest transition-all cursor-pointer ${
+                    selectedRoom.isAvailable 
+                      ? 'bg-[#261C19] hover:bg-[#C5A059] text-white hover:text-[#261C19] shadow-lg hover:shadow-xl hover:-translate-y-1' 
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {selectedRoom.isAvailable ? 'Lanjut Booking' : 'Unit Penuh'}
+                </button>
+              </div>
             </div>
           </div>
         )}

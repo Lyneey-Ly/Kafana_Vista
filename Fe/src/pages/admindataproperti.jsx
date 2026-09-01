@@ -672,7 +672,7 @@ export default function AdminDataProperti() {
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label>
                     <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer">
                       <option value="Kost">Kost</option>
-                      <option value="Kontrakan">Kontrakan</option>
+                      {/* <option value="Kontrakan">Kontrakan</option> */}
                     </select>
                   </div>
                   <div>

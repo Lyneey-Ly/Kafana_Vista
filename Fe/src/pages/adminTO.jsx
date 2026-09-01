@@ -642,6 +642,9 @@ export default function AdminTagihanOrder() {
                       
                       const dueStatus = calculateDueStatus(checkIn, duration);
 
+                      // VALIDASI HANYA TAMPILKAN BADGE JIKA STATUS AKTIF / LUNAS
+                      const shouldShowDueBadge = ["LUNAS", "DIKONFIRMASI", "APPROVED", "SELESAI", "AKTIF"].includes((status || "").toUpperCase());
+
                       return (
                         <tr key={inv.id || index} className="hover:bg-[#FAF6F0]/50 transition-colors duration-150">
                           
@@ -685,9 +688,13 @@ export default function AdminTagihanOrder() {
                                 <Calendar className="w-3 h-3 text-slate-400" />
                                 {checkIn ? new Date(checkIn).toLocaleDateString('id-ID') : '-'} ({duration} Bulan)
                               </span>
-                              <span className={`text-[9px] px-2 py-0.5 rounded-full border inline-block ${dueStatus.color}`}>
-                                {dueStatus.text}
-                              </span>
+                              
+                              {/* BADGE HITUNGAN SISA HARI HANYA MUNCUL PADA PESANAN AKTIF/LUNAS */}
+                              {shouldShowDueBadge && (
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full border inline-block ${dueStatus.color}`}>
+                                  {dueStatus.text}
+                                </span>
+                              )}
                             </div>
                           </td>
 
