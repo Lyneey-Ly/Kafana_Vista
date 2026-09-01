@@ -6,12 +6,15 @@ use Illuminate\Http\Request;
 use App\Models\Pemesanan;
 use App\Models\Properti;
 use App\Models\Pengeluaran;
+use App\Models\SiteSetting;
+use App\Services\FinanceService;
 use Illuminate\Support\Facades\Auth;
 
 class FinanceController extends Controller
 {
     /**
      * 1. GET LAPORAN KEUANGAN GLOBAL ADMIN (PEMASUKAN & PENGELUARAN)
+     * Sekaligus menyinkronkan komisi transaksi yang dikonfirmasi ke Finance Tracker Superadmin
      */
     public function laporanGlobal(Request $request)
     {
@@ -66,7 +69,7 @@ class FinanceController extends Controller
                 $expenseQuery->where('properti_id', $request->properti_id);
             }
 
-            // Hitung Total Nominal
+            // Hitung Total Nominal Pemasukan Gross Pemilik
             $totalPemasukan = (clone $incomeQuery)
                 ->where('status', 'Dikonfirmasi')
                 ->sum('total_price');
@@ -88,6 +91,22 @@ class FinanceController extends Controller
                 ->orderBy('date', 'desc')
                 ->orderBy('id', 'desc')
                 ->get();
+
+            // OTOMATISASI: Sinkronkan komisi booking yang sudah dikonfirmasi ke Finance Tracker Superadmin
+            $setting = SiteSetting::first();
+            $commissionPercent = $setting ? (float)$setting->platform_commission_percent : 3.00;
+
+            foreach ($transaksiSukses as $booking) {
+                $commissionAmount = round(($booking->total_price * $commissionPercent) / 100, 2);
+                $description = "Komisi Booking #{$booking->id} - {$booking->properti?->title}";
+                
+                FinanceService::recordIncome(
+                    'commission',
+                    $commissionAmount,
+                    $description,
+                    "BOOK-{$booking->id}"
+                );
+            }
 
             return response()->json([
                 'status'                => 'success',
@@ -111,7 +130,7 @@ class FinanceController extends Controller
     }
 
     /**
-     * 2. TAMBAH CATATAN PENGELUARAN BARU
+     * 2. TAMBAH CATATAN PENGELUARAN BARU (PEMILIK KOST / ADMIN)
      */
     public function storePengeluaran(Request $request)
     {

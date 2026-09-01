@@ -149,12 +149,7 @@ export default function BankAccountsPage() {
             Tujuan pembayaran pemilik kost (slot properti) &amp; vendor iklan.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="bg-[#B38E5D] hover:bg-[#8F6E45] text-white px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-md hover:scale-105 cursor-pointer"
-        >
-          ➕ Tambah Rekening
-        </button>
+       
       </div>
 
       {accounts.length === 0 ? (

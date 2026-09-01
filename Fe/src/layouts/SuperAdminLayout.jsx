@@ -63,14 +63,6 @@ export default function SuperAdminLayout() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start md:self-auto">
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-[#B38E5D] hover:bg-[#8F6E45] text-white px-5 py-3 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-md hover:scale-105 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>➕</span> Tambah Pengelola Baru
-            </button>
-          </div>
         </header>
 
         {/* KONTEN HALAMAN AKTIF (Outlet) */}

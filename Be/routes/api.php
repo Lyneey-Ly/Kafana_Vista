@@ -42,10 +42,10 @@ Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 // --- ENDPOINT PUBLIK VENDOR ADVERTISEMENTS ---
 Route::get('/vendor-ads/active', [VendorAdController::class, 'getActiveAds']);
 
-// --- ENDPOINT PUBLIK SITE SETTINGS (Dibaca Footer) ---
+// --- ENDPOINT PUBLIK SITE SETTINGS ---
 Route::get('/site-settings', [SiteSettingController::class, 'index']);
 
-// --- ENDPOINT WEBHOOK MIDTRANS (Dibaca oleh Midtrans IPN, diaccessible public) ---
+// --- ENDPOINT WEBHOOK MIDTRANS ---
 Route::post('/midtrans/webhook', [PembayaranController::class, 'handleMidtransWebhook']);
 
 /*
@@ -56,11 +56,12 @@ Route::post('/midtrans/webhook', [PembayaranController::class, 'handleMidtransWe
 Route::middleware('auth:sanctum')->group(function () {
 
     // --- AUTH & PROFILE USER ---
+    Route::get('/auth/me', [ProfileController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
 
-    // --- PENGATURAN PEMBAYARAN (DAPAT DIBACA USER & ADMIN) ---
+    // --- PENGATURAN PEMBAYARAN ---
     Route::get('/payment-settings', [AdminProfileController::class, 'getPaymentSettings']);
 
     // --- CUSTOMER & SEWA ---
@@ -73,17 +74,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pembayaran/bayar', [PembayaranController::class, 'bayar']);
     Route::get('/customer/finance/track', [FinanceController::class, 'trackFinanceCustomer']);
     
-    // --- TESTIMONI USER (CRUD) ---
+    // --- VENDOR ADVERTISEMENT (PENGAJUAN & RIWAYAT USER) ---
+    Route::post('/vendor-ads', [VendorAdController::class, 'store']);
+    Route::get('/vendor-ads/my-ads', [VendorAdController::class, 'myAds']);
+    
+    // --- TESTIMONI USER ---
     Route::post('/testimonis', [TestimoniController::class, 'store']);
-    Route::put('/testimonis/{id}', [TestimoniController::class, 'update']);    // <-- DITAMBAHKAN
-    Route::delete('/testimonis/{id}', [TestimoniController::class, 'destroy']); // <-- DITAMBAHKAN
+    Route::put('/testimonis/{id}', [TestimoniController::class, 'update']);
+    Route::delete('/testimonis/{id}', [TestimoniController::class, 'destroy']);
     
     Route::post('/reviews', [ReviewController::class, 'store']);
-    
     Route::post('/complaints', [ComplaintController::class, 'store']);
     Route::get('/my-complaints', [ComplaintController::class, 'myComplaints']);
 
-    // --- NOTIFIKASI (GLOBAL) ---
+    // --- NOTIFIKASI ---
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
@@ -120,11 +124,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [AdminProfileController::class, 'show']);
         Route::post('/profile', [AdminProfileController::class, 'update']);
         
-        // Simpan / Update Pengaturan Pembayaran (Hanya Admin)
         Route::get('/payment-settings', [AdminProfileController::class, 'getPaymentSettings']);
         Route::post('/payment-settings', [AdminProfileController::class, 'updatePaymentSettings']);
 
-        // Pengaturan Website (Hanya Superadmin - dicek di controller)
         Route::post('/site-settings', [SiteSettingController::class, 'update']);
         Route::put('/site-settings', [SiteSettingController::class, 'update']);
         
@@ -136,7 +138,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/properties/{id}', [PropertyController::class, 'update']);
         Route::delete('/properties/{id}', [PropertyController::class, 'destroy']);
 
-        // Monetisasi Publikasi Properti Admin & Gateway Integration
         Route::post('/properties/{id}/pay-gateway', [PembayaranController::class, 'payGateway']);
         Route::post('/properties/{id}/gateway-success', [PembayaranController::class, 'updateGatewaySuccess']);
         Route::post('/properties/{id}/upload-proof', [PembayaranController::class, 'uploadProof']);
@@ -162,6 +163,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/penyewa-aktif', [DashboardAdminController::class, 'penyewaAktif']);
         Route::get('/tagihan-order', [PembayaranController::class, 'indexTagihanOrder']);
 
+        // --- KELOLA VENDOR ADVERTISEMENT (ADMIN LEVEL) ---
+        Route::get('/vendor-ads', [VendorAdController::class, 'index']);
+        Route::get('/vendor-ads/{id}', [VendorAdController::class, 'show']);
+        Route::put('/vendor-ads/{id}/verify', [VendorAdController::class, 'verify']);
+        Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
+        Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
+
         // Kelola SuperAdmin Akses
         Route::prefix('superadmin')->group(function () {
             Route::get('/stats', [SuperAdminController::class, 'dashboardStats']);
@@ -175,37 +183,31 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/transactions', [SuperAdminController::class, 'allTransactions']);
             Route::get('/admin-list', [SuperAdminController::class, 'adminList']);
             
-            // --- VERIFIKASI & MONETISASI PROPERTI (SUPERADMIN) ---
             Route::get('/pending-properties', [SuperAdminController::class, 'getPendingProperties']);
             Route::patch('/properties/{id}/approval', [SuperAdminController::class, 'updatePropertyApproval']);
 
-            // --- VERIFIKASI PERUBAHAN PROFIL ADMIN (SUPERADMIN) ---
             Route::get('/profile-requests', [SuperAdminController::class, 'getProfileRequests']);
             Route::post('/profile-requests/{id}/approve', [SuperAdminController::class, 'approveProfileRequest']);
             Route::post('/profile-requests/{id}/reject', [SuperAdminController::class, 'rejectProfileRequest']);
 
-            // --- REKENING BANK RESMI SUPERADMIN ---
             Route::get('/bank-accounts', [SuperAdminController::class, 'getBankAccounts']);
             Route::post('/bank-accounts', [SuperAdminController::class, 'storeBankAccount']);
             Route::post('/bank-accounts/{id}', [SuperAdminController::class, 'storeBankAccount']);
             Route::delete('/bank-accounts/{id}', [SuperAdminController::class, 'destroyBankAccount']);
 
-            // --- FINANCE TRACKER SUPERADMIN ---
             Route::get('/finance-tracker', [SuperAdminController::class, 'getFinanceTracker']);
             Route::post('/finance-tracker', [SuperAdminController::class, 'storeFinanceRecord']);
             Route::delete('/finance-tracker/{id}', [SuperAdminController::class, 'destroyFinanceRecord']);
 
-            // --- ANALITIK PENDAPATAN SUPERADMIN (TRIPLE MONETIZATION) ---
             Route::get('/revenue-analytics', [SuperAdminController::class, 'revenueAnalytics']);
 
-            // --- KELOLA VENDOR ADVERTISEMENT (IKLAN) ---
+            // --- KELOLA VENDOR ADVERTISEMENT (SUPERADMIN LEVEL) ---
             Route::get('/vendor-ads', [VendorAdController::class, 'index']);
-            Route::post('/vendor-ads', [VendorAdController::class, 'store']);
             Route::get('/vendor-ads/{id}', [VendorAdController::class, 'show']);
+            Route::put('/vendor-ads/{id}/verify', [VendorAdController::class, 'verify']);
             Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
             Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
 
-            // --- NOTIFIKASI SUPERADMIN (POLLING) ---
             Route::get('/notifications', [SuperAdminNotificationController::class, 'index']);
             Route::patch('/notifications/{id}/read', [SuperAdminNotificationController::class, 'markAsRead']);
             Route::patch('/notifications/mark-all-read', [SuperAdminNotificationController::class, 'markAllAsRead']);

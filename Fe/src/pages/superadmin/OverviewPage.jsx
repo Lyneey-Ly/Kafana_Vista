@@ -87,7 +87,7 @@ export default function OverviewPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-[#D7C4B0] shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Okupansi Kamar</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">persentasi kamar yang kosong</p>
             <h3 className="text-2xl font-black text-[#261C19]">{`${occupancyRate}%`}</h3>
           </div>
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-xl border border-blue-200">🛏️</div>

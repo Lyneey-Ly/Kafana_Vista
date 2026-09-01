@@ -20,6 +20,7 @@ export default function Login() {
 
   const fromBooking = location.state?.fromBooking;
   const bookingData = location.state?.bookingData;
+  const redirectUrl = new URLSearchParams(location.search).get('redirect');
 
   // --- FUNGSI LOGIN STANDAR ---
   const handleSubmit = async (e) => {
@@ -84,6 +85,13 @@ export default function Login() {
     sessionStorage.setItem('token', token);
     if (token) API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     if (user) sessionStorage.setItem('user', JSON.stringify(user));
+
+    // Handle redirect to PasangIklan after login/register
+    if (redirectUrl === '/pasang-iklan') {
+      await kafanaSuccess('Login Berhasil! 🎉', 'Mengalihkan ke halaman Pasang Iklan...');
+      navigate('/pasang-iklan?restored=true');
+      return;
+    }
 
     if (fromBooking && bookingData && role === 'customer') {
       try {
@@ -275,7 +283,7 @@ export default function Login() {
 
             <div className="text-center text-xs text-gray-500 pt-4">
               <span>Belum memiliki akun? </span>
-              <Link to="/register" state={location.state} className="font-bold text-[#C5A059] hover:text-[#261C19] underline underline-offset-4 transition-colors">
+              <Link to={redirectUrl ? `/register?redirect=${redirectUrl}` : '/register'} state={location.state} className="font-bold text-[#C5A059] hover:text-[#261C19] underline underline-offset-4 transition-colors">
                 Daftar Sekarang
               </Link>
             </div>

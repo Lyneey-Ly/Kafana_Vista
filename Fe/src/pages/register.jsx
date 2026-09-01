@@ -9,6 +9,7 @@ function Register() {
 
   const fromBooking = location.state?.fromBooking;
   const bookingData = location.state?.bookingData;
+  const redirectUrl = new URLSearchParams(location.search).get('redirect');
 
   // State Form Input
   const [name, setName] = useState('');
@@ -102,6 +103,20 @@ function Register() {
       }
       if (user) {
         sessionStorage.setItem('user', JSON.stringify(user));
+      }
+
+      // Handle redirect to PasangIklan after register
+      if (redirectUrl === '/pasang-iklan') {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Pendaftaran Berhasil! 🎉',
+          text: 'Mengalihkan ke halaman Pasang Iklan...',
+          timer: 1800,
+          showConfirmButton: false,
+          customClass: { popup: 'rounded-2xl' }
+        });
+        navigate('/pasang-iklan?restored=true');
+        return;
       }
 
       // 🌟 PERBAIKAN: Jika pendaftaran terpicu dari booking, langsung kembali ke Detail Kamar
@@ -389,7 +404,7 @@ function Register() {
 
             <div className="text-center text-xs font-medium text-gray-500 pt-2">
               <span>Sudah memiliki akun? </span>
-              <Link to="/login" state={location.state} className="font-extra-bold text-[#B38E5D] hover:underline">
+              <Link to={redirectUrl ? `/login?redirect=${redirectUrl}` : '/login'} state={location.state} className="font-extra-bold text-[#B38E5D] hover:underline">
                 Masuk di sini
               </Link>
             </div>

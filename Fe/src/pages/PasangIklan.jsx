@@ -1,15 +1,53 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import API from '../api';
 import Swal from 'sweetalert2';
-import { ArrowLeft, Image as ImageIcon, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, X, Loader2, CreditCard } from 'lucide-react';
 import SidebarUser from '../components/SidebarUser';
 
-export default function PasangIklan() {
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [formData, setFormData] = useState({
+const PLACEMENT_PRICES = {
+  home_hero: 150000,
+  landing_mid: 100000,
+  catalog_top: 80000,
+  search_sidebar: 60000,
+  catalog_in_feed: 70000,
+  footer_banner: 30000,
+  custom: 120000,
+};
+
+const PLACEMENT_LABELS = {
+  home_hero: 'Beranda Atas (Hero Slide)',
+  landing_mid: 'Landing Page Tengah (Di antara Section)',
+  catalog_top: 'Atas Halaman Katalog / Cari Hunian',
+  search_sidebar: 'Sidebar Halaman Pencarian',
+  catalog_in_feed: 'Di Antara Grid Daftar Kost',
+  footer_banner: 'Banner Di Atas Footer',
+  custom: 'Lokasi Kustom Lainnya',
+};
+
+const DRAFT_KEY = 'pasang_iklan_draft';
+
+const getInitialFormData = () => {
+  const savedDraft = localStorage.getItem(DRAFT_KEY);
+  if (savedDraft) {
+    try {
+      const parsed = JSON.parse(savedDraft);
+      return {
+        vendor_name: parsed.vendor_name || '',
+        description: parsed.description || '',
+        link_url: parsed.link_url || '',
+        placement: parsed.placement || 'home_hero',
+        custom_placement: parsed.custom_placement || '',
+        price: parsed.price || '',
+        start_date: parsed.start_date || '',
+        end_date: parsed.end_date || '',
+        is_active: parsed.is_active !== undefined ? parsed.is_active : true,
+      };
+    } catch (e) {
+      console.error('Failed to parse draft:', e);
+    }
+  }
+  return {
     vendor_name: '',
     description: '',
     link_url: '',
@@ -19,10 +57,46 @@ export default function PasangIklan() {
     start_date: '',
     end_date: '',
     is_active: true,
-  });
+  };
+};
+
+export default function PasangIklan() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  const [formData, setFormData] = useState(getInitialFormData);
 
   const [bannerFiles, setBannerFiles] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
+
+  const durationDays = useMemo(() => {
+    if (!formData.start_date || !formData.end_date) return 0;
+    const start = new Date(formData.start_date);
+    const end = new Date(formData.end_date);
+    const diffTime = end - start;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays);
+  }, [formData.start_date, formData.end_date]);
+
+  const dailyPrice = useMemo(() => {
+    const placement = formData.placement === 'custom' ? 'custom' : formData.placement;
+    return PLACEMENT_PRICES[placement] || 0;
+  }, [formData.placement]);
+
+  const totalPrice = useMemo(() => {
+    return dailyPrice * durationDays;
+  }, [dailyPrice, durationDays]);
+
+  const saveDraft = () => {
+    const draft = { ...formData };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  };
+
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -38,14 +112,61 @@ export default function PasangIklan() {
     });
     setBannerFiles([]);
     setPreviewImages([]);
+    clearDraft();
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await API.get('/auth/me');
+        if (response.data) {
+          setIsLoggedIn(true);
+        }
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const restored = searchParams.get('restored');
+    if (restored === 'true') {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          setFormData(prev => ({
+            ...prev,
+            vendor_name: parsed.vendor_name || prev.vendor_name,
+            description: parsed.description || prev.description,
+            link_url: parsed.link_url || prev.link_url,
+            placement: parsed.placement || prev.placement,
+            custom_placement: parsed.custom_placement || prev.custom_placement,
+            price: parsed.price || prev.price,
+            start_date: parsed.start_date || prev.start_date,
+            end_date: parsed.end_date || prev.end_date,
+            is_active: parsed.is_active !== undefined ? parsed.is_active : prev.is_active,
+          }));
+          Swal.fire('Draf Ditemukan', 'Data formulir Anda telah dipulihkan dari draf tersimpan.', 'info');
+        } catch (e) {
+          console.error('Failed to restore draft:', e);
+        }
+      }
+    }
+  }, [location.search]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      };
+      return newData;
+    });
+    saveDraft();
   };
 
   const handleFileChange = (e) => {
@@ -75,6 +196,25 @@ export default function PasangIklan() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    saveDraft();
+
+    if (!isLoggedIn) {
+      Swal.fire({
+        title: 'Login Diperlukan',
+        text: 'Silakan login atau buat akun terlebih dahulu untuk melanjutkan pembayaran.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Login / Daftar',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#B38E5D',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login?redirect=/pasang-iklan');
+        }
+      });
+      return;
+    }
+
     if (bannerFiles.length === 0) {
       Swal.fire('Peringatan', 'Pilih minimal 1 gambar banner!', 'warning');
       return;
@@ -94,39 +234,20 @@ export default function PasangIklan() {
       return;
     }
 
-    setIsSubmitting(true);
-    const submitData = new FormData();
-    submitData.append('vendor_name', formData.vendor_name);
-    submitData.append('description', formData.description || '');
-    submitData.append('placement', finalPlacement);
-    submitData.append('start_date', formData.start_date);
-    submitData.append('end_date', formData.end_date);
-    submitData.append('is_active', formData.is_active ? 1 : 0);
-    
-    if (formData.link_url) submitData.append('link_url', formData.link_url);
-    if (formData.price) submitData.append('price', formData.price);
-
-    bannerFiles.forEach((file) => {
-      submitData.append('banner_images[]', file);
-    });
-
-    try {
-      await API.post('/vendor-ads', submitData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      Swal.fire('Berhasil!', 'Iklan Anda telah dikirim dan menunggu persetujuan admin.', 'success');
-      resetForm();
-      navigate('/home');
-    } catch (err) {
-      console.error(err);
-      Swal.fire('Gagal Mengirim', err.response?.data?.message || 'Terjadi kesalahan sistem. Pastikan Anda sudah login.', 'error');
-    } finally {
-      setIsSubmitting(false);
+    if (durationDays < 1) {
+      Swal.fire('Peringatan', 'Tanggal selesai harus minimal 1 hari setelah tanggal mulai!', 'warning');
+      return;
     }
+
+    navigate('/pembayaran-iklan', { 
+      state: { 
+        adData: { ...formData, placement: finalPlacement },
+        bannerFiles 
+      } 
+    });
   };
 
   return (
-    <SidebarUser>
       <div className="min-h-screen bg-[#FAF5EF] text-[#2D2321] pb-16">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <button 
@@ -238,6 +359,28 @@ export default function PasangIklan() {
                 </div>
               )}
 
+              <div className="bg-[#FAF5EF] border border-[#D7C4B0] rounded-xl p-4">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-[#B38E5D]" />
+                  Estimasi Biaya Iklan
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Lokasi: {PLACEMENT_LABELS[formData.placement === 'custom' ? 'custom' : formData.placement]}</span>
+                    <span className="font-medium">Rp {dailyPrice.toLocaleString('id-ID')} / hari</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Durasi: {durationDays} hari ({formData.start_date} s/d {formData.end_date})</span>
+                    <span className="font-medium">{durationDays} hari</span>
+                  </div>
+                  <div className="border-t border-[#D7C4B0] pt-2 flex justify-between text-lg font-bold text-[#2D2321]">
+                    <span>Total Biaya</span>
+                    <span>Rp {totalPrice.toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2">* Harga otomatis dihitung berdasarkan lokasi dan durasi. Tidak dapat diubah manual.</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-2">Link Tujuan (Opsional)</label>
@@ -248,18 +391,6 @@ export default function PasangIklan() {
                     onChange={handleChange} 
                     className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#B38E5D] focus:border-[#B38E5D] outline-none" 
                     placeholder="https://website-anda.com/promo"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">Harga Kesepakatan (Opsional)</label>
-                  <input 
-                    type="number" 
-                    name="price" 
-                    value={formData.price} 
-                    onChange={handleChange} 
-                    className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-[#B38E5D] focus:border-[#B38E5D] outline-none" 
-                    placeholder="0"
-                    min="0"
                   />
                 </div>
               </div>
@@ -324,9 +455,9 @@ export default function PasangIklan() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Mengirim...
+                      Memproses...
                     </>
-                  ) : 'Kirim Iklan'}
+                  ) : 'Lanjut ke Pembayaran'}
                 </button>
               </div>
             </form>
@@ -345,6 +476,5 @@ export default function PasangIklan() {
           </div>
         </div>
       </div>
-    </SidebarUser>
   );
 }

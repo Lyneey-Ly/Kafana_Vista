@@ -13,6 +13,7 @@ use App\Models\VendorAdvertisement;
 use App\Models\SuperAdminBankAccount;
 use App\Models\SuperAdminFinance;
 use App\Models\SiteSetting;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -414,7 +415,7 @@ class SuperAdminController extends Controller
      */
     public function allTransactions(Request $request)
     {
-        if (!$this::isSuperAdmin($request)) {
+        if (!$this->isSuperAdmin($request)) {
             return $this->denyAccess();
         }
 
@@ -548,7 +549,7 @@ class SuperAdminController extends Controller
         ], 200);
     }
 
-   public function updatePropertyApproval(Request $request, $id)
+    public function updatePropertyApproval(Request $request, $id)
     {
         if (!$this->isSuperAdmin($request)) {
             return $this->denyAccess();
@@ -565,7 +566,6 @@ class SuperAdminController extends Controller
 
         $property->approval_status = $request->approval_status;
         
-        // TAMBAHKAN INI: Jika di-approve (active), otomatis tandai slot sudah lunas
         if ($request->approval_status === 'active') {
             $property->is_paid_slot = true;
 
@@ -574,6 +574,14 @@ class SuperAdminController extends Controller
                 $setting = SiteSetting::first();
                 $property->slot_fee = $setting ? (float)$setting->property_extra_fee : 150000;
             }
+
+            // AUTO RECORDING: Catat ke Finance Tracker
+            $desc = "Pemasukan Slot Properti - {$property->title}";
+            FinanceService::recordIncome('slot_fee', $property->slot_fee, $desc, "PROP-{$property->id}");
+
+        } elseif ($request->approval_status === 'rejected') {
+            // AUTO VOID: Hapus catatan jika dibatalkan/ditolak
+            FinanceService::removeIncome('slot_fee', "PROP-{$property->id}");
         }
 
         $property->save();
@@ -1011,7 +1019,9 @@ class SuperAdminController extends Controller
 
         // 4. Pengeluaran Operasional & Pemasukan Manual (Finance Tracker)
         $expenseQuery = SuperAdminFinance::where('type', 'expense');
-        $incomeQuery = SuperAdminFinance::where('type', 'income');
+        // PERBAIKAN: Hanya hitung pemasukan manual agar tidak ganda dengan transaksi terotomatisasi
+        $incomeQuery = SuperAdminFinance::where('type', 'income')->where('is_system_generated', false);
+
         if ($year) {
             $expenseQuery->whereYear('transaction_date', $year);
             $incomeQuery->whereYear('transaction_date', $year);
@@ -1026,28 +1036,28 @@ class SuperAdminController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => [
-                'year'              => $year ? (int)$year : null,
+                'year'               => $year ? (int)$year : null,
                 'total_gross_income' => $totalGrossIncome,
-                'income_breakdown'  => [
-                    'total_slot_revenue'        => $totalSlotRevenue,
-                    'total_vendor_ad_revenue'   => $totalVendorAdRevenue,
-                    'total_commission_revenue'  => $totalCommissionRevenue,
-                    'total_manual_income'       => $totalManualIncome,
+                'income_breakdown'   => [
+                    'total_slot_revenue'       => $totalSlotRevenue,
+                    'total_vendor_ad_revenue'  => $totalVendorAdRevenue,
+                    'total_commission_revenue' => $totalCommissionRevenue,
+                    'total_manual_income'      => $totalManualIncome,
                 ],
-                'commission_info'   => [
-                    'commission_percent'   => $commissionPercent,
-                    'total_booking_value'  => $totalBookingValue,
-                    'confirmed_bookings'   => $confirmedBookings,
+                'commission_info'    => [
+                    'commission_percent'  => $commissionPercent,
+                    'total_booking_value' => $totalBookingValue,
+                    'confirmed_bookings'  => $confirmedBookings,
                 ],
-                'slot_info'         => [
-                    'paid_slots'   => $paidSlots,
-                    'slot_fee'     => $setting ? (float)$setting->property_extra_fee : 150000,
+                'slot_info'          => [
+                    'paid_slots' => $paidSlots,
+                    'slot_fee'   => $setting ? (float)$setting->property_extra_fee : 150000,
                 ],
-                'ad_info'           => [
+                'ad_info'            => [
                     'active_ads' => $activeAds,
                 ],
-                'total_expenses'    => $totalExpenses,
-                'net_profit'        => $netProfit,
+                'total_expenses'     => $totalExpenses,
+                'net_profit'         => $netProfit,
             ]
         ], 200);
     }

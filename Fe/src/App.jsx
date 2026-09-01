@@ -12,6 +12,8 @@ import Register from './pages/register';
 import Pembayaran from './pages/pembayaran';
 import FinanceTracker from './pages/FinanceTracker';
 import PasangIklan from './pages/PasangIklan';
+import PembayaranIklan from './pages/PembayaranIklan';
+import RiwayatIklan from './pages/RiwayatIklan';
 import ChatRoom from './pages/roomchat';
 import KatalogProperti from './pages/katalogproperti';
 import PusatBantuan from './pages/PusatBantuan';
@@ -53,7 +55,9 @@ import RevenueAnalyticsPage from './pages/superadmin/RevenueAnalyticsPage';
 import BankAccountsPage from './pages/superadmin/BankAccountsPage';
 import FinanceTrackerPage from './pages/superadmin/FinanceTrackerPage';
 import SettingsPage from './pages/superadmin/SettingsPage';
+import VerifikasiIklanAdmin from './pages/VerifikasiIklanAdmin';
 import VerifikasiPropertiSuperAdmin from './pages/VerifikasiPropertiSuperAdmin'; 
+
 
 // Components Import
 import NotificationBell from './components/NotificationBell';
@@ -82,6 +86,8 @@ export default function App() {
             {/* User Features */}
             <Route path="/FinanceTracker" element={<FinanceTracker />} />
             <Route path="/pasang-iklan" element={<PasangIklan />} />
+            <Route path="/pembayaran-iklan" element={<PembayaranIklan />} />
+            <Route path="/riwayat-iklan" element={<RiwayatIklan />} />
             <Route path="/carihunian" element={<CariHunian />} />
             <Route path="/pembayaran" element={<Pembayaran />} />
             <Route path="/kamar/:id" element={<DetailKamar />} />
@@ -129,6 +135,7 @@ export default function App() {
               <Route path="bank-accounts" element={<BankAccountsPage />} />
               <Route path="finance-tracker" element={<FinanceTrackerPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="VerifikasiIklanAdmin" element={<VerifikasiIklanAdmin />} />
             </Route>
             {/* Redirect dari URL lama berbasis query param (?tab=...) */}
             <Route path="/SuperAdminDashboard" element={<Navigate to="/superadmin/overview" replace />} />

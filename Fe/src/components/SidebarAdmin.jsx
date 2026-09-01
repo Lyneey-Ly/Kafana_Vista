@@ -15,12 +15,16 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Sparkles,
   CreditCard,
   MessageSquare,
   HelpCircle,
   ClipboardList,
+  Megaphone,
+  Newspaper,
+  ListTodo,
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
@@ -31,6 +35,13 @@ export default function SidebarAdmin({ children }) {
   // State untuk Mobile Drawer & Desktop Collapse
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // State untuk dropdown group expansion
+  const [expandedGroups, setExpandedGroups] = useState({});
+
+  const toggleGroup = (groupName) => {
+    setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
+  };
 
   // Profile Admin State
   const [adminProfile, setAdminProfile] = useState(null);
@@ -51,7 +62,6 @@ export default function SidebarAdmin({ children }) {
 
       if (response.ok && result.data) {
         setAdminProfile(result.data);
-        // Simpan versi terbaru ke sessionStorage
         sessionStorage.setItem('admin', JSON.stringify(result.data));
       }
     } catch (e) {
@@ -60,7 +70,6 @@ export default function SidebarAdmin({ children }) {
   };
 
   useEffect(() => {
-    // 1. Ambil data awal dari session storage jika ada
     const savedAdmin = sessionStorage.getItem('admin') || sessionStorage.getItem('user');
     if (savedAdmin) {
       try {
@@ -70,10 +79,8 @@ export default function SidebarAdmin({ children }) {
       }
     }
 
-    // 2. Fetch data terbaru langsung dari API
     fetchLatestProfile();
 
-    // 3. Listener saat ada event perubahan profil dari halaman Edit Profil
     const handleProfileUpdate = () => {
       const updatedAdmin = sessionStorage.getItem('admin') || sessionStorage.getItem('user');
       if (updatedAdmin) {
@@ -91,7 +98,6 @@ export default function SidebarAdmin({ children }) {
     };
   }, []);
 
-  // Handle Logout menggunakan SweetAlert2
   const handleLogout = () => {
     Swal.fire({
       title: 'Konfirmasi Keluar',
@@ -117,23 +123,64 @@ export default function SidebarAdmin({ children }) {
     });
   };
 
-  // DAFTAR MENU NAVIGASI DENGAN IKON SESUAI
+  // DAFTAR MENU NAVIGASI (DENGAN KATEGORI DROPDOWN & MANAJEMEN IKLAN)
   const menuItems = [
     { name: 'Dashboard', path: '/admindashboard', icon: LayoutDashboard },
     { name: 'Profil Admin', path: '/adminprofile', icon: User },
-    { name: 'Payment Setting', path: '/AdminPaymentSettings', icon: CreditCard },
-    { name: 'Kelola Properti', path: '/admin/properti', icon: Building2 },
-    { name: 'Penyewa Aktif', path: '/adminpenyewa', icon: Users },
-    { name: 'Tagihan & Order', path: '/adminTO', icon: Receipt },
-    { name: 'Riwayat Pembayaran', path: '/admin/riwayat-pembayaran', icon: ClipboardList },
-    { name: 'Laporan Keuangan', path: '/adminlaporan', icon: TrendingUp },
-    { name: 'Kelola Komplain', path: '/admin/komplain', icon: AlertTriangle },
-    { name: 'Dokumen Sewa', path: '/admin/dokumen-sewa', icon: FileText },
-    { name: 'Pusat Bantuan', path: '/pusatbantuanadmin', icon: HelpCircle },
-    { name: 'Room Chat', path: '/AdminRoomChat', icon: MessageSquare },
+    
+    // GRUP MANAJEMEN PROPERTI
+    {
+      name: 'Manajemen Properti',
+      icon: Building2,
+      isGroup: true,
+      isExpanded: true,
+      items: [
+        { name: 'Kelola Properti', path: '/admin/properti', icon: Building2 },
+        { name: 'Penyewa Aktif', path: '/adminpenyewa', icon: Users },
+        { name: 'Dokumen Sewa', path: '/admin/dokumen-sewa', icon: FileText },
+      ]
+    },
+
+    // GRUP IKLAN & PROMOSI
+    {
+      name: 'Iklan & Promosi',
+      icon: Newspaper,
+      isGroup: true,
+      isExpanded: false,
+      items: [
+        { name: 'Riwayat Iklan', path: '/riwayat-iklan', icon: ListTodo },
+        { name: 'Pembayaran Iklan', path: '/pembayaran-iklan', icon: Receipt },
+      ]
+    },
+
+    // GRUP KEUANGAN & TRANSAKSI
+    {
+      name: 'Keuangan & Transaksi',
+      icon: CreditCard,
+      isGroup: true,
+      isExpanded: false,
+      items: [
+        { name: 'Payment Setting', path: '/AdminPaymentSettings', icon: CreditCard },
+        { name: 'Tagihan & Order', path: '/adminTO', icon: Receipt },
+        { name: 'Riwayat Pembayaran', path: '/admin/riwayat-pembayaran', icon: ClipboardList },
+        { name: 'Laporan Keuangan', path: '/adminlaporan', icon: TrendingUp },
+      ]
+    },
+
+    // GRUP LAYANAN & BANTUAN
+    {
+      name: 'Layanan & Bantuan',
+      icon: MessageSquare,
+      isGroup: true,
+      isExpanded: false,
+      items: [
+        { name: 'Kelola Komplain', path: '/admin/komplain', icon: AlertTriangle },
+        { name: 'Room Chat', path: '/AdminRoomChat', icon: MessageSquare },
+        { name: 'Pusat Bantuan', path: '/pusatbantuanadmin', icon: HelpCircle },
+      ]
+    },
   ];
 
-  // Helper Foto Profil
   const avatarUrl = adminProfile?.foto
     ? (adminProfile.foto.startsWith('http') ? adminProfile.foto : `http://localhost:8000/storage/${adminProfile.foto}`)
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || adminProfile?.nama || 'Admin')}&background=B38E5D&color=fff&bold=true`;
@@ -219,7 +266,58 @@ export default function SidebarAdmin({ children }) {
 
         {/* NAVIGASI MENU UTAMA */}
         <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
-          {menuItems.map((item) => {
+          {menuItems.map((item, index) => {
+            if (item.isGroup) {
+              const isExpanded = expandedGroups[item.name] ?? item.isExpanded;
+              const isGroupActive = item.items.some(sub => location.pathname.toLowerCase() === sub.path.toLowerCase());
+
+              return (
+                <div key={index} className="relative group">
+                  <button
+                    onClick={() => toggleGroup(item.name)}
+                    className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 text-left cursor-pointer group hover:translate-x-1 ${
+                      isCollapsed ? 'justify-center px-0' : ''
+                    } ${isGroupActive ? 'bg-gradient-to-r from-[#B38E5D]/20 to-[#8F6E45]/20 text-white border-l-4 border-amber-200' : 'text-[#FAF5EF]/70 hover:bg-[#FAF5EF]/10 hover:text-white'}`}
+                  >
+                    <item.icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${isGroupActive ? 'text-white' : 'text-[#B38E5D]'}`} />
+                    {!isCollapsed && <span className="truncate flex-1">{item.name}</span>}
+                    {!isCollapsed && (
+                      <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${isGroupActive ? 'text-white' : 'text-[#B38E5D]'} ${isExpanded ? 'rotate-180' : ''}`} />
+                    )}
+                  </button>
+
+                  {!isCollapsed && isExpanded && (
+                    <div className="mt-1 ml-8 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                      {item.items.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        const isActive = location.pathname.toLowerCase() === subItem.path.toLowerCase();
+
+                        return (
+                          <Link
+                            key={subItem.path}
+                            to={subItem.path}
+                            className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 hover:translate-x-0.5 ${
+                              isActive ? 'bg-[#B38E5D]/20 text-white border-l-2 border-white' : 'text-[#FAF5EF]/70 hover:bg-[#B38E5D]/10 hover:text-white'
+                            }`}
+                          >
+                            <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#B38E5D]'}`} />
+                            <span className="truncate">{subItem.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {isCollapsed && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-[#1C1412] text-white border border-[#B38E5D]/30 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 pointer-events-none shadow-xl z-50 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#B38E5D]" />
+                      {item.name}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const Icon = item.icon;
             const isActive = location.pathname.toLowerCase() === item.path.toLowerCase();
 
@@ -321,7 +419,50 @@ export default function SidebarAdmin({ children }) {
 
         {/* Navigasi Mobile */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
+          {menuItems.map((item, index) => {
+            if (item.isGroup) {
+              const isExpanded = expandedGroups[item.name] ?? item.isExpanded;
+              const isGroupActive = item.items.some(sub => location.pathname.toLowerCase() === sub.path.toLowerCase());
+
+              return (
+                <div key={index} className="relative group">
+                  <button
+                    onClick={() => toggleGroup(item.name)}
+                    className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${
+                      isGroupActive ? 'bg-gradient-to-r from-[#B38E5D] to-[#8F6E45] text-white shadow-md' : 'text-[#FAF5EF]/80 hover:bg-[#B38E5D]/20 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className={`w-4 h-4 ${isGroupActive ? 'text-white' : 'text-[#B38E5D]'}`} />
+                    <span>{item.name}</span>
+                    <ChevronDown className={`w-4 h-4 ml-auto transition-transform duration-200 ${isGroupActive ? 'text-white' : 'text-[#B38E5D]'} ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isExpanded && (
+                    <div className="mt-1 ml-8 space-y-1 animate-in slide-in-from-top-2 duration-200 border-l border-[#B38E5D]/20 pl-2">
+                      {item.items.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        const isActive = location.pathname.toLowerCase() === subItem.path.toLowerCase();
+
+                        return (
+                          <Link
+                            key={subItem.path}
+                            to={subItem.path}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
+                              isActive ? 'bg-[#B38E5D]/20 text-white border-l-2 border-white' : 'text-[#FAF5EF]/80 hover:bg-[#B38E5D]/10 hover:text-white'
+                            }`}
+                          >
+                            <SubIcon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#B38E5D]'}`} />
+                            <span>{subItem.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const Icon = item.icon;
             const isActive = location.pathname.toLowerCase() === item.path.toLowerCase();
 
@@ -381,7 +522,6 @@ export default function SidebarAdmin({ children }) {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1412]/60 border border-[#B38E5D]/20 text-xs text-[#FAF5EF]">
-              {/* Endpoint Admin dipasang langsung di komponen NotificationBell */}
               <NotificationBell endpoint="http://localhost:8000/api/notifications" />
             </div>
           </div>
@@ -393,4 +533,4 @@ export default function SidebarAdmin({ children }) {
       </div>
     </div>
   );
-}
+} 
