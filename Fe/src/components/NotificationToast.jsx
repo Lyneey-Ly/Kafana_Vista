@@ -29,14 +29,15 @@ export default function NotificationToast({ notification, onOpen, onClose, durat
 
   // 🚀 Bungkus dengan Portal agar animasi keluar dari jeratan CSS / Layout Superadmin
   return createPortal(
-    <div className="fixed top-4 left-4 z-[999999] w-[340px] max-w-[calc(100vw-2rem)] pointer-events-auto">
+    /* UBAH DI SINI: left-4 menjadi right-4 */
+    <div className="fixed top-4 right-4 z-[999999] w-[340px] max-w-[calc(100vw-2rem)] pointer-events-auto">
       <button
         onClick={onOpen}
         className={`group cursor-pointer w-full text-left flex items-start gap-3 bg-[#2D2321] border-2 border-[#B38E5D] text-[#FAF5EF] rounded-2xl shadow-2xl shadow-black/60 p-4 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-[1.02] ${
           phase === 'enter'
-            ? '-translate-x-[130%] -translate-y-3 opacity-0 scale-95'
+            ? 'translate-x-[130%] -translate-y-3 opacity-0 scale-95' /* UBAH DI SINI: translate dari kanan */
             : phase === 'exit'
-            ? '-translate-x-[130%] opacity-0'
+            ? 'translate-x-[130%] opacity-0' /* UBAH DI SINI: translate keluar ke kanan */
             : 'translate-x-0 translate-y-0 opacity-100 scale-100'
         }`}
       >

@@ -103,7 +103,7 @@ export default function UserProfile() {
         icon: 'warning',
         title: 'Ukuran Terlalu Besar',
         text: 'Ukuran foto maksimal 2MB!',
-        confirmButtonColor: '#C5A059',
+        confirmButtonColor: '#f31f1f',
       });
       return;
     }
