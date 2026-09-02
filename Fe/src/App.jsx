@@ -71,6 +71,9 @@ import SnakeGame from './pages/SnakeGame';
 import TicTacToeSuper from './pages/TicTacToeSuper.jsx';
 import PvZGame from './pages/PvzGame';
 import SimonSays from './pages/SimonSays';
+import TowerofHanoi from './pages/TowerofHanoi'; 
+import DungeonCrawlerGrid from './pages/DungeonCrawlerGrid';
+import TeksRPGChooseYourOwnAdventure from './pages/TeksRPGChooseYourOwnAdventure';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_GOOGLE_CLIENT_ID_DI_SINI";
 
@@ -97,6 +100,9 @@ export default function App() {
               <Route path="/TicTacToeSuper" element={<TicTacToeSuper />} />
               <Route path="/SimonSays" element={<SimonSays />} />
               <Route path="/PvzGame" element={<PvZGame />} />
+              <Route path="/TowerofHanoi" element={<TowerofHanoi />} />
+              <Route path="/DungeonCrawlerGrid" element={<DungeonCrawlerGrid />} />
+              <Route path="/TeksRPGChooseYourOwnAdventure" element={<TeksRPGChooseYourOwnAdventure />} />
 
               {/* User Profile & Auth */}
               <Route path="/profile" element={<UserProfile />} />
