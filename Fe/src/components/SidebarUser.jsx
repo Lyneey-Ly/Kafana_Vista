@@ -88,7 +88,7 @@ export default function SidebarUser({ children }) {
   const [toastNotif, setToastNotif] = useState(null);
   const knownIdsRef = useRef(new Set());
 
-  // 🔊 Efek Suara Notifikasi (fallback Web Audio API jika file mp3 belum ada)
+  // 🔊 Efek Suara Notifikasi
   const synthNotificationChime = () => {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -127,7 +127,7 @@ export default function SidebarUser({ children }) {
     }
   }, []);
 
-  // Polling GET /notifications setiap 12 detik untuk deteksi notifikasi baru
+  // Polling GET /notifications setiap 12 detik
   useEffect(() => {
     if (!token) return;
 
@@ -254,13 +254,13 @@ export default function SidebarUser({ children }) {
     } catch (err) {
       console.error('Gagal membuka dokumen sewa:', err);
       navigate('/riwayattransaksi');
-    } finally {
+    } {
       setLoadingDoc(false);
       setIsOpen(false);
     }
   };
 
-  // 🟢 MENU NAVIGASI DENGAN LUCIDE VECTOR ICONS
+  // 🟢 MENU NAVIGASI
   const menuItems = [
     { 
       name: 'Dashboard', 
@@ -280,8 +280,6 @@ export default function SidebarUser({ children }) {
       icon: Heart,
       badge: null
     },
-    
-    // 💰 GRUP PEMBAYARAN & KEUANGAN
     {
       name: 'Pembayaran & Keuangan',
       icon: CreditCard,
@@ -293,8 +291,6 @@ export default function SidebarUser({ children }) {
         { name: 'Riwayat Transaksi', path: '/riwayattransaksi', icon: ClipboardList },
       ]
     },
-    
-    // 📢 GRUP IKLAN & PROMOSI
     {
       name: 'Iklan & Promosi',
       icon: Newspaper,
@@ -304,11 +300,8 @@ export default function SidebarUser({ children }) {
         { name: 'Pasang Iklan', path: '/pasang-iklan', icon: Newspaper },
         { name: 'Riwayat Iklan', path: '/riwayat-iklan', icon: ListTodo },
         { name: 'Pembayaran Iklan', path: '/pembayaran-iklan', icon: Receipt },
-          
       ]
     },
-
-    // 📄 GRUP DOKUMEN & KOMUNIKASI
     {
       name: 'Dokumen & Komunikasi',
       icon: FileText,
@@ -320,8 +313,6 @@ export default function SidebarUser({ children }) {
         { name: 'Complain', path: '/komplain', icon: AlertTriangle },
       ]
     },
-
-    // 📋 GRUP LAINNYA
     {
       name: 'Lainnya',
       icon: BookOpen,
@@ -330,6 +321,9 @@ export default function SidebarUser({ children }) {
       items: [
         { name: 'Testimoni', path: '/testimoni', icon: Star },
         { name: 'Pusat Bantuan', path: '/pusatbantuanuser', icon: HelpCircle },
+        { name: 'Pusat Bantuan', path: '/ResepHematKost', icon: HelpCircle },
+        { name: 'Pusat Bantuan', path: '/KalkulatorSurvival', icon: HelpCircle },
+        { name: 'Pusat Bantuan', path: '/RandomizerMakan', icon: HelpCircle },
         { 
           name: 'Mini Games', 
           path: 'https://peashooter-cpnr7zxeu-lyneey.vercel.app', 
@@ -388,7 +382,7 @@ export default function SidebarUser({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 max-w-7xl mx-auto w-full flex flex-col">
           {children}
         </main>
       </div>
@@ -553,7 +547,7 @@ export default function SidebarUser({ children }) {
           )}
         </div>
 
-        {/* 🟢 NAVIGASI MENU UTAMA */}
+        {/* NAVIGASI MENU UTAMA */}
         <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
           {menuItems.map((item, index) => {
             if (item.isGroup) {
@@ -643,7 +637,6 @@ export default function SidebarUser({ children }) {
               );
             }
             
-            // Single menu item (non-group)
             const Icon = item.icon;
             const isActive = location.pathname.toLowerCase() === item.path.toLowerCase();
             
@@ -859,7 +852,6 @@ export default function SidebarUser({ children }) {
               );
             }
             
-            // Single menu item (non-group)
             const Icon = item.icon;
             const isActive = location.pathname.toLowerCase() === item.path.toLowerCase();
             
@@ -1018,7 +1010,8 @@ export default function SidebarUser({ children }) {
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#FAF5EF]">
+        {/* MENGHILANGKAN PADDING UNTUK MEMASTIKAN HALAMAN DAPAT TAMPIL FULLSCREEN */}
+        <main className="flex-1 overflow-hidden bg-[#FAF5EF] flex flex-col w-full h-full min-h-0">
           {children}
         </main>
       </div>

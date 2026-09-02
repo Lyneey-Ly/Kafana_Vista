@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import SidebarSuperAdmin from '../components/SidebarSuperAdmin';
 import AddAdminModal from '../components/superadmin/AddAdminModal';
-import { SuperAdminLayoutContext } from '../contexts/SuperAdminContext';
+import { SuperAdminLayoutContext } from '../context/SuperAdminContext';
 
 const TAB_TITLES = {
   overview: 'Dashboard Analitik Platform',

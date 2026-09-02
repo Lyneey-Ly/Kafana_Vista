@@ -209,7 +209,7 @@ class SuperAdminController extends Controller
         $userList = User::orderBy('created_at', 'desc')->get();
 
         return response()->json([
-            'status' => 'success',
+             'status' => 'success',
             'total'  => $userList->count(),
             'data'   => $userList
         ], 200);
@@ -217,28 +217,61 @@ class SuperAdminController extends Controller
 
     /**
      * Inspeksi Riwayat Rental/Pemesanan milik User tertentu
-     */
-    public function getUserRentals(Request $request, $id)
-    {
-        if (!$this->isSuperAdmin($request)) {
-            return $this->denyAccess();
-        }
-
-        $user = User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'User tidak ditemukan'], 404);
-        }
-
-        $rentals = Pemesanan::with(['properti', 'kamar', 'pembayaran'])
-            ->where('user_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'status' => 'success',
-            'data'   => $rentals
-        ], 200);
+    */
+  public function getUserRentals(Request $request, $id)
+{
+    if (!$this->isSuperAdmin($request)) {
+        return $this->denyAccess();
     }
+
+    $user = User::find($id);
+    if (!$user) {
+        return response()->json(['message' => 'User tidak ditemukan'], 404);
+    }
+
+    $rentals = Pemesanan::with(['properti', 'kamar', 'pembayaran'])
+        ->where('customer_id', $id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // Formatting data agar compatible dengan property key di Frontend JS
+    $formattedRentals = $rentals->map(function ($item) {
+        return [
+            'id'              => $item->id,
+            'booking_date'    => $item->booking_date,
+            'check_in_date'   => $item->check_in_date,
+            'tanggal_sewa'    => $item->check_in_date ?? $item->booking_date,
+            'duration_months' => $item->duration_months,
+            'durasi'          => $item->duration_months ? $item->duration_months . ' Bulan' : '-',
+            'total_price'     => (float)$item->total_price,
+            'nominal'         => (float)($item->total_price ?? $item->pembayaran?->amount ?? 0),
+            'status'          => $item->status,
+            'properti'        => $item->properti ? [
+                'id'    => $item->properti->id,
+                'title' => $item->properti->title ?? $item->properti->nama_properti ?? 'Properti N/A',
+                'nama'  => $item->properti->title ?? $item->properti->nama_properti ?? 'Properti N/A',
+            ] : null,
+            'kamar'           => $item->kamar ? [
+                'id'          => $item->kamar->id,
+                'nomor_kamar' => $item->kamar->nomor_kamar ?? $item->kamar->tipe_kamar ?? 'Standar',
+                'tipe'        => $item->kamar->nomor_kamar ?? $item->kamar->tipe_kamar ?? 'Standar',
+            ] : null,
+            'pembayaran'      => $item->pembayaran,
+        ];
+    });
+
+    return response()->json([
+        'status' => 'success',
+        'user'   => [
+            'id'    => $user->id,
+            'name'  => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+        ],
+        'total_transaksi' => $rentals->count(),
+        'data'            => $formattedRentals
+    ], 200);
+}
 
     public function destroyUser(Request $request, $id)
     {
@@ -1129,4 +1162,40 @@ class SuperAdminController extends Controller
             ]
         ], 200);
     }
+
+
+    
+    // Tambah/Perpanjang +30 Hari
+public function grantPremium($id)
+{
+    $user = User::findOrFail($id);
+
+    // Jika masih aktif, tambahkan dari tanggal expired-nya. Jika sudah hangus/null, hitung dari sekarang.
+    $baseDate = ($user->premium_until && $user->premium_until->isFuture()) 
+        ? $user->premium_until 
+        : now();
+
+    $user->update([
+        'premium_until' => $baseDate->addDays(30)
+    ]);
+
+    return response()->json([
+        'message'       => 'Berhasil menambah 30 hari masa aktif premium.',
+        'premium_until' => $user->premium_until,
+        'is_premium'    => $user->is_premium
+    ]);
+}
+
+// Matikan / Cabut Status Premium
+public function revokePremium($id)
+{
+    $user = User::findOrFail($id);
+    $user->update(['premium_until' => null]);
+
+    return response()->json([
+        'message'    => 'Status premium pengguna berhasil dicabut.',
+        'is_premium' => false
+    ]);
+}
+
 }

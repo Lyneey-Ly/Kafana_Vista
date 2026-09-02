@@ -3,7 +3,7 @@ import API from '../../api';
 import Swal from 'sweetalert2';
 import useSuperAdminFetch from '../../hooks/useSuperAdminFetch';
 import { formatAvatar } from '../../utils/format';
-import { useSuperAdminLayout } from '../../contexts/SuperAdminContext';
+import { useSuperAdminLayout } from '../../context/SuperAdminContext';
 
 export default function AdministratorsPage() {
   const { refreshTick } = useSuperAdminLayout();

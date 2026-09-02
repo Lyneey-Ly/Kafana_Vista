@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { PlayerProvider } from './context/PlayerContext'; // <--- Impor PlayerProvider
 
 // Pages Import
 import LandingPage from './pages/landingpages';
@@ -58,103 +59,105 @@ import FinanceTrackerPage from './pages/superadmin/FinanceTrackerPage';
 import SettingsPage from './pages/superadmin/SettingsPage';
 import VerifikasiIklanAdmin from './pages/VerifikasiIklanAdmin';
 import VerifikasiPropertiSuperAdmin from './pages/VerifikasiPropertiSuperAdmin'; 
-
-
-// Components Import
 import NotificationBell from './components/NotificationBell';
 import Footer from './components/footer';
 import RandomizerMakan from './pages/RandomizerMakan';
 import KalkulatorSurvival from './pages/KalkulatorSurvival';
 import ResepHematKost from './pages/ResepHematKost';
+import WordleClone from './pages/WordleCLone';
+import MusicDashboard from './pages/MusicDashboard';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_GOOGLE_CLIENT_ID_DI_SINI";
 
 export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <Router>
-        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-          <Routes>
-            {/* Main Landing & Public Pages */}
-            <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/beranda" element={<Beranda />} />
-            <Route path="/landingpages" element={<LandingPage />} />
-            <Route path="/katalogproperti" element={<KatalogProperti />} />
-            <Route path="/RandomizerMakan" element={<RandomizerMakan />} />
-            <Route path="/KalkulatorSurvival" element={<KalkulatorSurvival />} />
-            <Route path="/ResepHematKost" element={<ResepHematKost />} />
+      <PlayerProvider> {/* <--- Bungkus di sini */}
+        <Router>
+          <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+            <Routes>
+              {/* Main Landing & Public Pages */}
+              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/beranda" element={<Beranda />} />
+              <Route path="/landingpages" element={<LandingPage />} />
+              <Route path="/katalogproperti" element={<KatalogProperti />} />
+              <Route path="/RandomizerMakan" element={<RandomizerMakan />} />
+              <Route path="/KalkulatorSurvival" element={<KalkulatorSurvival />} />
+              <Route path="/ResepHematKost" element={<ResepHematKost />} />
+              <Route path="/music" element={<MusicDashboard />} />
+              <Route path="/WordleClone" element={<WordleClone />} />
 
-            
-            {/* User Profile & Auth */}
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            {/* User Features */}
-            <Route path="/FinanceTracker" element={<FinanceTracker />} />
-            <Route path="/pasang-iklan" element={<PasangIklan />} />
-            <Route path="/pembayaran-iklan" element={<PembayaranIklan />} />
-            <Route path="/riwayat-iklan" element={<RiwayatIklan />} />
-            <Route path="/carihunian" element={<CariHunian />} />
-            <Route path="/pembayaran" element={<Pembayaran />} />
-            <Route path="/kamar/:id" element={<DetailKamar />} />
-            <Route path="/riwayattransaksi" element={<Riwayat />} />
-            <Route path="/roomchat" element={<ChatRoom />} />
-            <Route path="/komplain" element={<KomplainUser />} />
-            <Route path="/testimoni" element={<Testimoni />} /> 
-            <Route path="/whislist" element={<Wishlist />} /> 
-            <Route path="/footer" element={<Footer />} /> 
-            <Route path="/PusatBantuan" element={<PusatBantuan />} />
-            <Route path="/pusatbantuanuser" element={<PusatBantuanuser />} /> 
-            <Route path="/dokumen-sewa/:id" element={<Dokumen />} />
+              {/* User Profile & Auth */}
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              {/* User Features */}
+              <Route path="/FinanceTracker" element={<FinanceTracker />} />
+              <Route path="/pasang-iklan" element={<PasangIklan />} />
+              <Route path="/pembayaran-iklan" element={<PembayaranIklan />} />
+              <Route path="/riwayat-iklan" element={<RiwayatIklan />} />
+              <Route path="/carihunian" element={<CariHunian />} />
+              <Route path="/pembayaran" element={<Pembayaran />} />
+              <Route path="/kamar/:id" element={<DetailKamar />} />
+              <Route path="/riwayattransaksi" element={<Riwayat />} />
+              <Route path="/roomchat" element={<ChatRoom />} />
+              <Route path="/komplain" element={<KomplainUser />} />
+              <Route path="/testimoni" element={<Testimoni />} /> 
+              <Route path="/whislist" element={<Wishlist />} /> 
+              <Route path="/footer" element={<Footer />} /> 
+              <Route path="/PusatBantuan" element={<PusatBantuan />} />
+              <Route path="/pusatbantuanuser" element={<PusatBantuanuser />} /> 
+              <Route path="/dokumen-sewa/:id" element={<Dokumen />} />
 
-            {/* Admin Routes */}
-            <Route path="/adminprofile" element={<AdminProfile />} />
-            <Route path="/admindashboard" element={<AdminDashboard />} />
-            <Route path="/admin/properti" element={<AdminDataProperti />} />
-            <Route path="/adminlaporan" element={<AdminLaporanKeuangan />} />
-            <Route path="/adminTO" element={<AdminTagihanOrder />} />
-            <Route path="/adminpenyewa" element={<AdminPenyewa />} />
-            <Route path="/adminpengaturan" element={<AdminPengaturan />} />
-            <Route path="/admin/komplain" element={<AdminKomplain />} />
-            <Route path="/admin/dokumen-sewa" element={<AdminDokumenSewa />} />
-            <Route path="/admin/dokumen-sewa/:id" element={<AdminDokumenSewa />} />
-            <Route path="/AdminRoomChat" element={<AdminRoomChat/>} /> 
-            <Route path="/AdminPaymentSettings" element={<AdminPaymentSettings/>} /> 
-            <Route path="/pusatbantuanadmin" element={<PusatBantuanAdmin />} /> 
-            <Route path="/NotificationBell" element={<NotificationBell />} />
-            <Route path="/Adminpasangiklan" element={<Adminpasangiklan />} />
+              {/* Admin Routes */}
+              <Route path="/adminprofile" element={<AdminProfile />} />
+              <Route path="/admindashboard" element={<AdminDashboard />} />
+              <Route path="/admin/properti" element={<AdminDataProperti />} />
+              <Route path="/adminlaporan" element={<AdminLaporanKeuangan />} />
+              <Route path="/adminTO" element={<AdminTagihanOrder />} />
+              <Route path="/adminpenyewa" element={<AdminPenyewa />} />
+              <Route path="/adminpengaturan" element={<AdminPengaturan />} />
+              <Route path="/admin/komplain" element={<AdminKomplain />} />
+              <Route path="/admin/dokumen-sewa" element={<AdminDokumenSewa />} />
+              <Route path="/admin/dokumen-sewa/:id" element={<AdminDokumenSewa />} />
+              <Route path="/AdminRoomChat" element={<AdminRoomChat/>} /> 
+              <Route path="/AdminPaymentSettings" element={<AdminPaymentSettings/>} /> 
+              <Route path="/pusatbantuanadmin" element={<PusatBantuanAdmin />} /> 
+              <Route path="/NotificationBell" element={<NotificationBell />} />
+              <Route path="/Adminpasangiklan" element={<Adminpasangiklan />} />
 
-            {/* Route Pembayaran Properti (Admin) */}
-            <Route path="/PembayaranAdmin/:id" element={<PembayaranAdmin />} /> 
-            <Route path="/admin/pembayaran/:id" element={<PembayaranAdmin />} /> 
-            <Route path="/admin/riwayat-pembayaran" element={<RiwayatPembayaranAdmin />} />
+              {/* Route Pembayaran Properti (Admin) */}
+              <Route path="/PembayaranAdmin/:id" element={<PembayaranAdmin />} /> 
+              <Route path="/admin/pembayaran/:id" element={<PembayaranAdmin />} /> 
+              <Route path="/admin/riwayat-pembayaran" element={<RiwayatPembayaranAdmin />} />
 
-            {/* Super Admin Routes */}
-            <Route path="/superadmin" element={<SuperAdminLayout />}>
-              <Route index element={<Navigate to="/superadmin/overview" replace />} />
-              <Route path="overview" element={<OverviewPage />} />
-              <Route path="approval" element={<ApprovalPage />} />
-              <Route path="administrators" element={<AdministratorsPage />} />
-              <Route path="users" element={<UsersPage />} />
-              <Route path="revenue" element={<RevenuePage />} />
-              <Route path="transactions" element={<TransactionsPage />} />
-              <Route path="revenue-analytics" element={<RevenueAnalyticsPage />} />
-              <Route path="bank-accounts" element={<BankAccountsPage />} />
-              <Route path="finance-tracker" element={<FinanceTrackerPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="VerifikasiIklanAdmin" element={<VerifikasiIklanAdmin />} />
-            </Route>
-            {/* Redirect dari URL lama berbasis query param (?tab=...) */}
-            <Route path="/SuperAdminDashboard" element={<Navigate to="/superadmin/overview" replace />} />
-            <Route path="/VerifikasiPropertiSuperAdmin" element={<VerifikasiPropertiSuperAdmin />} />
-            <Route path="/KelolaIklanSuperAdmin" element={<KelolaIklanSuperAdmin />} />
-            <Route path="/SuperAdminProfileRequests" element={<SuperAdminProfileRequests />} />
+              {/* Super Admin Routes */}
+              <Route path="/superadmin" element={<SuperAdminLayout />}>
+                <Route index element={<Navigate to="/superadmin/overview" replace />} />
+                <Route path="overview" element={<OverviewPage />} />
+                <Route path="approval" element={<ApprovalPage />} />
+                <Route path="administrators" element={<AdministratorsPage />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="revenue" element={<RevenuePage />} />
+                <Route path="transactions" element={<TransactionsPage />} />
+                <Route path="revenue-analytics" element={<RevenueAnalyticsPage />} />
+                <Route path="bank-accounts" element={<BankAccountsPage />} />
+                <Route path="finance-tracker" element={<FinanceTrackerPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="VerifikasiIklanAdmin" element={<VerifikasiIklanAdmin />} />
+              </Route>
+              {/* Redirect dari URL lama berbasis query param (?tab=...) */}
+              <Route path="/SuperAdminDashboard" element={<Navigate to="/superadmin/overview" replace />} />
+              <Route path="/VerifikasiPropertiSuperAdmin" element={<VerifikasiPropertiSuperAdmin />} />
+              <Route path="/KelolaIklanSuperAdmin" element={<KelolaIklanSuperAdmin />} />
+              <Route path="/SuperAdminProfileRequests" element={<SuperAdminProfileRequests />} />
 
-          </Routes>
-        </div>
-      </Router>
+            </Routes>
+          </div>
+        </Router>
+      </PlayerProvider>
     </GoogleOAuthProvider>
   );
 }

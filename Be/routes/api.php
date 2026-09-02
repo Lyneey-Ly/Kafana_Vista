@@ -24,11 +24,20 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\SiteSettingController;
 
+// Import Controller Musik & Playlist
+use App\Http\Controllers\Api\TrackController;
+use App\Http\Controllers\Api\PlaylistController;
+
 /*
 |--------------------------------------------------------------------------
 | ROUTE PUBLIC (Bisa diakses tanpa login)
 |--------------------------------------------------------------------------
 */
+
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsPremium::class])->group(function () {
+    Route::get('/premium-feature-data', [FeatureController::class, 'index']);
+});
+
 Route::post('/customer/register', [AuthController::class, 'registerCustomer']);
 Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -115,6 +124,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chat/managed-properties', [ChatController::class, 'getManagedPropertiesChat']);
     Route::post('/chat/group', [ChatController::class, 'sendGroupMessage']);
     Route::get('/chat/group/{propertiId}', [ChatController::class, 'getGroupMessages']);
+
+    // --- MINI MUSIC PLAYER & PLAYLIST CUSTOM ---
+    Route::get('/tracks', [TrackController::class, 'index']);
+    Route::post('/tracks', [TrackController::class, 'store']);
+    Route::post('/tracks/{id}/like', [TrackController::class, 'toggleLike']);
+
+    Route::get('/playlists', [PlaylistController::class, 'index']);
+    Route::post('/playlists', [PlaylistController::class, 'store']);
+    Route::get('/playlists/{id}', [PlaylistController::class, 'show']);
+    Route::put('/playlists/{id}', [PlaylistController::class, 'update']);
+    Route::delete('/playlists/{id}', [PlaylistController::class, 'destroy']);
+    Route::post('/playlists/{id}/tracks', [PlaylistController::class, 'addTrack']);
+    Route::delete('/playlists/{id}/tracks/{trackId}', [PlaylistController::class, 'removeTrack']);
 
     // --- ROUTE KHUSUS ADMIN KOST & SUPERADMIN ---
     Route::middleware(EnsureIsAdmin::class)->prefix('admin')->group(function () {
@@ -214,6 +236,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/notifications/{id}/read', [SuperAdminNotificationController::class, 'markAsRead']);
             Route::patch('/notifications/mark-all-read', [SuperAdminNotificationController::class, 'markAllAsRead']);
             Route::delete('/notifications/{id}', [SuperAdminNotificationController::class, 'destroy']);
+            
         });
     });
 });

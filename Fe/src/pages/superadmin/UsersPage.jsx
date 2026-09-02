@@ -74,20 +74,20 @@ export default function UsersPage() {
     }).format(val || 0);
   };
 
-  // Helper Badge Status Sewa
+  // Helper Badge Status Sewa (Sudah disesuaikan dengan enum status Laravel)
   const renderStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
-    if (s === 'aktif' || s === 'disetujui' || s === 'approved' || s === 'lunas') {
+    if (s === 'aktif' || s === 'disetujui' || s === 'approved' || s === 'lunas' || s === 'dikonfirmasi') {
       return (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-          Aktif
+          {status}
         </span>
       );
     }
-    if (s === 'pending' || s === 'menunggu') {
+    if (s === 'pending' || s === 'menunggu' || s === 'tertunda') {
       return (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-          Pending
+          {status}
         </span>
       );
     }
@@ -100,7 +100,7 @@ export default function UsersPage() {
     }
     return (
       <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
-        Dibatalkan
+        {status || 'Dibatalkan'}
       </span>
     );
   };
@@ -210,7 +210,7 @@ export default function UsersPage() {
                     </div>
                     <div>
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Transaksi Sewa</span>
-                      <p className="font-extrabold text-[#B38E5D] text-sm">{selectedUser?.total_rentals || 0} Kali</p>
+                      <p className="font-extrabold text-[#B38E5D] text-sm">{rentals.length} Kali</p>
                     </div>
                   </div>
 
@@ -237,32 +237,42 @@ export default function UsersPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
-                            {rentals.map((item) => (
-                              <tr key={item.id} className="hover:bg-slate-50 transition">
-                                <td className="px-4 py-3.5">
-                                  <p className="font-bold text-[#261C19]">{item.properti?.nama_properti || item.nama_properti || 'Properti N/A'}</p>
-                                  <p className="text-[10px] text-slate-400">{item.properti?.alamat || '-'}</p>
-                                </td>
-                                <td className="px-4 py-3.5 font-semibold text-slate-700">
-                                  {item.kamar?.nomor_kamar ? `Kamar No. ${item.kamar.nomor_kamar}` : item.kamar?.tipe_kamar || 'Tipe Standar'}
-                                </td>
-                                <td className="px-4 py-3.5 text-slate-600">
-                                  <div>
-                                    {item.tanggal_mulai ? new Date(item.tanggal_mulai).toLocaleDateString('id-ID') : '-'}
-                                    {item.tanggal_selesai && ` - ${new Date(item.tanggal_selesai).toLocaleDateString('id-ID')}`}
-                                  </div>
-                                  <div className="text-[10px] text-slate-400 font-mono">
-                                    {item.durasi_sewa ? `${item.durasi_sewa} Bulan` : ''}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3.5 font-bold text-[#261C19]">
-                                  {formatRupiah(item.total_harga || item.nominal || item.harga_sewa)}
-                                </td>
-                                <td className="px-4 py-3.5 text-center">
-                                  {renderStatusBadge(item.status)}
-                                </td>
-                              </tr>
-                            ))}
+                            {rentals.map((item) => {
+                              // Pengecekan fallback key untuk Properti, Tanggal & Durasi
+                              const namaProperti = item.properti?.title || item.properti?.nama || item.properti?.nama_properti || item.nama_properti || 'Properti N/A';
+                              const alamatProperti = item.properti?.address || item.properti?.alamat || '-';
+                              
+                              const tglMulai = item.check_in_date || item.tanggal_sewa || item.booking_date || item.tanggal_mulai;
+                              const durasiBulan = item.duration_months || item.durasi_sewa || item.durasi;
+                              
+                              const nominalBayar = item.total_price || item.nominal || item.total_harga || item.pembayaran?.amount || 0;
+
+                              return (
+                                <tr key={item.id} className="hover:bg-slate-50 transition">
+                                  <td className="px-4 py-3.5">
+                                    <p className="font-bold text-[#261C19]">{namaProperti}</p>
+                                    <p className="text-[10px] text-slate-400">{alamatProperti}</p>
+                                  </td>
+                                  <td className="px-4 py-3.5 font-semibold text-slate-700">
+                                    {item.kamar?.nomor_kamar ? `Kamar No. ${item.kamar.nomor_kamar}` : item.kamar?.tipe_kamar || item.kamar?.tipe || 'Tipe Standar'}
+                                  </td>
+                                  <td className="px-4 py-3.5 text-slate-600">
+                                    <div>
+                                      {tglMulai ? new Date(tglMulai).toLocaleDateString('id-ID') : '-'}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-mono">
+                                      {durasiBulan ? `${durasiBulan} Bulan` : '-'}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3.5 font-bold text-[#261C19]">
+                                    {formatRupiah(nominalBayar)}
+                                  </td>
+                                  <td className="px-4 py-3.5 text-center">
+                                    {renderStatusBadge(item.status)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
