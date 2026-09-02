@@ -19,7 +19,6 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\SuperAdminNotificationController;
 use App\Http\Controllers\VendorAdController;
-use App\Http\Middleware\EnsureIsAdmin; 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\SiteSettingController;
@@ -31,15 +30,15 @@ use App\Http\Controllers\Api\PlaylistController;
 // Import Controller Subscription (Premium Account)
 use App\Http\Controllers\Api\SubscriptionController;
 
+// Import Middleware Custom
+use App\Http\Middleware\EnsureIsAdmin; 
+use App\Http\Middleware\EnsureUserIsPremium;
+
 /*
 |--------------------------------------------------------------------------
 | ROUTE PUBLIC (Bisa diakses tanpa login)
 |--------------------------------------------------------------------------
 */
-
-Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsPremium::class])->group(function () {
-    Route::get('/premium-feature-data', [FeatureController::class, 'index']);
-});
 
 Route::post('/customer/register', [AuthController::class, 'registerCustomer']);
 Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
@@ -67,6 +66,13 @@ Route::post('/midtrans/webhook', [PembayaranController::class, 'handleMidtransWe
 */
 Route::middleware('auth:sanctum')->group(function () {
 
+    // --- REKENING UNTUK USER BIASA ---
+    Route::get('/bank-accounts', function () {
+        return response()->json([
+            'data' => \App\Models\BankAccount::where('is_active', true)->get()
+        ]);
+    });
+
     // --- AUTH & PROFILE USER ---
     Route::get('/auth/me', [ProfileController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -74,8 +80,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'update']);
 
     // --- SUBSCRIPTION & AKUN PREMIUM ---
+
     Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
     Route::get('/subscriptions/my-subscription', [SubscriptionController::class, 'mySubscription']);
+    Route::get('/subscriptions/history', [SubscriptionController::class, 'history']);
 
     // --- PENGATURAN PEMBAYARAN ---
     Route::get('/payment-settings', [AdminProfileController::class, 'getPaymentSettings']);
@@ -108,11 +116,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 
-    // --- FINANCE TRACKER USER ---
-    Route::get('/finance-tracker', [FinanceTrackerController::class, 'index']);
-    Route::post('/finance-tracker', [FinanceTrackerController::class, 'store']);
-    Route::delete('/finance-tracker/{id}', [FinanceTrackerController::class, 'destroy']);
-
     // --- WISHLIST ---
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle']);
@@ -132,18 +135,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/group', [ChatController::class, 'sendGroupMessage']);
     Route::get('/chat/group/{propertiId}', [ChatController::class, 'getGroupMessages']);
 
-    // --- MINI MUSIC PLAYER & PLAYLIST CUSTOM ---
-    Route::get('/tracks', [TrackController::class, 'index']);
-    Route::post('/tracks', [TrackController::class, 'store']);
-    Route::post('/tracks/{id}/like', [TrackController::class, 'toggleLike']);
+    /*
+    |--------------------------------------------------------------------------
+    | ROUTE KHUSUS AKUN PREMIUM
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(EnsureUserIsPremium::class)->group(function () {
+        Route::get('/tracks', [TrackController::class, 'index']);
+        Route::post('/tracks', [TrackController::class, 'store']);
+        Route::post('/tracks/{id}/like', [TrackController::class, 'toggleLike']);
 
-    Route::get('/playlists', [PlaylistController::class, 'index']);
-    Route::post('/playlists', [PlaylistController::class, 'store']);
-    Route::get('/playlists/{id}', [PlaylistController::class, 'show']);
-    Route::put('/playlists/{id}', [PlaylistController::class, 'update']);
-    Route::delete('/playlists/{id}', [PlaylistController::class, 'destroy']);
-    Route::post('/playlists/{id}/tracks', [PlaylistController::class, 'addTrack']);
-    Route::delete('/playlists/{id}/tracks/{trackId}', [PlaylistController::class, 'removeTrack']);
+        // --- FINANCE TRACKER USER ---
+        Route::get('/finance-tracker', [FinanceTrackerController::class, 'index']);
+        Route::post('/finance-tracker', [FinanceTrackerController::class, 'store']);
+        Route::delete('/finance-tracker/{id}', [FinanceTrackerController::class, 'destroy']);
+
+        Route::get('/playlists', [PlaylistController::class, 'index']);
+        Route::post('/playlists', [PlaylistController::class, 'store']);
+        Route::get('/playlists/{id}', [PlaylistController::class, 'show']);
+        Route::put('/playlists/{id}', [PlaylistController::class, 'update']);
+        Route::delete('/playlists/{id}', [PlaylistController::class, 'destroy']);
+        Route::post('/playlists/{id}/tracks', [PlaylistController::class, 'addTrack']);
+        Route::delete('/playlists/{id}/tracks/{trackId}', [PlaylistController::class, 'removeTrack']);
+    });
 
     // --- ROUTE KHUSUS ADMIN KOST & SUPERADMIN ---
     Route::middleware(EnsureIsAdmin::class)->prefix('admin')->group(function () {
@@ -248,7 +262,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/notifications/{id}/read', [SuperAdminNotificationController::class, 'markAsRead']);
             Route::patch('/notifications/mark-all-read', [SuperAdminNotificationController::class, 'markAllAsRead']);
             Route::delete('/notifications/{id}', [SuperAdminNotificationController::class, 'destroy']);
-            
         });
     });
 });

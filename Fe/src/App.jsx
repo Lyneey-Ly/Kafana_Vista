@@ -73,6 +73,11 @@ import PvZGame from './pages/PvzGame';
 import SimonSays from './pages/SimonSays';
 import TowerofHanoi from './pages/TowerofHanoi'; 
 import DungeonCrawlerGrid from './pages/DungeonCrawlerGrid';
+import UpgradePremium from './pages/UpgradePremium';
+import SuperAdminSubscriptions from './pages/SuperAdminSubscriptions';
+import AdminSubscriptionVerification from './pages/AdminSubscriptionVerification.jsx';
+import SubscriptionHistory from './pages/SubscriptionHistory';
+import GameLauncherHub from './pages/GameLauncherHub';
 import TeksRPGChooseYourOwnAdventure from './pages/TeksRPGChooseYourOwnAdventure';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_GOOGLE_CLIENT_ID_DI_SINI";
@@ -103,6 +108,8 @@ export default function App() {
               <Route path="/TowerofHanoi" element={<TowerofHanoi />} />
               <Route path="/DungeonCrawlerGrid" element={<DungeonCrawlerGrid />} />
               <Route path="/TeksRPGChooseYourOwnAdventure" element={<TeksRPGChooseYourOwnAdventure />} />
+              <Route path="/UpgradePremium" element={<UpgradePremium />} />
+              <Route path="/GameLauncherHub" element={<GameLauncherHub />} />
 
               {/* User Profile & Auth */}
               <Route path="/profile" element={<UserProfile />} />
@@ -126,6 +133,7 @@ export default function App() {
               <Route path="/PusatBantuan" element={<PusatBantuan />} />
               <Route path="/pusatbantuanuser" element={<PusatBantuanuser />} /> 
               <Route path="/dokumen-sewa/:id" element={<Dokumen />} />
+              <Route path="/SubscriptionHistory" element={<SubscriptionHistory />} />
 
               {/* Admin Routes */}
               <Route path="/adminprofile" element={<AdminProfile />} />
@@ -163,6 +171,8 @@ export default function App() {
                 <Route path="finance-tracker" element={<FinanceTrackerPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="VerifikasiIklanAdmin" element={<VerifikasiIklanAdmin />} />
+                <Route path="SuperAdminSubscriptions" element={<SuperAdminSubscriptions />} />
+                <Route path="AdminSubscriptionVerification" element={<AdminSubscriptionVerification />} />
               </Route>
               {/* Redirect dari URL lama berbasis query param (?tab=...) */}
               <Route path="/SuperAdminDashboard" element={<Navigate to="/superadmin/overview" replace />} />
