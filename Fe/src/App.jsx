@@ -66,6 +66,10 @@ import KalkulatorSurvival from './pages/KalkulatorSurvival';
 import ResepHematKost from './pages/ResepHematKost';
 import WordleClone from './pages/WordleCLone';
 import MusicDashboard from './pages/MusicDashboard';
+import MemoryCardMatch from './pages/MemoryCardMatch';
+import SnakeGame from './pages/SnakeGame';
+import TicTacToeSuper from './pages/TicTacToeSuper.jsx';
+import SimonSays from './pages/SimonSays';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_GOOGLE_CLIENT_ID_DI_SINI";
 
@@ -87,6 +91,10 @@ export default function App() {
               <Route path="/ResepHematKost" element={<ResepHematKost />} />
               <Route path="/music" element={<MusicDashboard />} />
               <Route path="/WordleClone" element={<WordleClone />} />
+              <Route path="/MemoryCardMatch" element={<MemoryCardMatch />} />
+              <Route path="/SnakeGame" element={<SnakeGame />} />
+              <Route path="/TicTacToeSuper" element={<TicTacToeSuper />} />
+              <Route path="/SimonSays" element={<SimonSays />} />
 
               {/* User Profile & Auth */}
               <Route path="/profile" element={<UserProfile />} />
