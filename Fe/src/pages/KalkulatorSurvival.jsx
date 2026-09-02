@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import SidebarUser from '../components/SidebarUser'; 
+
 import { 
   Wallet, 
   Calendar, 
@@ -138,6 +140,7 @@ export default function KalkulatorSurvival() {
   const StatusIcon = survivalStatus.icon;
 
   return (
+    <SidebarUser> 
     <div className="min-h-screen bg-[#FAF6F0] text-[#261C19] font-sans p-4 md:p-8 flex items-center justify-center">
       <div className="w-full max-w-5xl mx-auto space-y-8">
         
@@ -350,5 +353,6 @@ export default function KalkulatorSurvival() {
 
       </div>
     </div>
+    </SidebarUser>
   );
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2'; 
 import API from '../api'; 
 import SidebarUser from '../components/SidebarUser';
+import { Crown, Sparkles } from 'lucide-react';
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -17,6 +18,9 @@ export default function UserProfile() {
   // Data dari API Backend
   const [user, setUser] = useState(null);
   const [rentStatus, setRentStatus] = useState([]);
+
+  // Variabel turunan status premium (Ditaruh di top-level komponen)
+  const isPremium = user?.is_premium === true || user?.status === 'premium';
 
   // Form State untuk Edit Data Profil
   const [formState, setFormState] = useState({
@@ -242,13 +246,19 @@ export default function UserProfile() {
                 KV
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl md:text-2xl font-black tracking-tight text-[#261C19]">
                     Kafana<span className="text-[#C5A059] font-light">Vista</span>
                   </h1>
                   <span className="bg-[#261C19] text-[#C5A059] text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-[#C5A059]/40">
                     Resident Portal
                   </span>
+                  {isPremium && (
+                    <span className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full shadow-lg border border-yellow-300/50 animate-pulse">
+                      <Crown className="w-3.5 h-3.5" />
+                      Premium
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs md:text-sm text-slate-500 font-medium mt-0.5">
                   Pengelolaan kredensial profil dan status hunian sewa Anda.
@@ -290,7 +300,13 @@ export default function UserProfile() {
                       />
                     </div>
                     
-                    <button 
+                    {isPremium && (
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white p-1.5 rounded-full shadow-lg border-2 border-[#1E1614] animate-bounce">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                    )}
+                    
+                    <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="absolute inset-0 rounded-full bg-black/75 opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col items-center justify-center text-xs font-bold uppercase tracking-wider text-[#E5D7C5] gap-1.5 backdrop-blur-xs cursor-pointer border-2 border-[#C5A059]/50"
@@ -300,7 +316,7 @@ export default function UserProfile() {
                     </button>
 
                     <span className="absolute bottom-1.5 right-1.5 bg-gradient-to-r from-[#C5A059] to-[#8F6E45] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border border-[#1E1614]">
-                      {user?.role || "Penghuni"}
+                      {isPremium ? 'Premium' : (user?.role || "Penghuni")}
                     </span>
                   </div>
 
@@ -313,12 +329,27 @@ export default function UserProfile() {
                   />
 
                   <div className="text-center md:text-left space-y-1">
-                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">{user?.name}</h2>
+                    <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap">
+                      <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">{user?.name}</h2>
+                      {isPremium && (
+                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white px-3 py-1 rounded-full shadow-lg border border-yellow-300/50 animate-pulse">
+                          <Crown className="w-4 h-4" />
+                          <span className="text-xs font-extrabold uppercase tracking-wider">Premium</span>
+                          <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-[#E5D7C5]/70 font-medium">{user?.email}</p>
-                    <div className="pt-2 flex items-center justify-center md:justify-start gap-2">
+                    <div className="pt-2 flex items-center justify-center md:justify-start gap-2 flex-wrap">
                       <span className="inline-flex items-center gap-1.5 bg-emerald-950/80 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-700/60">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Akses Penghuni Aktif
                       </span>
+                      {isPremium && (
+                        <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-900/90 to-yellow-900/90 text-amber-200 text-xs font-bold px-3 py-1 rounded-full border border-amber-600/60 shadow-md">
+                          <Crown className="w-3.5 h-3.5" />
+                          Akses Premium Aktif
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

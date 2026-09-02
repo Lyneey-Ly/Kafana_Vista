@@ -32,7 +32,8 @@ import {
   Calendar,
   User,
   Radio,
-  Check
+  Check,
+  Compass
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import API from '../api';
@@ -41,59 +42,59 @@ import SidebarUser from '../components/SidebarUser';
 import { usePlayer, getFullUrl } from '../context/PlayerContext';
 
 // =====================================================================
-// UTILITY & SUB-COMPONENTS
+// UTILITY & SUB-COMPONENTS (TEMA KAVANA VISTA)
 // =====================================================================
 
-// Tooltip Sederhana
+// Tooltip Sederhana Kavana
 const Tooltip = ({ text, children }) => {
   return (
     <div className="relative group flex items-center justify-center">
       {children}
-      <span className="absolute bottom-full mb-2 hidden group-hover:block px-2 py-1 text-[10px] font-medium text-white bg-zinc-800 border border-zinc-700 rounded shadow-xl whitespace-nowrap z-50 pointer-events-none transition-all">
+      <span className="absolute bottom-full mb-2 hidden group-hover:block px-2 py-1 text-[10px] font-medium text-slate-100 bg-slate-900 border border-slate-700/80 rounded-lg shadow-xl whitespace-nowrap z-50 pointer-events-none transition-all">
         {text}
       </span>
     </div>
   );
 };
 
-// Skeleton Loader
+// Skeleton Loader Kavana
 const SkeletonRow = () => (
-  <tr className="animate-pulse border-b border-zinc-800/40">
-    <td className="px-4 py-3"><div className="h-4 bg-zinc-800 rounded w-4 m-auto"></div></td>
+  <tr className="animate-pulse border-b border-slate-800/50">
+    <td className="px-4 py-3"><div className="h-4 bg-slate-800/80 rounded w-4 m-auto"></div></td>
     <td className="px-4 py-3 flex items-center gap-3">
-      <div className="w-10 h-10 bg-zinc-800 rounded-md shrink-0"></div>
+      <div className="w-10 h-10 bg-slate-800/80 rounded-lg shrink-0"></div>
       <div className="space-y-2 flex-1">
-        <div className="h-4 bg-zinc-800 rounded w-36"></div>
-        <div className="h-3 bg-zinc-800/60 rounded w-24"></div>
+        <div className="h-4 bg-slate-800/80 rounded w-36"></div>
+        <div className="h-3 bg-slate-800/50 rounded w-24"></div>
       </div>
     </td>
-    <td className="px-4 py-3"><div className="h-4 bg-zinc-800 rounded w-24"></div></td>
-    <td className="px-4 py-3 text-center"><div className="h-4 bg-zinc-800 rounded w-12 mx-auto"></div></td>
-    <td className="px-4 py-3 text-center"><div className="h-6 bg-zinc-800 rounded w-6 mx-auto"></div></td>
-    <td className="px-4 py-3 text-center"><div className="h-8 bg-zinc-800 rounded-full w-8 mx-auto"></div></td>
-    <td className="px-4 py-3 text-center"><div className="h-6 bg-zinc-800 rounded w-6 mx-auto"></div></td>
+    <td className="px-4 py-3"><div className="h-4 bg-slate-800/80 rounded w-24"></div></td>
+    <td className="px-4 py-3 text-center"><div className="h-4 bg-slate-800/80 rounded w-12 mx-auto"></div></td>
+    <td className="px-4 py-3 text-center"><div className="h-6 bg-slate-800/80 rounded w-6 mx-auto"></div></td>
+    <td className="px-4 py-3 text-center"><div className="h-8 bg-slate-800/80 rounded-full w-8 mx-auto"></div></td>
+    <td className="px-4 py-3 text-center"><div className="h-6 bg-slate-800/80 rounded w-6 mx-auto"></div></td>
   </tr>
 );
 
 const SkeletonCard = () => (
-  <div className="bg-zinc-900/40 border border-zinc-800/60 p-4 rounded-xl animate-pulse space-y-3">
-    <div className="w-full aspect-square bg-zinc-800 rounded-lg"></div>
-    <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-    <div className="h-3 bg-zinc-800/60 rounded w-1/2"></div>
+  <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl animate-pulse space-y-3">
+    <div className="w-full aspect-square bg-slate-800 rounded-xl"></div>
+    <div className="h-4 bg-slate-800 rounded w-3/4"></div>
+    <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
   </div>
 );
 
-// Equalizer Animasi Hijau
+// Equalizer Animasi Warm Amber
 const EqualizerIcon = () => (
   <div className="flex items-end gap-0.5 h-4 w-4 justify-center">
-    <span className="w-0.5 bg-emerald-400 h-full animate-[bounce_1s_infinite_100ms]"></span>
-    <span className="w-0.5 bg-emerald-400 h-2/3 animate-[bounce_1s_infinite_300ms]"></span>
-    <span className="w-0.5 bg-emerald-400 h-4/5 animate-[bounce_1s_infinite_200ms]"></span>
+    <span className="w-0.5 bg-amber-400 h-full animate-[bounce_1s_infinite_100ms]"></span>
+    <span className="w-0.5 bg-amber-400 h-2/3 animate-[bounce_1s_infinite_300ms]"></span>
+    <span className="w-0.5 bg-amber-400 h-4/5 animate-[bounce_1s_infinite_200ms]"></span>
   </div>
 );
 
 // =====================================================================
-// 1. KOMPONEN UTAMA: MUSIC DASHBOARD
+// 1. KOMPONEN UTAMA: MUSIC DASHBOARD (KAVANA VISTA)
 // =====================================================================
 export default function MusicDashboard() {
   const {
@@ -205,7 +206,7 @@ export default function MusicDashboard() {
         position: 'top-end',
         showConfirmButton: false,
         timer: 1500,
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
     } catch (error) {
@@ -213,7 +214,7 @@ export default function MusicDashboard() {
         icon: 'error',
         title: 'Gagal',
         text: 'Lagu sudah ada di playlist ini.',
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
     }
@@ -230,7 +231,7 @@ export default function MusicDashboard() {
         icon: 'error',
         title: 'Gagal',
         text: 'Tidak dapat memuat isi playlist.',
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
     } finally {
@@ -241,14 +242,14 @@ export default function MusicDashboard() {
   const handleDeleteTrack = async (trackId) => {
     const result = await Swal.fire({
       title: 'Hapus Lagu?',
-      text: 'Lagu akan dihapus permanen dari library.',
+      text: 'Lagu akan dihapus permanen dari koleksi.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#10b981',
+      confirmButtonColor: '#f59e0b',
       cancelButtonColor: '#ef4444',
       confirmButtonText: 'Ya, Hapus',
       cancelButtonText: 'Batal',
-      background: '#18181b',
+      background: '#0f172a',
       color: '#fff',
     });
 
@@ -263,7 +264,7 @@ export default function MusicDashboard() {
           position: 'top-end',
           showConfirmButton: false,
           timer: 1500,
-          background: '#18181b',
+          background: '#0f172a',
           color: '#fff',
         });
       } catch (err) {
@@ -271,7 +272,7 @@ export default function MusicDashboard() {
           icon: 'error',
           title: 'Gagal Hapus',
           text: 'Terjadi kesalahan sistem.',
-          background: '#18181b',
+          background: '#0f172a',
           color: '#fff',
         });
       }
@@ -288,7 +289,7 @@ export default function MusicDashboard() {
       position: 'top-end',
       showConfirmButton: false,
       timer: 1500,
-      background: '#18181b',
+      background: '#0f172a',
       color: '#fff',
     });
   };
@@ -304,7 +305,7 @@ export default function MusicDashboard() {
       position: 'top-end',
       showConfirmButton: false,
       timer: 1500,
-      background: '#18181b',
+      background: '#0f172a',
       color: '#fff',
     });
   };
@@ -344,222 +345,221 @@ export default function MusicDashboard() {
 
   return (
     <SidebarUser> 
-    <div className="flex h-screen bg-black text-white font-sans overflow-hidden select-none">
-      
-      {/* 1. SIDEBAR LEFT NAVIGATION */}
-      <Sidebar
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
-        playlists={playlists}
-        onOpenPlaylist={handleOpenPlaylist}
-        onResetView={() => setViewMode({ type: 'all', data: null })}
-        setIsCreatePlaylistOpen={setIsCreatePlaylistOpen}
-        setIsUploadOpen={setIsUploadOpen}
-      />
-
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto bg-gradient-to-b from-zinc-900 via-zinc-950 to-black pb-36 relative">
+      <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans select-none">
         
-        {/* HERO BANNER BERGRADASI */}
-        <HeroBanner
-          viewMode={viewMode}
-          currentTrack={currentTrack}
+        {/* 1. SIDEBAR LEFT NAVIGATION (KAVANA VISTA) */}
+        <Sidebar
+          activeFilter={activeFilter}
+          setActiveFilter={setActiveFilter}
+          playlists={playlists}
+          onOpenPlaylist={handleOpenPlaylist}
           onResetView={() => setViewMode({ type: 'all', data: null })}
+          setIsCreatePlaylistOpen={setIsCreatePlaylistOpen}
+          setIsUploadOpen={setIsUploadOpen}
         />
 
-        <div className="p-6 space-y-6">
+        {/* MAIN CONTENT AREA */}
+        <div className="flex-1 flex flex-col min-h-screen bg-gradient-to-b from-slate-900/90 via-slate-950 to-slate-950 pb-36 relative">
           
-          {/* CONTROL BAR: SEARCH, FILTER CHIPS & SORTING */}
-          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/60 backdrop-blur-md">
+          {/* HERO BANNER KAVANA VISTA */}
+          <HeroBanner
+            viewMode={viewMode}
+            currentTrack={currentTrack}
+            onResetView={() => setViewMode({ type: 'all', data: null })}
+          />
+
+          <div className="p-6 space-y-6">
             
-            {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari lagu, artis, atau kata kunci..."
-                className="w-full bg-zinc-800/80 border border-zinc-700/60 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-500 transition-all"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-                >
-                  <X size={14} />
-                </button>
+            {/* CONTROL BAR: SEARCH, FILTER CHIPS & SORTING */}
+            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80 backdrop-blur-xl shadow-lg shadow-black/20">
+              
+              {/* Search Input */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Cari lagu, artis, atau kata kunci..."
+                  className="w-full bg-slate-800/70 border border-slate-700/60 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/30 transition-all"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Filter Tags / Chips */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  { id: 'all', label: 'Semua' },
+                  { id: 'liked', label: 'Lagu Favorit' },
+                  { id: 'recent', label: 'Terbaru' },
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    onClick={() => setActiveFilter(chip.id)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      activeFilter === chip.id
+                        ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+                        : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 hover:text-white'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sorting & View Mode Toggle */}
+              <div className="flex items-center gap-3 self-end md:self-auto">
+                <div className="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300">
+                  <SlidersHorizontal size={14} className="text-amber-400" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent text-xs text-slate-200 outline-none cursor-pointer"
+                  >
+                    <option value="title" className="bg-slate-900">Urutkan: Judul (A-Z)</option>
+                    <option value="artist" className="bg-slate-900">Urutkan: Penyanyi</option>
+                    <option value="date" className="bg-slate-900">Urutkan: Terbaru</option>
+                    <option value="duration" className="bg-slate-900">Urutkan: Durasi</option>
+                  </select>
+                </div>
+
+                {/* View Switcher */}
+                <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
+                  <button
+                    onClick={() => setDisplayMode('table')}
+                    className={`p-1.5 rounded-lg transition ${
+                      displayMode === 'table' ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Tooltip text="Tampilan Tabel"><List size={16} /></Tooltip>
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('grid')}
+                    className={`p-1.5 rounded-lg transition ${
+                      displayMode === 'grid' ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Tooltip text="Tampilan Grid"><Grid size={16} /></Tooltip>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* GRID PLAYLIST SECTION */}
+            {playlists.length > 0 && viewMode.type === 'all' && activeFilter === 'all' && !searchTerm && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-extrabold text-slate-200 tracking-wider uppercase flex items-center gap-2">
+                  <Library size={18} className="text-amber-400" /> Playlist Kavana
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                  {playlists.map((pl) => (
+                    <div
+                      key={pl.id}
+                      onClick={() => handleOpenPlaylist(pl)}
+                      className="group bg-slate-900/50 hover:bg-slate-800/80 border border-slate-800/80 hover:border-amber-500/30 p-3.5 rounded-2xl transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-xl cursor-pointer relative"
+                    >
+                      <div className="relative mb-3 overflow-hidden rounded-xl aspect-square bg-slate-800">
+                        <img
+                          src={getFullUrl(pl.cover_url) || 'https://placehold.co/150?text=Kavana+Playlist'}
+                          alt={pl.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                          onError={(e) => { e.target.src = 'https://placehold.co/150?text=Kavana+Playlist'; }}
+                        />
+                        <button className="absolute right-2 bottom-2 p-3 bg-amber-500 rounded-full text-slate-950 shadow-lg shadow-amber-500/30 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                          <Play size={18} fill="currentColor" />
+                        </button>
+                      </div>
+                      <h3 className="font-bold text-xs truncate text-white">{pl.name}</h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{pl.tracks_count || 0} Lagu</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TRACKS LIST / GRID */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-extrabold text-slate-200 tracking-wider uppercase flex items-center gap-2">
+                  <Music size={18} className="text-amber-400" />
+                  {viewMode.type === 'playlist' ? `Playlist: ${viewMode.data?.name}` : 'Koleksi Musik'}
+                  <span className="text-xs font-normal text-slate-500 lowercase">({filteredAndSortedTracks.length} lagu)</span>
+                </h2>
+              </div>
+
+              {displayMode === 'table' ? (
+                <TrackTableView
+                  loading={loading}
+                  tracks={filteredAndSortedTracks}
+                  currentTrack={currentTrack}
+                  isPlaying={isPlaying}
+                  playTrack={playTrack}
+                  playlists={playlists}
+                  handleToggleLike={handleToggleLike}
+                  handleAddToPlaylist={handleAddToPlaylist}
+                  handleDeleteTrack={handleDeleteTrack}
+                  handleAddToQueue={handleAddToQueue}
+                  handleShareTrack={handleShareTrack}
+                  activeMenuTrackId={activeMenuTrackId}
+                  setActiveMenuTrackId={setActiveMenuTrackId}
+                />
+              ) : (
+                <TrackGridView
+                  loading={loading}
+                  tracks={filteredAndSortedTracks}
+                  currentTrack={currentTrack}
+                  isPlaying={isPlaying}
+                  playTrack={playTrack}
+                  handleToggleLike={handleToggleLike}
+                  handleDeleteTrack={handleDeleteTrack}
+                  handleAddToQueue={handleAddToQueue}
+                />
               )}
             </div>
 
-            {/* Filter Tags / Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
-              {[
-                { id: 'all', label: 'Semua' },
-                { id: 'liked', label: 'Lagu Liked' },
-                { id: 'recent', label: 'Baru Ditambahkan' },
-              ].map((chip) => (
-                <button
-                  key={chip.id}
-                  onClick={() => setActiveFilter(chip.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    activeFilter === chip.id
-                      ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                      : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80'
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Sorting & View Mode Toggle */}
-            <div className="flex items-center gap-3 self-end md:self-auto">
-              <div className="flex items-center gap-1.5 bg-zinc-800/80 px-3 py-1.5 rounded-xl border border-zinc-700/50 text-xs text-zinc-300">
-                <SlidersHorizontal size={14} className="text-zinc-400" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent text-xs text-zinc-200 outline-none cursor-pointer"
-                >
-                  <option value="title" className="bg-zinc-900">Urutkan: Judul (A-Z)</option>
-                  <option value="artist" className="bg-zinc-900">Urutkan: Penyanyi</option>
-                  <option value="date" className="bg-zinc-900">Urutkan: Terbaru</option>
-                  <option value="duration" className="bg-zinc-900">Urutkan: Durasi</option>
-                </select>
-              </div>
-
-              {/* View Switcher */}
-              <div className="flex items-center bg-zinc-800/80 p-1 rounded-xl border border-zinc-700/50">
-                <button
-                  onClick={() => setDisplayMode('table')}
-                  className={`p-1.5 rounded-lg transition ${
-                    displayMode === 'table' ? 'bg-zinc-700 text-emerald-400' : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Tooltip text="Tampilan Tabel"><List size={16} /></Tooltip>
-                </button>
-                <button
-                  onClick={() => setDisplayMode('grid')}
-                  className={`p-1.5 rounded-lg transition ${
-                    displayMode === 'grid' ? 'bg-zinc-700 text-emerald-400' : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Tooltip text="Tampilan Grid"><Grid size={16} /></Tooltip>
-                </button>
-              </div>
-            </div>
-
           </div>
-
-          {/* GRID PLAYLIST SECTION */}
-          {playlists.length > 0 && viewMode.type === 'all' && activeFilter === 'all' && !searchTerm && (
-            <div className="space-y-3">
-              <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
-                <Library size={18} className="text-emerald-400" /> Playlist Saya
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                {playlists.map((pl) => (
-                  <div
-                    key={pl.id}
-                    onClick={() => handleOpenPlaylist(pl)}
-                    className="group bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800/60 p-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer relative"
-                  >
-                    <div className="relative mb-3 overflow-hidden rounded-lg aspect-square bg-zinc-800">
-                      <img
-                        src={getFullUrl(pl.cover_url) || 'https://placehold.co/150?text=Playlist'}
-                        alt={pl.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                        onError={(e) => { e.target.src = 'https://placehold.co/150?text=Playlist'; }}
-                      />
-                      <button className="absolute right-2 bottom-2 p-3 bg-emerald-500 rounded-full text-black shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                        <Play size={18} fill="currentColor" />
-                      </button>
-                    </div>
-                    <h3 className="font-bold text-xs truncate text-white">{pl.name}</h3>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">{pl.tracks_count || 0} Lagu</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TRACKS LIST / GRID */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
-                <Music size={18} className="text-emerald-400" />
-                {viewMode.type === 'playlist' ? `Playlist: ${viewMode.data?.name}` : 'Daftar Lagu'}
-                <span className="text-xs font-normal text-zinc-500">({filteredAndSortedTracks.length} Lagu)</span>
-              </h2>
-            </div>
-
-            {displayMode === 'table' ? (
-              <TrackTableView
-                loading={loading}
-                tracks={filteredAndSortedTracks}
-                currentTrack={currentTrack}
-                isPlaying={isPlaying}
-                playTrack={playTrack}
-                playlists={playlists}
-                handleToggleLike={handleToggleLike}
-                handleAddToPlaylist={handleAddToPlaylist}
-                handleDeleteTrack={handleDeleteTrack}
-                handleAddToQueue={handleAddToQueue}
-                handleShareTrack={handleShareTrack}
-                activeMenuTrackId={activeMenuTrackId}
-                setActiveMenuTrackId={setActiveMenuTrackId}
-              />
-            ) : (
-              <TrackGridView
-                loading={loading}
-                tracks={filteredAndSortedTracks}
-                currentTrack={currentTrack}
-                isPlaying={isPlaying}
-                playTrack={playTrack}
-                handleToggleLike={handleToggleLike}
-                handleDeleteTrack={handleDeleteTrack}
-                handleAddToQueue={handleAddToQueue}
-              />
-            )}
-          </div>
-
         </div>
+
+        {/* QUEUE DRAWER */}
+        <QueueDrawer
+          isOpen={isQueueOpen}
+          onClose={() => setIsQueueOpen(false)}
+          queueList={queueList}
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+        />
+
+        {/* FULL SCREEN EXPANDED NOW PLAYING MODAL */}
+        <ExpandedPlayerModal
+          isOpen={isExpandedPlayer}
+          onClose={() => setIsExpandedPlayer(false)}
+        />
+
+        {/* MODALS */}
+        <UploadTrackModal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} onSuccess={fetchData} />
+        <CreatePlaylistModal isOpen={isCreatePlaylistOpen} onClose={() => setIsCreatePlaylistOpen(false)} onSuccess={fetchData} />
+
+        {/* PLAYER BAR UNDERNEATH */}
+        <MusicPlayerBar
+          onOpenQueue={() => setIsQueueOpen((prev) => !prev)}
+          onExpandPlayer={() => setIsExpandedPlayer(true)}
+        />
+
       </div>
-
-      {/* QUEUE DRAWER */}
-      <QueueDrawer
-        isOpen={isQueueOpen}
-        onClose={() => setIsQueueOpen(false)}
-        queueList={queueList}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-      />
-
-      {/* FULL SCREEN EXPANDED NOW PLAYING MODAL */}
-      <ExpandedPlayerModal
-        isOpen={isExpandedPlayer}
-        onClose={() => setIsExpandedPlayer(false)}
-      />
-
-      {/* MODALS */}
-      <UploadTrackModal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} onSuccess={fetchData} />
-      <CreatePlaylistModal isOpen={isCreatePlaylistOpen} onClose={() => setIsCreatePlaylistOpen(false)} onSuccess={fetchData} />
-
-      {/* PLAYER BAR UNDERNEATH */}
-      <MusicPlayerBar
-        onOpenQueue={() => setIsQueueOpen((prev) => !prev)}
-        onExpandPlayer={() => setIsExpandedPlayer(true)}
-      />
-
-    </div>
-        </SidebarUser>
-
+    </SidebarUser>
   );
 }
 
 // =====================================================================
-// 2. KOMPONEN SIDEBAR NAVIGATION
+// 2. KOMPONEN SIDEBAR NAVIGATION (KAVANA VISTA)
 // =====================================================================
 function Sidebar({
   activeFilter,
@@ -571,32 +571,39 @@ function Sidebar({
   setIsUploadOpen,
 }) {
   return (
-    <div className="w-64 bg-black border-r border-zinc-800/80 flex flex-col h-full p-4 shrink-0 hidden md:flex">
-      {/* App Logo */}
-      <div className="flex items-center gap-3 px-2 py-3 mb-4">
-        <div className="p-2 bg-emerald-500 rounded-xl text-black shadow-lg shadow-emerald-500/30">
-          <Music size={22} strokeWidth={2.5} />
+    <div className="w-64 bg-slate-950/95 border-r border-slate-800/80 flex flex-col min-h-screen p-4 shrink-0 hidden md:flex sticky top-0 self-start backdrop-blur-xl">
+      {/* App Logo - Kavana Vista */}
+      <div className="flex items-center gap-3 px-2 py-3 mb-6">
+        <div className="p-2.5 bg-gradient-to-tr from-amber-500 to-indigo-600 rounded-xl text-slate-950 shadow-lg shadow-amber-500/20">
+          <Sparkles size={20} className="text-white" />
         </div>
-        <span className="font-black text-lg tracking-wider text-white">KAFA<span className="text-emerald-400">SPOTY</span></span>
+        <div>
+          <span className="font-black text-lg tracking-wider text-white">KAVANA</span>
+          <span className="font-light text-xs block text-amber-400 tracking-widest uppercase -mt-1">Vista Music</span>
+        </div>
       </div>
 
       {/* Main Nav */}
-      <div className="space-y-1 mb-6">
+      <div className="space-y-1.5 mb-6">
         <button
           onClick={() => { onResetView(); setActiveFilter('all'); }}
-          className={`w-full flex items-center gap-4 px-3 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-            activeFilter === 'all' ? 'bg-zinc-800/90 text-emerald-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+          className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            activeFilter === 'all'
+              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
           }`}
         >
           <Home size={18} /> Beranda
         </button>
         <button
           onClick={() => { onResetView(); setActiveFilter('liked'); }}
-          className={`w-full flex items-center gap-4 px-3 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-            activeFilter === 'liked' ? 'bg-zinc-800/90 text-emerald-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+          className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            activeFilter === 'liked'
+              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
           }`}
         >
-          <Heart size={18} /> Lagu Liked
+          <Heart size={18} /> Lagu Favorit
         </button>
       </div>
 
@@ -604,35 +611,35 @@ function Sidebar({
       <div className="space-y-2 mb-6">
         <button
           onClick={() => setIsCreatePlaylistOpen(true)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs font-semibold border border-zinc-800 transition cursor-pointer"
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white rounded-xl text-xs font-semibold border border-slate-800 transition cursor-pointer"
         >
-          <Plus size={16} className="text-emerald-400" /> Buat Playlist
+          <Plus size={16} className="text-amber-400" /> Buat Playlist
         </button>
         <button
           onClick={() => setIsUploadOpen(true)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-500/20 cursor-pointer"
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 rounded-xl text-xs font-bold transition shadow-md shadow-amber-500/20 cursor-pointer"
         >
           <Upload size={16} /> Unggah MP3
         </button>
       </div>
 
-      <hr className="border-zinc-800/60 mb-4" />
+      <hr className="border-slate-800/80 mb-4" />
 
       {/* User Playlists List */}
-      <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">Playlist Kamu</p>
+      <div className="flex-1 space-y-1 pr-1">
+        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Playlist Kamu</p>
         {playlists.length > 0 ? (
           playlists.map((pl) => (
             <button
               key={pl.id}
               onClick={() => onOpenPlaylist(pl)}
-              className="w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-400 hover:text-white hover:bg-zinc-900/50 truncate transition block"
+              className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-900/50 truncate transition block"
             >
               {pl.name}
             </button>
           ))
         ) : (
-          <p className="px-3 text-xs text-zinc-600 italic">Belum ada playlist</p>
+          <p className="px-3 text-xs text-slate-600 italic">Belum ada playlist</p>
         )}
       </div>
     </div>
@@ -640,41 +647,45 @@ function Sidebar({
 }
 
 // =====================================================================
-// 3. KOMPONEN HERO BANNER BERGRADASI DYNAMIS
+// 3. KOMPONEN HERO BANNER KAVANA VISTA
 // =====================================================================
 function HeroBanner({ viewMode, currentTrack, onResetView }) {
   const isPlaylist = viewMode.type === 'playlist';
-  const bannerTitle = isPlaylist ? viewMode.data?.name : 'Selamat Datang di KafaSpoty';
+  const bannerTitle = isPlaylist ? viewMode.data?.name : 'Selamat Datang di Kavana Vista';
   const bannerDesc = isPlaylist
     ? viewMode.data?.description || 'Daftar lagu pilihan di dalam playlist ini.'
-    : 'Nikmati musik favoritmu dengan kualitas audio tinggi tanpa hambatan.';
+    : 'Nikmati alunan musik kesukaanmu dalam atmosfer visual yang anggun dan modern.';
   const bannerCover = isPlaylist
     ? getFullUrl(viewMode.data?.cover_url)
-    : getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/300x300/18181b/ffffff?text=KafaSpoty';
+    : getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/300x300/0f172a/ffffff?text=Kavana+Vista';
 
   return (
-    <div className="relative w-full h-64 bg-gradient-to-b from-emerald-900/40 via-zinc-900/60 to-transparent p-6 flex items-end border-b border-zinc-800/40">
+    <div className="relative w-full h-64 bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-slate-950 p-6 flex items-end border-b border-slate-800/60 overflow-hidden">
+      {/* Subtle Glow Background Elements */}
+      <div className="absolute top-0 right-1/4 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-10 right-10 w-60 h-60 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
       <div className="flex items-end gap-6 relative z-10 w-full">
         <img
           src={bannerCover}
           alt="Banner Cover"
-          className="w-36 h-36 rounded-2xl object-cover shadow-2xl ring-2 ring-white/10 shrink-0"
-          onError={(e) => { e.target.src = 'https://placehold.co/150x150/18181b/ffffff?text=KafaSpoty'; }}
+          className="w-36 h-36 rounded-2xl object-cover shadow-2xl ring-2 ring-amber-500/20 shrink-0"
+          onError={(e) => { e.target.src = 'https://placehold.co/150x150/0f172a/ffffff?text=Kavana+Vista'; }}
         />
         <div className="space-y-2 flex-1 min-w-0">
           {isPlaylist && (
             <button
               onClick={onResetView}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-black/40 hover:bg-black/60 rounded-full text-xs text-zinc-300 mb-1 backdrop-blur-md transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900/80 hover:bg-slate-800 rounded-full text-xs text-slate-300 mb-1 border border-slate-700/50 backdrop-blur-md transition cursor-pointer"
             >
               <ArrowLeft size={14} /> Kembali ke Semua
             </button>
           )}
-          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-            {isPlaylist ? 'PLAYLIST' : 'LIBRARY MUSIK'}
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">
+            {isPlaylist ? 'PLAYLIST KAVANA' : 'KOLEKSI AUDIO'}
           </span>
           <h1 className="text-3xl lg:text-4xl font-black text-white truncate">{bannerTitle}</h1>
-          <p className="text-xs text-zinc-300 max-w-xl line-clamp-2">{bannerDesc}</p>
+          <p className="text-xs text-slate-300 max-w-xl line-clamp-2 leading-relaxed">{bannerDesc}</p>
         </div>
       </div>
     </div>
@@ -700,9 +711,9 @@ function TrackTableView({
   setActiveMenuTrackId,
 }) {
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden backdrop-blur-md">
+    <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-xl">
       <table className="w-full text-left text-xs whitespace-nowrap">
-        <thead className="bg-zinc-900/80 text-zinc-400 border-b border-zinc-800/60 text-[11px] uppercase tracking-wider">
+        <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800/80 text-[11px] uppercase tracking-wider">
           <tr>
             <th className="px-4 py-3.5 w-10 text-center">#</th>
             <th className="px-4 py-3.5">Judul Lagu</th>
@@ -713,7 +724,7 @@ function TrackTableView({
             <th className="px-4 py-3.5 text-center">Aksi</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-800/40">
+        <tbody className="divide-y divide-slate-800/40">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
           ) : tracks.length > 0 ? (
@@ -725,28 +736,28 @@ function TrackTableView({
               return (
                 <tr
                   key={track.id}
-                  className={`hover:bg-zinc-800/40 transition group ${
-                    isCurrent ? 'bg-emerald-500/5' : ''
+                  className={`hover:bg-slate-800/40 transition group ${
+                    isCurrent ? 'bg-amber-500/10 border-l-2 border-amber-400' : ''
                   }`}
                 >
-                  <td className="px-4 py-3 text-center text-zinc-500 font-mono">
+                  <td className="px-4 py-3 text-center text-slate-500 font-mono">
                     {isCurrentPlaying ? <EqualizerIcon /> : idx + 1}
                   </td>
                   <td className="px-4 py-3 flex items-center gap-3">
                     <img
-                      src={getFullUrl(track.cover_url) || 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'}
+                      src={getFullUrl(track.cover_url) || 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'}
                       alt=""
-                      className="w-10 h-10 rounded-lg object-cover bg-zinc-800 shrink-0"
-                      onError={(e) => { e.target.src = 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'; }}
+                      className="w-10 h-10 rounded-lg object-cover bg-slate-800 shrink-0"
+                      onError={(e) => { e.target.src = 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'; }}
                     />
                     <div className="min-w-0">
-                      <p className={`font-semibold truncate ${isCurrent ? 'text-emerald-400' : 'text-zinc-100'}`}>
+                      <p className={`font-semibold truncate ${isCurrent ? 'text-amber-400 font-bold' : 'text-slate-100'}`}>
                         {track.title}
                       </p>
-                      <p className="text-[11px] text-zinc-400 truncate">{track.artist}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{track.artist}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-zinc-400 font-medium truncate max-w-[150px]">{track.artist}</td>
+                  <td className="px-4 py-3 text-slate-400 font-medium truncate max-w-[150px]">{track.artist}</td>
 
                   {/* Like Button */}
                   <td className="px-4 py-3 text-center">
@@ -756,7 +767,7 @@ function TrackTableView({
                     >
                       <Heart
                         size={16}
-                        className={isLiked ? 'fill-rose-500 text-rose-500' : 'text-zinc-500 hover:text-rose-400'}
+                        className={isLiked ? 'fill-rose-500 text-rose-500' : 'text-slate-500 hover:text-rose-400'}
                       />
                     </button>
                   </td>
@@ -771,7 +782,7 @@ function TrackTableView({
                             e.target.value = '';
                           }
                         }}
-                        className="bg-zinc-800/80 text-[11px] text-zinc-300 border border-zinc-700/60 rounded-lg px-2 py-1 outline-none cursor-pointer focus:border-emerald-500"
+                        className="bg-slate-800/80 text-[11px] text-slate-300 border border-slate-700/60 rounded-lg px-2 py-1 outline-none cursor-pointer focus:border-amber-400"
                       >
                         <option value="">+ Playlist</option>
                         {playlists.map((pl) => (
@@ -779,7 +790,7 @@ function TrackTableView({
                         ))}
                       </select>
                     ) : (
-                      <span className="text-zinc-600">-</span>
+                      <span className="text-slate-600">-</span>
                     )}
                   </td>
 
@@ -787,7 +798,7 @@ function TrackTableView({
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => playTrack(tracks, idx)}
-                      className="p-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-black rounded-full transition cursor-pointer"
+                      className="p-2 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 rounded-full transition cursor-pointer"
                     >
                       {isCurrentPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
                     </button>
@@ -797,7 +808,7 @@ function TrackTableView({
                   <td className="px-4 py-3 text-center relative">
                     <button
                       onClick={() => setActiveMenuTrackId(activeMenuTrackId === track.id ? null : track.id)}
-                      className="p-1 text-zinc-400 hover:text-white rounded-md transition cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-white rounded-md transition cursor-pointer"
                     >
                       <MoreVertical size={16} />
                     </button>
@@ -818,7 +829,7 @@ function TrackTableView({
             })
           ) : (
             <tr>
-              <td colSpan="7" className="px-6 py-12 text-center text-zinc-500">
+              <td colSpan="7" className="px-6 py-12 text-center text-slate-500">
                 Lagu tidak ditemukan.
               </td>
             </tr>
@@ -851,7 +862,7 @@ function TrackGridView({
   }
 
   if (tracks.length === 0) {
-    return <div className="text-center py-12 text-zinc-500 text-xs">Lagu tidak ditemukan.</div>;
+    return <div className="text-center py-12 text-slate-500 text-xs">Lagu tidak ditemukan.</div>;
   }
 
   return (
@@ -863,46 +874,46 @@ function TrackGridView({
         return (
           <div
             key={track.id}
-            className="group bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800/60 p-3.5 rounded-xl transition duration-300 relative flex flex-col justify-between"
+            className="group bg-slate-900/50 hover:bg-slate-800/80 border border-slate-800/80 hover:border-amber-500/30 p-3.5 rounded-2xl transition duration-300 relative flex flex-col justify-between shadow-md"
           >
-            <div className="relative aspect-square rounded-lg overflow-hidden bg-zinc-800 mb-3">
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-800 mb-3">
               <img
-                src={getFullUrl(track.cover_url) || 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'}
+                src={getFullUrl(track.cover_url) || 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'}
                 alt={track.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                onError={(e) => { e.target.src = 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'; }}
+                onError={(e) => { e.target.src = 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'; }}
               />
               <button
                 onClick={() => playTrack(tracks, idx)}
-                className="absolute right-2 bottom-2 p-3 bg-emerald-500 rounded-full text-black shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
+                className="absolute right-2 bottom-2 p-3 bg-amber-500 rounded-full text-slate-950 shadow-lg shadow-amber-500/30 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 cursor-pointer"
               >
                 {isCurrentPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
               </button>
             </div>
 
             <div>
-              <h3 className={`font-bold text-xs truncate ${isCurrent ? 'text-emerald-400' : 'text-white'}`}>
+              <h3 className={`font-bold text-xs truncate ${isCurrent ? 'text-amber-400' : 'text-white'}`}>
                 {track.title}
               </h3>
-              <p className="text-[11px] text-zinc-400 truncate mt-0.5">{track.artist}</p>
+              <p className="text-[11px] text-slate-400 truncate mt-0.5">{track.artist}</p>
             </div>
 
-            <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-800/40">
+            <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/60">
               <button
                 onClick={() => handleToggleLike(track.id)}
-                className="text-zinc-500 hover:text-rose-500 transition cursor-pointer"
+                className="text-slate-500 hover:text-rose-500 transition cursor-pointer"
               >
                 <Heart size={14} className={track.is_liked ? 'fill-rose-500 text-rose-500' : ''} />
               </button>
               <button
                 onClick={() => handleAddToQueue(track)}
-                className="text-zinc-500 hover:text-emerald-400 transition cursor-pointer"
+                className="text-slate-500 hover:text-amber-400 transition cursor-pointer"
               >
                 <ListMusic size={14} />
               </button>
               <button
                 onClick={() => handleDeleteTrack(track.id)}
-                className="text-zinc-500 hover:text-rose-500 transition cursor-pointer"
+                className="text-slate-500 hover:text-rose-500 transition cursor-pointer"
               >
                 <Trash2 size={14} />
               </button>
@@ -933,27 +944,27 @@ function ContextMenu({ track, onClose, onAddToQueue, onShare, onDelete, onLike }
   return (
     <div
       ref={menuRef}
-      className="absolute right-6 top-8 w-44 bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl p-1.5 z-50 text-xs text-zinc-200 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
+      className="absolute right-6 top-8 w-44 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl p-1.5 z-50 text-xs text-slate-200 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
     >
       <button
         onClick={() => { onAddToQueue(); onClose(); }}
-        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800 rounded-lg transition text-left cursor-pointer"
+        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-slate-800 rounded-lg transition text-left cursor-pointer"
       >
-        <ListMusic size={14} className="text-emerald-400" /> Tambah ke Queue
+        <ListMusic size={14} className="text-amber-400" /> Tambah ke Queue
       </button>
       <button
         onClick={() => { onLike(); onClose(); }}
-        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800 rounded-lg transition text-left cursor-pointer"
+        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-slate-800 rounded-lg transition text-left cursor-pointer"
       >
         <Heart size={14} className="text-rose-400" /> Sukai Lagu
       </button>
       <button
         onClick={() => { onShare(); onClose(); }}
-        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800 rounded-lg transition text-left cursor-pointer"
+        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-slate-800 rounded-lg transition text-left cursor-pointer"
       >
-        <Share2 size={14} className="text-blue-400" /> Bagikan Tautan
+        <Share2 size={14} className="text-indigo-400" /> Bagikan Tautan
       </button>
-      <hr className="my-1 border-zinc-800" />
+      <hr className="my-1 border-slate-800" />
       <button
         onClick={() => { onDelete(); onClose(); }}
         className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-rose-500/10 text-rose-400 rounded-lg transition text-left cursor-pointer"
@@ -971,14 +982,14 @@ function QueueDrawer({ isOpen, onClose, queueList, currentTrack, isPlaying }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-80 max-w-full bg-zinc-950 border-l border-zinc-800/80 h-full p-5 flex flex-col justify-between shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-80 max-w-full bg-slate-950 border-l border-slate-800 h-full p-5 flex flex-col justify-between shadow-2xl">
         <div>
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <ListMusic size={18} className="text-emerald-400" /> Antrean Lagu (Queue)
+              <ListMusic size={18} className="text-amber-400" /> Antrean Lagu
             </h3>
-            <button onClick={onClose} className="p-1 text-zinc-400 hover:text-white cursor-pointer">
+            <button onClick={onClose} className="p-1 text-slate-400 hover:text-white cursor-pointer">
               <X size={18} />
             </button>
           </div>
@@ -986,16 +997,16 @@ function QueueDrawer({ isOpen, onClose, queueList, currentTrack, isPlaying }) {
           {/* Currently Playing */}
           {currentTrack && (
             <div className="mb-6">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-2">Sedang Diputar</p>
-              <div className="flex items-center gap-3 p-2 bg-zinc-900/80 border border-emerald-500/30 rounded-xl">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-2">Sedang Diputar</p>
+              <div className="flex items-center gap-3 p-2.5 bg-slate-900/80 border border-amber-500/30 rounded-xl">
                 <img
-                  src={getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'}
+                  src={getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'}
                   alt=""
                   className="w-10 h-10 rounded-md object-cover"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-xs text-white truncate">{currentTrack.title}</p>
-                  <p className="text-[11px] text-zinc-400 truncate">{currentTrack.artist}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{currentTrack.artist}</p>
                 </div>
                 {isPlaying && <EqualizerIcon />}
               </div>
@@ -1004,20 +1015,20 @@ function QueueDrawer({ isOpen, onClose, queueList, currentTrack, isPlaying }) {
 
           {/* Up Next List */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Berikutnya</p>
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Berikutnya</p>
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
               {queueList.length > 0 ? (
                 queueList.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-2 bg-zinc-900/40 rounded-lg hover:bg-zinc-800/50">
-                    <img src={getFullUrl(item.cover_url) || 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'} alt="" className="w-8 h-8 rounded object-cover" />
+                  <div key={idx} className="flex items-center gap-3 p-2 bg-slate-900/40 rounded-lg hover:bg-slate-800/50">
+                    <img src={getFullUrl(item.cover_url) || 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'} alt="" className="w-8 h-8 rounded object-cover" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-xs text-zinc-200 truncate">{item.title}</p>
-                      <p className="text-[10px] text-zinc-400 truncate">{item.artist}</p>
+                      <p className="font-semibold text-xs text-slate-200 truncate">{item.title}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{item.artist}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-zinc-600 italic py-4 text-center">Antrean manual kosong.</p>
+                <p className="text-xs text-slate-600 italic py-4 text-center">Antrean manual kosong.</p>
               )}
             </div>
           </div>
@@ -1025,7 +1036,7 @@ function QueueDrawer({ isOpen, onClose, queueList, currentTrack, isPlaying }) {
 
         <button
           onClick={onClose}
-          className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold rounded-xl text-zinc-300 transition cursor-pointer"
+          className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-xl text-slate-300 transition cursor-pointer"
         >
           Tutup Antrean
         </button>
@@ -1051,23 +1062,23 @@ function ExpandedPlayerModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-zinc-950/95 backdrop-blur-2xl flex flex-col justify-between p-8 animate-in slide-in-from-bottom duration-300">
+    <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-2xl flex flex-col justify-between p-8 animate-in slide-in-from-bottom duration-300">
       {/* Top Header Controls */}
       <div className="flex items-center justify-between">
-        <button onClick={onClose} className="p-2 bg-zinc-800/60 rounded-full hover:bg-zinc-700 text-white cursor-pointer">
+        <button onClick={onClose} className="p-2 bg-slate-800/60 rounded-full hover:bg-slate-700 text-white cursor-pointer">
           <Minimize2 size={20} />
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">PLAYING FROM LIBRARY</span>
-        <div className="flex gap-2 bg-zinc-900 p-1 rounded-full border border-zinc-800">
+        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">PLAYING FROM KAVANA AUDIO</span>
+        <div className="flex gap-2 bg-slate-900 p-1 rounded-full border border-slate-800">
           <button
             onClick={() => setTab('visualizer')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${tab === 'visualizer' ? 'bg-emerald-500 text-black' : 'text-zinc-400'}`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${tab === 'visualizer' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}
           >
             Visual
           </button>
           <button
             onClick={() => setTab('lyrics')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${tab === 'lyrics' ? 'bg-emerald-500 text-black' : 'text-zinc-400'}`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${tab === 'lyrics' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}
           >
             Lirik
           </button>
@@ -1079,9 +1090,9 @@ function ExpandedPlayerModal({ isOpen, onClose }) {
         {/* Cover Artwork */}
         <div className="relative group">
           <img
-            src={getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/300x300/18181b/ffffff?text=KafaSpoty'}
+            src={getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/300x300/0f172a/ffffff?text=Kavana+Vista'}
             alt=""
-            className={`w-72 h-72 md:w-80 md:h-80 rounded-3xl object-cover shadow-2xl ring-4 ring-emerald-500/20 transition-all ${
+            className={`w-72 h-72 md:w-80 md:h-80 rounded-3xl object-cover shadow-2xl ring-4 ring-amber-500/20 transition-all ${
               isPlaying ? 'scale-105' : 'scale-100 opacity-90'
             }`}
           />
@@ -1090,29 +1101,29 @@ function ExpandedPlayerModal({ isOpen, onClose }) {
         {/* Dynamic Display / Visualizer Placeholder */}
         <div className="w-full max-w-md space-y-4 text-center md:text-left">
           {tab === 'visualizer' ? (
-            <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex flex-col items-center justify-center h-48 space-y-3">
-              <Sparkles size={32} className="text-emerald-400 animate-pulse" />
-              <p className="text-xs text-zinc-400">Audio Visualizer Active</p>
-              <div className="flex items-end gap-1 h-12">
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col items-center justify-center h-48 space-y-3">
+              <Sparkles size={32} className="text-amber-400 animate-pulse" />
+              <p className="text-xs text-slate-400">Visualizer Kavana Aktif</p>
+              <div className="flex items-end gap-1.5 h-12">
                 {[40, 80, 20, 90, 60, 30, 70, 100, 50, 80].map((h, idx) => (
                   <div
                     key={idx}
                     style={{ height: isPlaying ? `${h}%` : '10%' }}
-                    className="w-1.5 bg-emerald-500 rounded-full transition-all duration-300"
+                    className="w-1.5 bg-amber-400 rounded-full transition-all duration-300"
                   ></div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="p-6 bg-zinc-900/50 border border-zinc-800 rounded-2xl h-48 overflow-y-auto text-center space-y-2 text-sm text-zinc-300 italic custom-scrollbar">
-              <p className="text-emerald-400 font-bold">♪ Lirik lagu otomatis ♪</p>
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl h-48 overflow-y-auto text-center space-y-2 text-sm text-slate-300 italic">
+              <p className="text-amber-400 font-bold">♪ Lirik lagu otomatis ♪</p>
               <p>Lirik belum tersedia untuk track ini.</p>
             </div>
           )}
 
           <div>
             <h2 className="text-2xl font-black text-white truncate">{currentTrack.title}</h2>
-            <p className="text-sm text-emerald-400 font-semibold mt-1">{currentTrack.artist}</p>
+            <p className="text-sm text-amber-400 font-semibold mt-1">{currentTrack.artist}</p>
           </div>
         </div>
       </div>
@@ -1126,25 +1137,25 @@ function ExpandedPlayerModal({ isOpen, onClose }) {
             max={duration || 100}
             value={currentTime}
             onChange={(e) => seek(Number(e.target.value))}
-            className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+            className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
           />
-          <div className="flex justify-between text-xs text-zinc-400 font-mono">
+          <div className="flex justify-between text-xs text-slate-400 font-mono">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-center gap-8">
-          <button onClick={handlePrev} className="text-zinc-400 hover:text-white transition p-2 cursor-pointer">
+          <button onClick={handlePrev} className="text-slate-400 hover:text-white transition p-2 cursor-pointer">
             <SkipBack size={28} />
           </button>
           <button
             onClick={togglePlay}
-            className="p-5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-full shadow-xl transition hover:scale-105 cursor-pointer"
+            className="p-5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-full shadow-xl shadow-amber-500/20 transition hover:scale-105 cursor-pointer"
           >
             {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
           </button>
-          <button onClick={handleNext} className="text-zinc-400 hover:text-white transition p-2 cursor-pointer">
+          <button onClick={handleNext} className="text-slate-400 hover:text-white transition p-2 cursor-pointer">
             <SkipForward size={28} />
           </button>
         </div>
@@ -1189,7 +1200,7 @@ function UploadTrackModal({ isOpen, onClose, onSuccess }) {
         text: 'Lagu berhasil ditambahkan.',
         timer: 1500,
         showConfirmButton: false,
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
       onSuccess();
@@ -1199,7 +1210,7 @@ function UploadTrackModal({ isOpen, onClose, onSuccess }) {
         icon: 'error',
         title: 'Gagal Upload',
         text: error.response?.data?.message || 'Terjadi kesalahan.',
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
     } finally {
@@ -1208,86 +1219,86 @@ function UploadTrackModal({ isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md text-white shadow-2xl">
+    <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-white shadow-2xl">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-base font-bold flex items-center gap-2">
-            <Upload size={18} className="text-emerald-400" /> Unggah Lagu Baru
+            <Upload size={18} className="text-amber-400" /> Unggah Lagu Baru
           </h3>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="text-slate-400 hover:text-white"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-zinc-400 mb-1 font-medium">Judul Lagu</label>
+            <label className="block text-slate-400 mb-1 font-medium">Judul Lagu</label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"
-              placeholder="Cth: Boomerang"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400"
+              placeholder="Cth: Sunset Kavana"
             />
           </div>
           <div>
-            <label className="block text-zinc-400 mb-1 font-medium">Penyanyi / Artist</label>
+            <label className="block text-slate-400 mb-1 font-medium">Penyanyi / Artist</label>
             <input
               type="text"
               required
               value={formData.artist}
               onChange={(e) => setFormData({ ...formData, artist: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400"
               placeholder="Cth: NIKI"
             />
           </div>
 
-          <div className="flex gap-4 text-zinc-300 py-1">
+          <div className="flex gap-4 text-slate-300 py-1">
             <label className="flex items-center gap-1.5 cursor-pointer">
-              <input type="radio" name="type" checked={uploadType === 'file'} onChange={() => setUploadType('file')} className="accent-emerald-500" /> File MP3
+              <input type="radio" name="type" checked={uploadType === 'file'} onChange={() => setUploadType('file')} className="accent-amber-400" /> File MP3
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer">
-              <input type="radio" name="type" checked={uploadType === 'url'} onChange={() => setUploadType('url')} className="accent-emerald-500" /> URL External
+              <input type="radio" name="type" checked={uploadType === 'url'} onChange={() => setUploadType('url')} className="accent-amber-400" /> URL External
             </label>
           </div>
 
           {uploadType === 'file' ? (
             <div>
-              <label className="block text-zinc-400 mb-1 font-medium">File Audio (.mp3)</label>
+              <label className="block text-slate-400 mb-1 font-medium">File Audio (.mp3)</label>
               <input
                 type="file"
                 accept="audio/*"
                 required
                 onChange={(e) => setAudioFile(e.target.files[0])}
-                className="w-full text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer"
+                className="w-full text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer"
               />
             </div>
           ) : (
             <div>
-              <label className="block text-zinc-400 mb-1 font-medium">Link Direct Audio URL</label>
+              <label className="block text-slate-400 mb-1 font-medium">Link Direct Audio URL</label>
               <input
                 type="url"
                 required
                 value={formData.audio_url}
                 onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400"
                 placeholder="https://example.com/audio.mp3"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-zinc-400 mb-1 font-medium">Foto Cover Album (Opsional)</label>
+            <label className="block text-slate-400 mb-1 font-medium">Foto Cover Album (Opsional)</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setCoverFile(e.target.files[0])}
-              className="w-full text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer"
+              className="w-full text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer"
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-semibold cursor-pointer">Batal</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold cursor-pointer">Batal</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition cursor-pointer">
               {loading ? 'Mengunggah...' : 'Simpan Lagu'}
             </button>
           </div>
@@ -1324,7 +1335,7 @@ function CreatePlaylistModal({ isOpen, onClose, onSuccess }) {
         text: 'Playlist berhasil dibuat.',
         timer: 1500,
         showConfirmButton: false,
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
       setName('');
@@ -1337,7 +1348,7 @@ function CreatePlaylistModal({ isOpen, onClose, onSuccess }) {
         icon: 'error',
         title: 'Gagal',
         text: error.response?.data?.message || 'Terjadi kesalahan.',
-        background: '#18181b',
+        background: '#0f172a',
         color: '#fff',
       });
     } finally {
@@ -1346,49 +1357,49 @@ function CreatePlaylistModal({ isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-md text-white shadow-2xl">
+    <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md text-white shadow-2xl">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-base font-bold flex items-center gap-2">
-            <Plus size={18} className="text-emerald-400" /> Buat Playlist Baru
+            <Plus size={18} className="text-amber-400" /> Buat Playlist Baru
           </h3>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="text-slate-400 hover:text-white"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-zinc-400 mb-1 font-medium">Nama Playlist</label>
+            <label className="block text-slate-400 mb-1 font-medium">Nama Playlist</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"
-              placeholder="Cth: Lagu Santai Malam"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400"
+              placeholder="Cth: Suasana Santai"
             />
           </div>
           <div>
-            <label className="block text-zinc-400 mb-1 font-medium">Deskripsi</label>
+            <label className="block text-slate-400 mb-1 font-medium">Deskripsi</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-emerald-500"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400"
               rows={3}
             />
           </div>
           <div>
-            <label className="block text-zinc-400 mb-1 font-medium">Foto Sampul</label>
+            <label className="block text-slate-400 mb-1 font-medium">Foto Sampul</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setCoverFile(e.target.files[0])}
-              className="w-full text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer"
+              className="w-full text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer"
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-semibold cursor-pointer">Batal</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold cursor-pointer">Batal</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition cursor-pointer">
               {loading ? 'Menyimpan...' : 'Buat Playlist'}
             </button>
           </div>
@@ -1399,7 +1410,7 @@ function CreatePlaylistModal({ isOpen, onClose, onSuccess }) {
 }
 
 // =====================================================================
-// 11. ADVANCED MUSIC PLAYER BAR (BOTTOM)
+// 11. ADVANCED MUSIC PLAYER BAR (BOTTOM KAVANA VISTA)
 // =====================================================================
 function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
   const {
@@ -1424,7 +1435,7 @@ function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
   const [progress, setProgress] = useState(0);
   const isSeekingRef = useRef(false);
 
-  // Sync progress dengan currentTime dari PlayerContext (kecuali saat user sedang drag/seeking)
+  // Sync progress dengan currentTime
   useEffect(() => {
     if (!isSeekingRef.current && duration > 0) {
       setProgress((currentTime / duration) * 100);
@@ -1455,17 +1466,17 @@ function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-800/80 px-4 py-2.5 text-white flex items-center justify-between z-50 shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-2xl border-t border-slate-800/80 px-4 py-2.5 text-white flex items-center justify-between z-50 shadow-2xl">
       {/* Left Info Track */}
       <div className="flex items-center gap-3 w-1/4 min-w-[180px]">
         <div className="relative group cursor-pointer" onClick={onExpandPlayer}>
           <img
-            src={getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'}
+            src={getFullUrl(currentTrack?.cover_url) || 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'}
             alt=""
-            className="w-12 h-12 rounded-lg object-cover bg-zinc-800 shadow-md ring-1 ring-white/10"
-            onError={(e) => { e.target.src = 'https://placehold.co/150x150/18181b/ffffff?text=No+Cover'; }}
+            className="w-12 h-12 rounded-lg object-cover bg-slate-800 shadow-md ring-1 ring-amber-500/20"
+            onError={(e) => { e.target.src = 'https://placehold.co/150x150/0f172a/ffffff?text=No+Cover'; }}
           />
-          <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+          <div className="absolute inset-0 bg-slate-950/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
             <Maximize2 size={16} className="text-white" />
           </div>
         </div>
@@ -1473,11 +1484,11 @@ function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
         <div className="min-w-0">
           <h4
             onClick={onExpandPlayer}
-            className="text-xs font-bold truncate hover:text-emerald-400 cursor-pointer transition"
+            className="text-xs font-bold truncate hover:text-amber-400 cursor-pointer transition"
           >
             {currentTrack?.title || 'Tidak Ada Lagu'}
           </h4>
-          <p className="text-[11px] text-zinc-400 truncate">{currentTrack?.artist || 'KafaSpoty Player'}</p>
+          <p className="text-[11px] text-slate-400 truncate">{currentTrack?.artist || 'Kavana Player'}</p>
         </div>
       </div>
 
@@ -1486,36 +1497,36 @@ function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
         <div className="flex items-center gap-5">
           <button
             onClick={toggleShuffle}
-            className={`transition cursor-pointer ${isShuffle ? 'text-emerald-400' : 'text-zinc-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${isShuffle ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
           >
             <Tooltip text="Acak"><Shuffle size={15} /></Tooltip>
           </button>
 
-          <button onClick={handlePrev} className="text-zinc-400 hover:text-white transition cursor-pointer">
+          <button onClick={handlePrev} className="text-slate-400 hover:text-white transition cursor-pointer">
             <Tooltip text="Sebelumnya"><SkipBack size={18} /></Tooltip>
           </button>
 
           <button
             onClick={togglePlay}
-            className="bg-emerald-500 hover:bg-emerald-400 text-black rounded-full p-2.5 shadow-lg shadow-emerald-500/20 hover:scale-105 transition cursor-pointer"
+            className="bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-full p-2.5 shadow-lg shadow-amber-500/20 hover:scale-105 transition cursor-pointer"
           >
             {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
           </button>
 
-          <button onClick={handleNext} className="text-zinc-400 hover:text-white transition cursor-pointer">
+          <button onClick={handleNext} className="text-slate-400 hover:text-white transition cursor-pointer">
             <Tooltip text="Berikutnya"><SkipForward size={18} /></Tooltip>
           </button>
 
           <button
             onClick={toggleRepeat}
-            className={`transition cursor-pointer ${isRepeat ? 'text-emerald-400' : 'text-zinc-400 hover:text-white'}`}
+            className={`transition cursor-pointer ${isRepeat ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
           >
             <Tooltip text="Ulangi"><Repeat size={15} /></Tooltip>
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full flex items-center gap-2 text-[10px] text-zinc-400 font-mono">
+        <div className="w-full flex items-center gap-2 text-[10px] text-slate-400 font-mono">
           <span className="w-8 text-right">{formatTime(isSeekingRef.current ? (progress / 100) * duration : currentTime)}</span>
           <input
             type="range"
@@ -1528,16 +1539,16 @@ function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
             onMouseUp={handleSliderCommit}
             onTouchEnd={handleSliderCommit}
             style={{
-              background: `linear-gradient(to right, #10b981 ${progress}%, #3f3f46 ${progress}%)`
+              background: `linear-gradient(to right, #f59e0b ${progress}%, #334155 ${progress}%)`
             }}
-            className="flex-1 h-1 rounded-lg appearance-none cursor-pointer accent-emerald-400 hover:h-1.5 transition-all"
+            className="flex-1 h-1 rounded-lg appearance-none cursor-pointer accent-amber-400 hover:h-1.5 transition-all"
           />
           <span className="w-8 text-left">{formatTime(duration)}</span>
         </div>
       </div>
 
       {/* Right Volume & Extra Actions */}
-      <div className="w-1/4 flex justify-end items-center gap-3 text-zinc-400">
+      <div className="w-1/4 flex justify-end items-center gap-3 text-slate-400">
         <button onClick={onOpenQueue} className="hover:text-white transition cursor-pointer">
           <Tooltip text="Antrean"><ListMusic size={18} /></Tooltip>
         </button>
@@ -1556,9 +1567,9 @@ function MusicPlayerBar({ onOpenQueue, onExpandPlayer }) {
           value={isMuted ? 0 : volume}
           onChange={(e) => changeVolume(Number(e.target.value))}
           style={{
-            background: `linear-gradient(to right, #10b981 ${(isMuted ? 0 : volume) * 100}%, #3f3f46 ${(isMuted ? 0 : volume) * 100}%)`
+            background: `linear-gradient(to right, #f59e0b ${(isMuted ? 0 : volume) * 100}%, #334155 ${(isMuted ? 0 : volume) * 100}%)`
           }}
-          className="w-20 h-1 rounded-lg appearance-none cursor-pointer accent-emerald-400 hover:h-1.5 transition-all"
+          className="w-20 h-1 rounded-lg appearance-none cursor-pointer accent-amber-400 hover:h-1.5 transition-all"
         />
 
         <button onClick={onExpandPlayer} className="hover:text-white transition cursor-pointer hidden sm:block">

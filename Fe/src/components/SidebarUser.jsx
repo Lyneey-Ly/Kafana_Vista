@@ -29,7 +29,16 @@ import {
   ChevronDown,
   BookOpen,
   Newspaper,
-  LayoutDashboard
+  LayoutDashboard,
+  Utensils,
+  Music,
+  Calculator,
+  Crown,
+  History,
+  Zap,
+  BookText,
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import API from '../api';
 import { kafanaWarning, kafanaConfirm } from '../components/kafanaAlert';
@@ -260,6 +269,28 @@ export default function SidebarUser({ children }) {
     }
   };
 
+  const handlePremiumAccess = (itemName, itemPath, isExternal = false) => {
+    const isPremium = userProfile?.is_premium === true || userProfile?.status === 'premium';
+    
+    if (!isPremium) {
+      kafanaWarning(
+        'Akses Premium Diperlukan',
+        `Fitur "${itemName}" hanya tersedia untuk pengguna Premium. Upgrade sekarang untuk mengakses semua fitur eksklusif!`
+      );
+      navigate('/UpgradePremium');
+      setIsOpen(false);
+      return false;
+    }
+    
+    if (isExternal) {
+      window.open(itemPath, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(itemPath);
+    }
+    setIsOpen(false);
+    return true;
+  };
+
   // 🟢 MENU NAVIGASI DENGAN LUCIDE VECTOR ICONS
   const menuItems = [
     { 
@@ -289,11 +320,43 @@ export default function SidebarUser({ children }) {
       isExpanded: true,
       items: [
         { name: 'Pembayaran Properti', path: '/pembayaran', icon: CreditCard },
-        { name: 'Finance Tracker', path: '/FinanceTracker', icon: Wallet },
         { name: 'Riwayat Transaksi', path: '/riwayattransaksi', icon: ClipboardList },
       ]
     },
     
+    
+
+    // 📄 GRUP DOKUMEN & KOMUNIKASI
+    {
+      name: 'Dokumen & Komunikasi',
+      icon: FileText,
+      isGroup: true,
+      isExpanded: false,
+      items: [
+        { name: 'Dokumen Sewa', path: '/dokumen-sewa', icon: FileText, isCustomAction: true },
+        { name: 'Complain', path: '/komplain', icon: AlertTriangle },
+      ]
+    },
+
+    
+    // 👑 GRUP AKSES PREMIUM
+    {
+      name: 'Akses Premium',
+      icon: Sparkles,
+      isGroup: true,
+      isExpanded: false,
+      items: [
+        { name: 'Finance Tracker', path: '/FinanceTracker', icon: Wallet, isPremium: true },
+        { name: 'Resep Hemat Kost', path: '/ResepHematKost', icon: Utensils, isPremium: true },
+        { name: 'Randomizer Makan', path: '/RandomizerMakan', icon: Zap, isPremium: true },
+        { name: 'Music Dashboard', path: '/music', icon: Music, isPremium: true },
+        { name: 'Game Launcher Hub', path: '/GameLauncherHub', icon: Gamepad2, isPremium: true },
+        { name: 'Kalkulator Survival', path: '/KalkulatorSurvival', icon: Calculator, isPremium: true },
+        { name: 'RoomChat', path: '/roomchat', icon: MessageSquare,  isPremium: true  },
+
+      ]
+    },
+
     // 📢 GRUP IKLAN & PROMOSI
     {
       name: 'Iklan & Promosi',
@@ -308,19 +371,6 @@ export default function SidebarUser({ children }) {
       ]
     },
 
-    // 📄 GRUP DOKUMEN & KOMUNIKASI
-    {
-      name: 'Dokumen & Komunikasi',
-      icon: FileText,
-      isGroup: true,
-      isExpanded: false,
-      items: [
-        { name: 'Dokumen Sewa', path: '/dokumen-sewa', icon: FileText, isCustomAction: true },
-        { name: 'RoomChat', path: '/roomchat', icon: MessageSquare },
-        { name: 'Complain', path: '/komplain', icon: AlertTriangle },
-      ]
-    },
-
     // 📋 GRUP LAINNYA
     {
       name: 'Lainnya',
@@ -330,13 +380,25 @@ export default function SidebarUser({ children }) {
       items: [
         { name: 'Testimoni', path: '/testimoni', icon: Star },
         { name: 'Pusat Bantuan', path: '/pusatbantuanuser', icon: HelpCircle },
-        { name: 'upp', path: '/UpgradePremium', icon: HelpCircle },
+        { name: 'Upgrade Premium', path: '/UpgradePremium', icon: Crown },
         { 
           name: 'Mini Games', 
           path: 'https://peashooter-cpnr7zxeu-lyneey.vercel.app', 
           icon: Gamepad2, 
           isExternal: true 
         },
+      ]
+    },
+
+
+    // 📜 GRUP RIWAYAT & LANGGANAN
+    {
+      name: 'Riwayat & Langganan',
+      icon: History,
+      isGroup: true,
+      isExpanded: false,
+      items: [
+        { name: 'Subscription History', path: '/SubscriptionHistory', icon: BookText },
       ]
     },
   ];
@@ -620,6 +682,21 @@ export default function SidebarUser({ children }) {
                           );
                         }
                         
+                        if (subItem.isPremium) {
+                          return (
+                            <div key={subItem.name} className="relative group">
+                              <button
+                                onClick={() => handlePremiumAccess(subItem.name, subItem.path)}
+                                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 text-left cursor-pointer hover:translate-x-0.5 ${isActive ? 'bg-[#B38E5D]/20 text-white border-l-2 border-white' : 'text-[#FAF5EF]/70 hover:bg-[#B38E5D]/10 hover:text-white'}`}
+                              >
+                                <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#B38E5D]'}`} />
+                                <span className="truncate flex-1">{subItem.name}</span>
+                                <Lock className="w-3.5 h-3.5 flex-shrink-0 text-[#B38E5D]/70" title="Fitur Premium" />
+                              </button>
+                            </div>
+                          );
+                        }
+                        
                         return (
                           <Link
                             key={subItem.path}
@@ -839,6 +916,20 @@ export default function SidebarUser({ children }) {
                               <SubIcon className="w-4 h-4 text-[#B38E5D]" />
                               <span>{subItem.name}</span>
                             </a>
+                          );
+                        }
+                        
+                        if (subItem.isPremium) {
+                          return (
+                            <button
+                              key={subItem.name}
+                              onClick={() => { handlePremiumAccess(subItem.name, subItem.path); setIsOpen(false); }}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${isActive ? 'bg-[#B38E5D]/20 text-white border-l-2 border-white' : 'text-[#FAF5EF]/80 hover:bg-[#B38E5D]/10 hover:text-white'}`}
+                            >
+                              <SubIcon className="w-4 h-4 text-[#B38E5D]" />
+                              <span className="flex-1">{subItem.name}</span>
+                              <Lock className="w-4 h-4 text-[#B38E5D]/70" title="Fitur Premium" />
+                            </button>
                           );
                         }
                         

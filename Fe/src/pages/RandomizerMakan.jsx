@@ -10,6 +10,8 @@ import {
   ChefHat,
   X
 } from 'lucide-react';
+import SidebarUser from '../components/SidebarUser'; 
+
 import Swal from 'sweetalert2';
 
 // 1. PRESET MENU DEFAULT ANAK KOST WITH PRICE RANGE & BUDGET CATEGORY
@@ -332,6 +334,7 @@ export default function RandomizerMakan() {
   };
 
   return (
+    <SidebarUser>  
     <div className="min-h-screen bg-[#FAF6F0] font-sans text-[#261C19] relative overflow-x-hidden p-4 md:p-8">
       {/* Confetti Overlay Canvas */}
       <canvas ref={confettiCanvasRef} className="fixed inset-0 pointer-events-none z-50" />
@@ -539,5 +542,6 @@ export default function RandomizerMakan() {
         </div>
       </div>
     </div>
+    </SidebarUser>
   );
 }

@@ -95,7 +95,6 @@ export const GAMES_DATA = [
     lastPlayed: null
   },
 
-
   {
     id: 'game-7',
     title: 'Kingdom Tactics 4x4',
@@ -103,6 +102,21 @@ export const GAMES_DATA = [
     category: 'Strategy',
     thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?auto=format&fit=crop&w=600&q=80',
     url: '/WordleClone',
+    isExternal: true,
+    status: 'ONLINE',
+    rating: 4.6,
+    isFavorite: false,
+    isRecentlyPlayed: false,
+    lastPlayed: null
+  },
+
+  {
+    id: 'game-8',
+    title: 'Kingdom Tactics 4x4',
+    description: 'Uji strategi giliranmu dalam papan catur taktikal untuk merebut takhta kerajaan.',
+    category: 'Strategy',
+    thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?auto=format&fit=crop&w=600&q=80',
+    url: 'https://peashooter-cpnr7zxeu-lyneey.vercel.app/',
     isExternal: true,
     status: 'ONLINE',
     rating: 4.6,

@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import SidebarUser from '../components/SidebarUser'; 
+
 import { 
   Flame, 
   Clock, 
@@ -2197,6 +2199,7 @@ export default function ResepHematKost() {
   }, [equipmentFilter, budgetFilter, searchTerm, sortBy]);
 
   return (
+    <SidebarUser> 
     <div className="min-h-screen bg-[#FAF6F0] font-sans text-[#261C19] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
@@ -2476,5 +2479,6 @@ export default function ResepHematKost() {
 
       </div>
     </div>
+    </SidebarUser>
   );
 }

@@ -74,7 +74,48 @@ export default function UsersPage() {
     }).format(val || 0);
   };
 
-  // Helper Badge Status Sewa (Sudah disesuaikan dengan enum status Laravel)
+  // Helper Badge Status Akun Premium / Regular
+  const renderPremiumBadge = (user) => {
+    const isPremium =
+      user?.is_premium === true ||
+      user?.is_premium === 1 ||
+      user?.status_premium === 'active' ||
+      user?.subscription?.status === 'active' ||
+      user?.subscription_status === 'active';
+
+    const isPending =
+      user?.subscription?.status === 'pending' ||
+      user?.subscription_status === 'pending';
+
+    const packageType =
+      user?.subscription?.package_type ||
+      user?.package_type ||
+      '';
+
+    if (isPremium) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#B38E5D]/15 text-[#261C19] border border-[#B38E5D]/40 shadow-xs">
+          👑 Premium {packageType ? <span className="uppercase text-[10px] text-[#B38E5D]">({packageType})</span> : ''}
+        </span>
+      );
+    }
+
+    if (isPending) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300">
+          ⏳ Pending Premium
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+        Regular / Gratis
+      </span>
+    );
+  };
+
+  // Helper Badge Status Sewa
   const renderStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
     if (s === 'aktif' || s === 'disetujui' || s === 'approved' || s === 'lunas' || s === 'dikonfirmasi') {
@@ -137,6 +178,7 @@ export default function UsersPage() {
                 <th className="px-6 py-3.5">ID</th>
                 <th className="px-6 py-3.5">Nama Lengkap</th>
                 <th className="px-6 py-3.5">Email</th>
+                <th className="px-6 py-3.5">Status Akun</th>
                 <th className="px-6 py-3.5">Tanggal Bergabung</th>
                 <th className="px-6 py-3.5 text-center">Aksi</th>
               </tr>
@@ -147,6 +189,7 @@ export default function UsersPage() {
                   <td className="px-6 py-4 text-xs font-mono font-bold text-slate-400">#{user.id}</td>
                   <td className="px-6 py-4 font-bold text-[#261C19]">{user.name}</td>
                   <td className="px-6 py-4 text-slate-600">{user.email}</td>
+                  <td className="px-6 py-4">{renderPremiumBadge(user)}</td>
                   <td className="px-6 py-4 text-xs text-slate-500">
                     {new Date(user.created_at).toLocaleDateString('id-ID')}
                   </td>
@@ -199,7 +242,7 @@ export default function UsersPage() {
               ) : (
                 <>
                   {/* Summary Profile User */}
-                  <div className="bg-white p-4 rounded-xl border border-[#D7C4B0] grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-xl border border-[#D7C4B0] grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Nama User</span>
                       <p className="font-bold text-[#261C19] text-sm">{selectedUser?.name || '-'}</p>
@@ -207,6 +250,10 @@ export default function UsersPage() {
                     <div>
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Email</span>
                       <p className="font-semibold text-slate-700 text-sm">{selectedUser?.email || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Tipe Akun</span>
+                      <div className="mt-1">{renderPremiumBadge(selectedUser)}</div>
                     </div>
                     <div>
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Transaksi Sewa</span>
@@ -238,7 +285,6 @@ export default function UsersPage() {
                           </thead>
                           <tbody className="divide-y divide-slate-100">
                             {rentals.map((item) => {
-                              // Pengecekan fallback key untuk Properti, Tanggal & Durasi
                               const namaProperti = item.properti?.title || item.properti?.nama || item.properti?.nama_properti || item.nama_properti || 'Properti N/A';
                               const alamatProperti = item.properti?.address || item.properti?.alamat || '-';
                               
