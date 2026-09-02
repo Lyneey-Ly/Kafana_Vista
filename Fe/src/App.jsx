@@ -69,6 +69,7 @@ import MusicDashboard from './pages/MusicDashboard';
 import MemoryCardMatch from './pages/MemoryCardMatch';
 import SnakeGame from './pages/SnakeGame';
 import TicTacToeSuper from './pages/TicTacToeSuper.jsx';
+import PvZGame from './pages/PvzGame';
 import SimonSays from './pages/SimonSays';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_GOOGLE_CLIENT_ID_DI_SINI";
@@ -95,6 +96,7 @@ export default function App() {
               <Route path="/SnakeGame" element={<SnakeGame />} />
               <Route path="/TicTacToeSuper" element={<TicTacToeSuper />} />
               <Route path="/SimonSays" element={<SimonSays />} />
+              <Route path="/PvzGame" element={<PvZGame />} />
 
               {/* User Profile & Auth */}
               <Route path="/profile" element={<UserProfile />} />

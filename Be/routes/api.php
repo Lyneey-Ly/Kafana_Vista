@@ -28,6 +28,9 @@ use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\Api\TrackController;
 use App\Http\Controllers\Api\PlaylistController;
 
+// Import Controller Subscription (Premium Account)
+use App\Http\Controllers\Api\SubscriptionController;
+
 /*
 |--------------------------------------------------------------------------
 | ROUTE PUBLIC (Bisa diakses tanpa login)
@@ -69,6 +72,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
+
+    // --- SUBSCRIPTION & AKUN PREMIUM ---
+    Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
+    Route::get('/subscriptions/my-subscription', [SubscriptionController::class, 'mySubscription']);
 
     // --- PENGATURAN PEMBAYARAN ---
     Route::get('/payment-settings', [AdminProfileController::class, 'getPaymentSettings']);
@@ -231,6 +238,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
             Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
             Route::get('/administrators/{id}/properties', [SuperAdminController::class, 'getAdminProperties']);
+
+            // --- KELOLA SUBSCRIPTION / PREMIUM (SUPERADMIN LEVEL) ---
+            Route::get('/subscriptions', [SubscriptionController::class, 'indexSuperAdmin']);
+            Route::post('/subscriptions/{id}/approve', [SubscriptionController::class, 'approve']);
+            Route::post('/subscriptions/{id}/reject', [SubscriptionController::class, 'reject']);
 
             Route::get('/notifications', [SuperAdminNotificationController::class, 'index']);
             Route::patch('/notifications/{id}/read', [SuperAdminNotificationController::class, 'markAsRead']);
