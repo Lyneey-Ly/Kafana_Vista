@@ -1,4 +1,5 @@
 // gamesData.js
+
 export const CATEGORIES = ['All', 'Action', 'Strategy', 'Arcade', 'Puzzle', 'RPG'];
 
 export const STATUS_TYPES = {
@@ -10,10 +11,10 @@ export const STATUS_TYPES = {
 export const GAMES_DATA = [
   {
     id: 'game-1',
-    title: 'Cyber Strike 2088',
-    description: 'Game aksi futuristik dengan pertempuran intens dan grafis memukau di kota cyberpunk.',
+    title: 'Tower Of Hanoi',
+    description: 'Game Mengasah Otak Anda.',
     category: 'Action',
-    thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=600&q=80',
+    thumbnail: '/images/Tower.png',
     url: '/TowerofHanoi', // BISA DIISI URL ROUTER (/games/xyz) ATAU LINK EXTERNAL (https://...)
     isExternal: false,
     status: 'ONLINE',
@@ -27,7 +28,7 @@ export const GAMES_DATA = [
     title: 'Misteri Labirin Kafana',
     description: 'Petualangan fiksi interaktif berbasis teks dengan statistik pemain, item, dan pilihan bercabang.',
     category: 'RPG',
-    thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80',
+    thumbnail: '/images/Labirin.png',
     url: '/DungeonCrawlerGrid',
     isExternal: false,
     status: 'NEW',
@@ -38,10 +39,10 @@ export const GAMES_DATA = [
   },
   {
     id: 'game-3',
-    title: 'Kingdom Tactics 4x4',
-    description: 'Uji strategi giliranmu dalam papan catur taktikal untuk merebut takhta kerajaan.',
+    title: 'Snake Game',
+    description: 'Uji strategi pada game ular.',
     category: 'Strategy',
-    thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?auto=format&fit=crop&w=600&q=80',
+    thumbnail: '/images/Snake.png',
     url: '/SnakeGame',
     isExternal: true,
     status: 'ONLINE',
@@ -66,10 +67,10 @@ export const GAMES_DATA = [
   },
   {
     id: 'game-5',
-    title: 'Pixel Retro Racer',
-    description: 'Balapan mobil klasik gaya 8-bit melewati rintangan jalanan tanpa batas.',
+    title: 'Simon Says',
+    description: 'Game Mengingat warna dan juga mengasah otak anda.',
     category: 'Arcade',
-    thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=600&q=80',
+    thumbnail: '/images/Simon.png',
     url: '/SimonSays',
     isExternal: false,
     status: 'ONLINE',
@@ -82,10 +83,10 @@ export const GAMES_DATA = [
 
   {
     id: 'game-6',
-    title: 'Kingdom Tactics 4x4',
-    description: 'Uji strategi giliranmu dalam papan catur taktikal untuk merebut takhta kerajaan.',
+    title: 'Memory Card Match',
+    description: 'Game menghapal kartu.',
     category: 'Strategy',
-    thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?auto=format&fit=crop&w=600&q=80',
+    thumbnail: '/images/card.png',
     url: '/MemoryCardMatch',
     isExternal: true,
     status: 'ONLINE',
@@ -97,10 +98,10 @@ export const GAMES_DATA = [
 
   {
     id: 'game-7',
-    title: 'Kingdom Tactics 4x4',
-    description: 'Uji strategi giliranmu dalam papan catur taktikal untuk merebut takhta kerajaan.',
+    title: 'World Clone',
+    description: 'Uji menghapal kosa kata.',
     category: 'Strategy',
-    thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?auto=format&fit=crop&w=600&q=80',
+    thumbnail: '/images/wordle.png',
     url: '/WordleClone',
     isExternal: true,
     status: 'ONLINE',
@@ -112,8 +113,8 @@ export const GAMES_DATA = [
 
   {
     id: 'game-8',
-    title: 'Kingdom Tactics 4x4',
-    description: 'Uji strategi giliranmu dalam papan catur taktikal untuk merebut takhta kerajaan.',
+    title: 'Shooter Game',
+    description: 'Uji strategi pada game menembak.',
     category: 'Strategy',
     thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?auto=format&fit=crop&w=600&q=80',
     url: 'https://peashooter-cpnr7zxeu-lyneey.vercel.app/',

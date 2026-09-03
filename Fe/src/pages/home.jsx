@@ -210,7 +210,7 @@ export default function Home() {
                 Ada Keluhan?
               </h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Berbagai fitur dan layanan manajemen sewa terpadu untuk meningkatkan okupansi bisnis kost &amp; kontrakan Anda.
+                Berbagai fitur dan layanan manajemen sewa terpadu untuk meningkatkan okupansi bisnis kost Anda.
               </p>
               <a
                 href="https://wa.me/6283808699130?text=Halo%20Admin%20Kafana%20Vista,%20saya%20butuh%20bantuan"
@@ -341,7 +341,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {['Semua', 'Kost', 'Kontrakan', 'Putra', 'Putri'].map((cat) => (
+              {['Semua', 'Kost', , 'Putra', 'Putri'].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
@@ -514,7 +514,7 @@ export default function Home() {
                   onClick={() => navigate('/carihunian')}
                   className="text-xs font-bold uppercase tracking-widest bg-[#FAF5EF] hover:bg-[#B38E5D] text-[#2D2321] hover:text-white px-6 py-3.5 rounded-lg transition duration-300 shadow-md cursor-pointer"
                 >
-                  Eksplorasi Semua Kost &amp; Kontrakan
+                  Eksplorasi Semua Kost
                 </button>
               </div>
             </div>

@@ -106,6 +106,7 @@ export default function SidebarSuperAdmin({ children }) {
         { name: 'Verifikasi Properti', path: '/VerifikasiPropertiSuperAdmin', icon: ShieldCheck },
         { name: 'Kelola Iklan Banner', path: '/KelolaIklanSuperAdmin', icon: Megaphone },
         { name: 'Verifikasi Iklan', path: '/superadmin/VerifikasiIklanAdmin', icon: Megaphone },
+        { name: 'Verifikasi ', path: '/superadmin/SuperAdminSubscriptions', icon: Megaphone },
       ]
     },
 
