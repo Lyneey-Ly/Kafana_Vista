@@ -312,7 +312,7 @@ const PremiumActiveView = ({ mySubscription, onRenew }) => {
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black text-[#FAF5EF] mt-1">
-                Selamat Datang, Sultan Kavana!
+                Selamat Datang bos!
               </h1>
               <p className="text-xs text-[#E5D7C5]/70 mt-1">
                 Kamu memiliki akses tak terbatas ke seluruh fitur eksklusif aplikasi.
@@ -320,12 +320,6 @@ const PremiumActiveView = ({ mySubscription, onRenew }) => {
             </div>
           </div>
 
-          <button
-            onClick={onRenew}
-            className="px-6 py-3 bg-[#B38E5D] hover:bg-[#C5A059] text-[#261C19] font-extrabold rounded-2xl shadow-xl shadow-[#B38E5D]/20 transition hover:scale-105 cursor-pointer text-xs flex items-center gap-2 uppercase tracking-wider"
-          >
-            <IconRefresh className="w-4 h-4" /> Perpanjang Langganan
-          </button>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4 mt-8 pt-8 border-t border-[#4A3B32]">

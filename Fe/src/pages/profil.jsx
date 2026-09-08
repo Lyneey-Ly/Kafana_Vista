@@ -19,8 +19,19 @@ export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [rentStatus, setRentStatus] = useState([]);
 
-  // Variabel turunan status premium (Ditaruh di top-level komponen)
-  const isPremium = user?.is_premium === true || user?.status === 'premium';
+  // Fungsi Hitung Sisa Hari Premium
+  const getRemainingDays = (expiryDate) => {
+    if (!expiryDate) return 0;
+    const end = new Date(expiryDate);
+    const now = new Date();
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // Variabel turunan status premium & sisa hari
+  const remainingDays = getRemainingDays(user?.premium_until);
+  const isPremium = (user?.is_premium === true || user?.status === 'premium' || remainingDays > 0) && remainingDays > 0;
 
   // Form State untuk Edit Data Profil
   const [formState, setFormState] = useState({
@@ -36,36 +47,49 @@ export default function UserProfile() {
   const [previewAvatar, setPreviewAvatar] = useState(null);
 
   // =========================================================================
-  // 🔌 FETCH DATA PROFIL USER & STATUS SEWA
+  // 🔌 FETCH DATA PROFIL USER & STATUS SEWA (OPTIMASI PARALEL PROMISE.ALL)
   // =========================================================================
   const fetchUserProfile = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await API.get('/profile');
-      const apiUser = res.data?.data || res.data;
-      
+
+      // Menggunakan Promise.all agar eksekusi endpoint /profile & /my-subscription berjalan sejajar/paralel
+      const [profileRes, subRes] = await Promise.all([
+        API.get('/profile'),
+        API.get('/my-subscription').catch(() => null) // Catch agar tidak merusak UI jika endpoint langganan gagal
+      ]);
+
+      const apiUser = profileRes.data?.data || profileRes.data;
+      const subData = subRes?.data;
+
+      // Penggabungan data profil dan informasi premium terbaru
+      const mergedUser = {
+        ...apiUser,
+        is_premium: subData?.is_premium ?? apiUser?.is_premium,
+        premium_until: subData?.premium_until ?? apiUser?.premium_until
+      };
+
       // Normalisasi status sewa
-      const rawSewa = res.data?.status_sewa || res.data?.sewa || [];
+      const rawSewa = profileRes.data?.status_sewa || profileRes.data?.sewa || [];
       const sewaList = Array.isArray(rawSewa) 
         ? rawSewa 
         : (rawSewa && typeof rawSewa === 'object' && Object.keys(rawSewa).length > 0 ? [rawSewa] : []);
 
-      setUser(apiUser);
+      setUser(mergedUser);
       setRentStatus(sewaList);
 
       setFormState({
-        name: apiUser?.name || '',
-        email: apiUser?.email || '',
-        phone: apiUser?.phone || '',
+        name: mergedUser?.name || '',
+        email: mergedUser?.email || '',
+        phone: mergedUser?.phone || '',
         current_password: '',
         password: '',
       });
 
-      const timestamp = new Date().getTime();
-      const backendPhotoUrl = apiUser?.foto
-        ? (apiUser.foto.startsWith('http') 
-            ? `${apiUser.foto}?t=${timestamp}` 
-            : `${import.meta.env.VITE_STORAGE_BASE_URL || 'http://localhost:8000/storage'}/${apiUser.foto}?t=${timestamp}`)
+      const backendPhotoUrl = mergedUser?.foto
+        ? (mergedUser.foto.startsWith('http') 
+            ? mergedUser.foto 
+            : `${import.meta.env.VITE_STORAGE_BASE_URL || 'http://localhost:8000/storage'}/${mergedUser.foto}`)
         : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80";
 
       setPreviewAvatar(backendPhotoUrl);
@@ -224,11 +248,6 @@ export default function UserProfile() {
     });
   };
 
-  const formatRupiah = (number) => {
-    if (!number) return "Rp 0";
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
-  };
-
   return (
     <SidebarUser>
       <div className="w-full min-h-screen bg-[#FAF6F0] text-[#261C19] font-sans p-4 md:p-8 flex flex-col justify-between relative overflow-hidden">
@@ -250,13 +269,11 @@ export default function UserProfile() {
                   <h1 className="text-xl md:text-2xl font-black tracking-tight text-[#261C19]">
                     Kafana<span className="text-[#C5A059] font-light">Vista</span>
                   </h1>
-                  <span className="bg-[#261C19] text-[#C5A059] text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-[#C5A059]/40">
-                    Resident Portal
-                  </span>
+                 
                   {isPremium && (
                     <span className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full shadow-lg border border-yellow-300/50 animate-pulse">
                       <Crown className="w-3.5 h-3.5" />
-                      Premium
+                      Premium ({remainingDays} Hari Lagi)
                     </span>
                   )}
                 </div>
@@ -347,7 +364,7 @@ export default function UserProfile() {
                       {isPremium && (
                         <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-900/90 to-yellow-900/90 text-amber-200 text-xs font-bold px-3 py-1 rounded-full border border-amber-600/60 shadow-md">
                           <Crown className="w-3.5 h-3.5" />
-                          Akses Premium Aktif
+                          Sisa Masa Aktif: {remainingDays} Hari
                         </span>
                       )}
                     </div>
@@ -555,7 +572,7 @@ export default function UserProfile() {
                     {rentStatus.map((item, index) => {
                       const cleanDuration = String(item.duration_months || '').replace(/bulan/gi, '').trim();
                       const nomorKamarNum = item.kamar?.nomor_kamar || item.nomor_kamar || item.properti?.nomor_kamar || null;
-                      const imageSrc = item.main_image || item.properti?.main_image || item.kamar?.main_image;
+                      const imageSrc = item.main_image || item.foto || item.properti?.main_image || item.kamar?.main_image;
 
                       return (
                         <div key={item.id || index} className="bg-[#FAF6F0]/60 p-4 rounded-2xl border border-[#E5D7C5] flex flex-col justify-between space-y-3 hover:border-[#C5A059] transition">

@@ -312,15 +312,17 @@ export default function SidebarUser({ children }) {
       badge: null
     },
     
-    // 💰 GRUP PEMBAYARAN & KEUANGAN
+    
+    // 📜 GRUP RIWAYAT & LANGGANAN
     {
-      name: 'Pembayaran & Keuangan',
-      icon: CreditCard,
+      name: 'Riwayat & Langganan',
+      icon: History,
       isGroup: true,
-      isExpanded: true,
+      isExpanded: false,
       items: [
-        { name: 'Pembayaran Properti', path: '/pembayaran', icon: CreditCard },
         { name: 'Riwayat Transaksi', path: '/riwayattransaksi', icon: ClipboardList },
+
+        { name: 'Subscription History', path: '/SubscriptionHistory', icon: BookText },
       ]
     },
     
@@ -381,26 +383,11 @@ export default function SidebarUser({ children }) {
         { name: 'Testimoni', path: '/testimoni', icon: Star },
         { name: 'Pusat Bantuan', path: '/pusatbantuanuser', icon: HelpCircle },
         { name: 'Upgrade Premium', path: '/UpgradePremium', icon: Crown },
-        { 
-          name: 'Mini Games', 
-          path: 'https://peashooter-cpnr7zxeu-lyneey.vercel.app', 
-          icon: Gamepad2, 
-          isExternal: true 
-        },
+      
       ]
     },
 
 
-    // 📜 GRUP RIWAYAT & LANGGANAN
-    {
-      name: 'Riwayat & Langganan',
-      icon: History,
-      isGroup: true,
-      isExpanded: false,
-      items: [
-        { name: 'Subscription History', path: '/SubscriptionHistory', icon: BookText },
-      ]
-    },
   ];
 
   const avatarUrl = userProfile?.foto

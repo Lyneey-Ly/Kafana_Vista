@@ -134,8 +134,14 @@ export default function MusicDashboard() {
   // Queue List State
   const [queueList, setQueueList] = useState([]);
 
-  // Fetch Semua Data
+  // Ref untuk cegah double fetch bersamaan
+  const isFetchingRef = useRef(false);
+
+  // Fetch Semua Data (DIPERBAIKI)
   const fetchData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
       setLoading(true);
       const [resTracks, resPlaylists] = await Promise.all([
@@ -145,9 +151,14 @@ export default function MusicDashboard() {
       setTracks(resTracks.data || []);
       setPlaylists(resPlaylists.data || []);
     } catch (error) {
-      console.error('Gagal mengambil data musik:', error);
+      if (error.response?.status === 429) {
+        console.warn('Rate limit hit (429) pada data musik. Menghentikan request sementara.');
+      } else {
+        console.error('Gagal mengambil data musik:', error);
+      }
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -184,15 +195,22 @@ export default function MusicDashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePlay, handleNext, handlePrev, toggleMute]);
 
-  // Handlers
+  // Handlers (DIPERBAIKI: Tanpa re-fetch saat error agar tidak looping)
   const handleToggleLike = async (trackId) => {
+    // Optimistic UI update
     setTracks((prev) =>
       prev.map((t) => (t.id === trackId ? { ...t, is_liked: !t.is_liked } : t))
     );
     try {
       await API.post(`/tracks/${trackId}/like`);
     } catch (error) {
-      if (viewMode.type === 'all') fetchData();
+      // Revert status jika gagal tanpa memanggil fetchData() lagi
+      setTracks((prev) =>
+        prev.map((t) => (t.id === trackId ? { ...t, is_liked: !t.is_liked } : t))
+      );
+      if (error.response?.status !== 429) {
+        console.warn('Gagal mengubah status favorit:', error);
+      }
     }
   };
 
@@ -227,13 +245,15 @@ export default function MusicDashboard() {
       setTracks(res.data.tracks || res.data || []);
       setViewMode({ type: 'playlist', data: playlist });
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal',
-        text: 'Tidak dapat memuat isi playlist.',
-        background: '#0f172a',
-        color: '#fff',
-      });
+      if (error.response?.status !== 429) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Tidak dapat memuat isi playlist.',
+          background: '#0f172a',
+          color: '#fff',
+        });
+      }
     } finally {
       setLoading(false);
     }

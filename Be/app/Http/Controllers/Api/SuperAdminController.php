@@ -209,7 +209,7 @@ class SuperAdminController extends Controller
         $userList = User::orderBy('created_at', 'desc')->get();
 
         return response()->json([
-             'status' => 'success',
+            'status' => 'success',
             'total'  => $userList->count(),
             'data'   => $userList
         ], 200);
@@ -1083,8 +1083,8 @@ class SuperAdminController extends Controller
     }
 
     /**
-     * 14. ANALITIK PENDAPATAN SUPERADMIN (TRIPLE MONETIZATION)
-     * 3 Sumber pendapatan: Slot Properti + Iklan Vendor + Komisi Booking
+     * 14. ANALITIK PENDAPATAN SUPERADMIN (QUADRUPLE MONETIZATION + MONTHLY TRENDS)
+     * Sumber Pendapatan: Premium User + Listing Fee Properti + Iklan Vendor + Komisi Booking
      */
     public function revenueAnalytics(Request $request)
     {
@@ -1092,9 +1092,26 @@ class SuperAdminController extends Controller
             return $this->denyAccess();
         }
 
-        $year = $request->get('year');
+        $year = (int)$request->get('year', Carbon::now()->year);
 
-        // 1. Pendapatan Slot Properti (Listing Fee)
+        $setting = SiteSetting::first();
+        $slotPrice = $setting ? (float)($setting->property_extra_fee ?? 150000) : 150000;
+        $premiumPrice = $setting ? (float)($setting->premium_subscription_fee ?? 50000) : 50000;
+        $commissionPercent = $setting ? (float)($setting->platform_commission_percent ?? 3.00) : 3.00;
+
+        // 1. Pendapatan Akun Premium (Langganan)
+        $activePremiumUsers = User::whereNotNull('premium_until')
+            ->where('premium_until', '>', now())
+            ->count();
+
+        $subscriptionsQuery = User::whereNotNull('premium_until');
+        if ($year) {
+            $subscriptionsQuery->whereYear('updated_at', $year);
+        }
+        $totalSubscriptions = $subscriptionsQuery->count();
+        $totalPremiumRevenue = round($totalSubscriptions * $premiumPrice, 2);
+
+        // 2. Pendapatan Slot Properti (Listing Fee)
         $slotQuery = Properti::where('is_paid_slot', true);
         if ($year) {
             $slotQuery->whereYear('updated_at', $year);
@@ -1102,7 +1119,7 @@ class SuperAdminController extends Controller
         $totalSlotRevenue = (float)$slotQuery->sum('slot_fee');
         $paidSlots = (int)$slotQuery->count();
 
-        // 2. Pendapatan Iklan Vendor (Banner Ads)
+        // 3. Pendapatan Iklan Vendor (Banner Ads)
         $adQuery = VendorAdvertisement::where('is_active', true);
         if ($year) {
             $adQuery->whereYear('created_at', $year);
@@ -1110,10 +1127,7 @@ class SuperAdminController extends Controller
         $totalVendorAdRevenue = (float)$adQuery->sum('price');
         $activeAds = (int)$adQuery->count();
 
-        // 3. Komisi Booking Kost (Platform Fee, persentase dari site_settings)
-        $setting = SiteSetting::first();
-        $commissionPercent = $setting ? (float)$setting->platform_commission_percent : 3.00;
-
+        // 4. Komisi Booking Kost (Platform Fee)
         $bookingQuery = Pemesanan::where('status', 'Dikonfirmasi');
         if ($year) {
             $bookingQuery->whereYear('created_at', $year);
@@ -1122,9 +1136,8 @@ class SuperAdminController extends Controller
         $confirmedBookings = (int)$bookingQuery->count();
         $totalCommissionRevenue = round($totalBookingValue * $commissionPercent / 100, 2);
 
-        // 4. Pengeluaran Operasional & Pemasukan Manual (Finance Tracker)
+        // 5. Finance Tracker (Pengeluaran Operasional & Pemasukan Manual)
         $expenseQuery = SuperAdminFinance::where('type', 'expense');
-        // PERBAIKAN: Hanya hitung pemasukan manual agar tidak ganda dengan transaksi terotomatisasi
         $incomeQuery = SuperAdminFinance::where('type', 'income')->where('is_system_generated', false);
 
         if ($year) {
@@ -1135,34 +1148,87 @@ class SuperAdminController extends Controller
         $totalManualIncome = (float)$incomeQuery->sum('amount');
 
         // Total Pendapatan Kasar & Laba Bersih
-        $totalGrossIncome = round($totalSlotRevenue + $totalVendorAdRevenue + $totalCommissionRevenue + $totalManualIncome, 2);
+        $totalGrossIncome = round($totalPremiumRevenue + $totalSlotRevenue + $totalVendorAdRevenue + $totalCommissionRevenue + $totalManualIncome, 2);
         $netProfit = round($totalGrossIncome - $totalExpenses, 2);
+
+        // 6. Kurva Tren Bulanan (Bulan 1-12)
+        $monthlyTrends = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $mPremiumCount = User::whereNotNull('premium_until')
+                ->whereYear('updated_at', $year)
+                ->whereMonth('updated_at', $m)
+                ->count();
+            $mPremium = round($mPremiumCount * $premiumPrice, 2);
+
+            $mSlot = (float)Properti::where('is_paid_slot', true)
+                ->whereYear('updated_at', $year)
+                ->whereMonth('updated_at', $m)
+                ->sum('slot_fee');
+
+            $mAd = (float)VendorAdvertisement::where('is_active', true)
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $m)
+                ->sum('price');
+
+            $mBooking = (float)Pemesanan::where('status', 'Dikonfirmasi')
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $m)
+                ->sum('total_price');
+            $mCommission = round($mBooking * $commissionPercent / 100, 2);
+
+            $mManualIncome = (float)SuperAdminFinance::where('type', 'income')
+                ->where('is_system_generated', false)
+                ->whereYear('transaction_date', $year)
+                ->whereMonth('transaction_date', $m)
+                ->sum('amount');
+
+            $mExpense = (float)SuperAdminFinance::where('type', 'expense')
+                ->whereYear('transaction_date', $year)
+                ->whereMonth('transaction_date', $m)
+                ->sum('amount');
+
+            $mGross = round($mPremium + $mSlot + $mAd + $mCommission + $mManualIncome, 2);
+            $mNet = round($mGross - $mExpense, 2);
+
+            $monthlyTrends[] = [
+                'month'   => $m,
+                'gross'   => $mGross,
+                'expense' => $mExpense,
+                'net'     => $mNet,
+            ];
+        }
 
         return response()->json([
             'status' => 'success',
             'data'   => [
-                'year'               => $year ? (int)$year : null,
+                'year'               => $year,
                 'total_gross_income' => $totalGrossIncome,
+                'total_expenses'     => $totalExpenses,
+                'net_profit'         => $netProfit,
                 'income_breakdown'   => [
+                    'total_premium_revenue'    => $totalPremiumRevenue,
                     'total_slot_revenue'       => $totalSlotRevenue,
                     'total_vendor_ad_revenue'  => $totalVendorAdRevenue,
                     'total_commission_revenue' => $totalCommissionRevenue,
                     'total_manual_income'      => $totalManualIncome,
+                ],
+                'premium_info'       => [
+                    'active_premium_users' => $activePremiumUsers,
+                    'total_subscriptions'  => $totalSubscriptions,
+                ],
+                'listing_info'       => [
+                    'total_listings' => $paidSlots,
+                    'slot_fee'       => $slotPrice,
                 ],
                 'commission_info'    => [
                     'commission_percent'  => $commissionPercent,
                     'total_booking_value' => $totalBookingValue,
                     'confirmed_bookings'  => $confirmedBookings,
                 ],
-                'slot_info'          => [
-                    'paid_slots' => $paidSlots,
-                    'slot_fee'   => $setting ? (float)$setting->property_extra_fee : 150000,
-                ],
                 'ad_info'            => [
                     'active_ads' => $activeAds,
                 ],
-                'total_expenses'     => $totalExpenses,
-                'net_profit'         => $netProfit,
+                'monthly_trends'     => $monthlyTrends,
             ]
         ], 200);
     }

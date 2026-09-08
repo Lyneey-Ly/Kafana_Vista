@@ -325,7 +325,7 @@ export default function RiwayatTransaksi() {
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-xs text-[#B38E5D] font-bold">{item.tipeKamar || 'Kamar Standar'}</p>
                           <span className="text-xs text-[#2D2321] bg-[#B38E5D]/15 px-2 py-0.5 rounded font-extrabold border border-[#B38E5D]/30">
-                            🚪 {item.nomorKamar}
+                             {item.nomorKamar}
                           </span>
                         </div>
                       </div>

@@ -38,18 +38,173 @@ const formatImage = (item) => {
   return `http://127.0.0.1:8000/storage/${rawImage}`;
 };
 
+// Fallback Dummy Data jika backend mati / kosong
+const getFallbackData = () => [
+  {
+    id: 1,
+    type: 'Kost',
+    gender: 'mixed',
+    title: 'Kost Kavana Vista Tipe A',
+    location: 'Bojongsoang, Bandung',
+    price: 'Rp 1.500.000',
+    period: 'bulan',
+    rating: '0.0',
+    reviews: 0,
+    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
+    tags: ['Wifi', 'AC', 'KM Dalam'],
+    isAvailable: true,
+    desc: 'Kost nyaman dan bersih siap huni di kawasan Bojongsoang dekat kampus.',
+    lat: -6.9745,
+    lng: 107.6338
+  },
+  {
+    id: 2,
+    type: 'Kontrakan',
+    gender: 'mixed',
+    title: 'Kontrakan Asri Pavilion 2 Kamar',
+    location: 'Buahbatu, Bandung',
+    price: 'Rp 24.000.000',
+    period: 'tahun',
+    rating: '0.0',
+    reviews: 0,
+    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80',
+    tags: ['2 KT', 'Parkir Mobil', 'Dapur'],
+    isAvailable: true,
+    desc: 'Kontrakan sekeluarga atau mahasiswa dengan halaman luas dan lokasi strategis.',
+    lat: -6.9372,
+    lng: 107.6547
+  },
+  {
+    id: 3,
+    type: 'Kost',
+    gender: 'female',
+    title: 'Kost Eksklusif Heritage Suite',
+    location: 'Coblong, Bandung',
+    price: 'Rp 2.100.000',
+    period: 'bulan',
+    rating: '0.0',
+    reviews: 0,
+    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
+    tags: ['Wi-Fi', 'Water Heater', 'AC'],
+    isAvailable: false,
+    desc: 'Kost khusus putri aman 24 jam dengan fasilitas mewah standar apartemen.',
+    lat: -6.8915,
+    lng: 107.6107
+  },
+  {
+    id: 4,
+    type: 'Kost',
+    gender: 'male',
+    title: 'ACA VISTA Premium Male',
+    location: 'Nanggleng, Sukabumi',
+    price: 'Rp 1.200.000',
+    period: 'bulan',
+    rating: '0.0',
+    reviews: 0,
+    image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=600&q=80',
+    tags: ['Wi-Fi', 'Kasur', 'Parkir Mobil'],
+    isAvailable: true,
+    desc: 'Kost sewa putra tenang, nyaman, dekat dengan fasilitas publik Sukabumi.',
+    lat: -6.9342,
+    lng: 106.9156
+  }
+];
+
+// HELPER NORMALISASI DATA
+const normalizePropertyData = (items) => {
+  if (!Array.isArray(items)) return [];
+
+  return items.map((item, idx) => {
+    let rawFacilities = item?.facilities || item?.fasilitas || item?.tags || [];
+    let tagsArray = [];
+    if (typeof rawFacilities === 'string') {
+      tagsArray = rawFacilities.split(',').map(f => f.trim()).filter(Boolean);
+    } else if (Array.isArray(rawFacilities)) {
+      tagsArray = rawFacilities;
+    }
+    if (tagsArray.length === 0) tagsArray = ['Wi-Fi', 'AC', 'Lengkap'];
+
+    const priceVal = item?.price_per_month ?? item?.harga ?? item?.price ?? item?.rawPrice ?? 0;
+    const numPrice = typeof priceVal === 'number' ? priceVal : Number(String(priceVal).replace(/[^0-9]/g, '')) || 0;
+
+    const avgRating = item?.reviews_avg_rating ?? item?.avg_rating ?? item?.rating ?? 0;
+    const reviewsCount = item?.reviews_count ?? item?.total_reviews ?? item?.reviews ?? 0;
+
+    const itemId = item?.id || idx + 1;
+    const itemLocation = item?.address || item?.alamat || item?.lokasi || item?.location || 'Bandung';
+
+    const getLatLng = (location, id) => {
+      const loc = location.toLowerCase();
+      if (loc.includes('bojongsoang')) return { lat: -6.9745, lng: 107.6338 };
+      if (loc.includes('buahbatu')) return { lat: -6.9372, lng: 107.6547 };
+      if (loc.includes('coblong')) return { lat: -6.8915, lng: 107.6107 };
+      if (loc.includes('lembang')) return { lat: -6.8214, lng: 107.6222 };
+      if (loc.includes('dago')) return { lat: -6.8842, lng: 107.5981 };
+      if (loc.includes('nanggleng')) return { lat: -6.9342, lng: 106.9156 };
+      if (loc.includes('cikole')) return { lat: -6.9056, lng: 106.9289 };
+      if (loc.includes('limusnunggal')) return { lat: -6.9212, lng: 106.9356 };
+      if (loc.includes('baros')) return { lat: -6.9567, lng: 106.8923 };
+      if (loc.includes('cisaat')) return { lat: -6.9834, lng: 106.8745 };
+      
+      const seed = (id % 50) * 0.002;
+      return { lat: -6.9175 + seed, lng: 107.6191 + seed };
+    };
+
+    const coords = (item?.latitude && item?.longitude) 
+      ? { lat: Number(item.latitude), lng: Number(item.longitude) }
+      : (item?.lat && item?.lng) ? { lat: item.lat, lng: item.lng } : getLatLng(itemLocation, itemId);
+
+    const type = item?.type || item?.kategori || 'Kost';
+    
+    // PENYESUAIAN NORMALISASI GENDER (Mendukung format Indonesia & Inggris)
+    const rawGender = String(item?.gender_type || item?.gender || 'mixed').toLowerCase();
+    let gender = 'mixed';
+    if (rawGender.includes('male') || rawGender.includes('putra') || rawGender.includes('pria')) {
+      gender = 'male';
+    } else if (rawGender.includes('female') || rawGender.includes('putri') || rawGender.includes('wanita')) {
+      gender = 'female';
+    }
+
+    const title = item?.title || item?.nama_properti || item?.nama || 'Hunian Tanpa Nama';
+    const period = item?.periode || item?.period || 'bulan';
+
+    return {
+      id: itemId,
+      type,
+      gender,
+      title,
+      location: itemLocation,
+      rawPrice: numPrice,
+      price: formatPrice(priceVal),
+      period,
+      rating: Number(avgRating).toFixed(1),
+      reviews: Number(reviewsCount),
+      image: formatImage(item),
+      tags: tagsArray,
+      isAvailable: item?.is_available !== undefined ? Boolean(item.is_available) : (item?.status !== 'Penuh'),
+      desc: item?.description || item?.deskripsi || item?.facilities || 'Tidak ada deskripsi tambahan.',
+      lat: coords.lat,
+      lng: coords.lng,
+      
+      titleLower: title.toLowerCase(),
+      locationLower: itemLocation.toLowerCase(),
+      typeLower: type.toLowerCase(),
+      genderLower: gender.toLowerCase(),
+      periodLower: period.toLowerCase(),
+      tagsLower: tagsArray.map(t => String(t).toLowerCase())
+    };
+  });
+};
+
 export default function CariHunian() {
   const navigate = useNavigate();
 
-  // State Data Backend & Loading
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. STATE WISHLIST & LOADING TOGGLE INDIVIDUAL
   const [wishlistIds, setWishlistIds] = useState(new Set());
   const [togglingWishlistId, setTogglingWishlistId] = useState(null);
 
-  // State UI Filter & Search
   const [showFilterMobile, setShowFilterMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [quickCategory, setQuickCategory] = useState('Semua Properti');
@@ -60,20 +215,16 @@ export default function CariHunian() {
   const [selectedPeriod, setSelectedPeriod] = useState('Semua');
   const [sortBy, setSortBy] = useState('Rekomendasi Utama');
   
-  // MAP STATE
   const [showMap, setShowMap] = useState(false); 
   const [mapSelectedProperty, setMapSelectedProperty] = useState(null);
 
-  // Modal Detail Properti
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  // Data Pilihan Area Berdasarkan Kota
   const areaKota = {
     Bandung: ['Bojongsoang', 'Buahbatu', 'Coblong', 'Lembang', 'Dago'],
     Sukabumi: ['Cikole', 'Limusnunggal', 'Nanggleng', 'Baros', 'Cisaat']
   };
 
-  // Toast Notification Swal
   const showToast = (message, icon = 'success') => {
     Swal.fire({
       toast: true,
@@ -88,184 +239,85 @@ export default function CariHunian() {
     });
   };
 
-  // Fallback Dummy Data jika backend mati / kosong
-  const getFallbackData = () => [
-    {
-      id: 1,
-      type: 'Kost',
-      gender: 'mixed',
-      title: 'Kost Kavana Vista Tipe A',
-      location: 'Bojongsoang, Bandung',
-      price: 'Rp 1.500.000',
-      period: 'bulan',
-      rating: '0.0',
-      reviews: 0,
-      image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
-      tags: ['Wifi', 'AC', 'KM Dalam'],
-      isAvailable: true,
-      desc: 'Kost nyaman dan bersih siap huni di kawasan Bojongsoang dekat kampus.',
-      lat: -6.9745,
-      lng: 107.6338
-    },
-    {
-      id: 2,
-      type: 'Kontrakan',
-      gender: 'mixed',
-      title: 'Kontrakan Asri Pavilion 2 Kamar',
-      location: 'Buahbatu, Bandung',
-      price: 'Rp 24.000.000',
-      period: 'tahun',
-      rating: '0.0',
-      reviews: 0,
-      image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80',
-      tags: ['2 KT', 'Parkir Mobil', 'Dapur'],
-      isAvailable: true,
-      desc: 'Kontrakan sekeluarga atau mahasiswa dengan halaman luas dan lokasi strategis.',
-      lat: -6.9372,
-      lng: 107.6547
-    },
-    {
-      id: 3,
-      type: 'Kost',
-      gender: 'female',
-      title: 'Kost Eksklusif Heritage Suite',
-      location: 'Coblong, Bandung',
-      price: 'Rp 2.100.000',
-      period: 'bulan',
-      rating: '0.0',
-      reviews: 0,
-      image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
-      tags: ['Wi-Fi', 'Water Heater', 'AC'],
-      isAvailable: false,
-      desc: 'Kost khusus putri aman 24 jam dengan fasilitas mewah standar apartemen.',
-      lat: -6.8915,
-      lng: 107.6107
-    },
-    {
-      id: 4,
-      type: 'Kost',
-      gender: 'male',
-      title: 'ACA VISTA Premium Male',
-      location: 'Nanggleng, Sukabumi',
-      price: 'Rp 1.200.000',
-      period: 'bulan',
-      rating: '0.0',
-      reviews: 0,
-      image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=600&q=80',
-      tags: ['Wi-Fi', 'Kasur', 'Parkir Mobil'],
-      isAvailable: true,
-      desc: 'Kost sewa putra tenang, nyaman, dekat dengan fasilitas publik Sukabumi.',
-      lat: -6.9342,
-      lng: 106.9156
-    }
-  ];
-
-  // 📥 FETCH DATA PROPERTI & INITIAL WISHLIST DARI BACKEND
+  // 📥 FETCH DATA PROPERTI & WISHLIST
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setLoading(true);
+    let isMounted = true;
 
-        // Fetch paralel untuk katalog properti dan daftar wishlist user
+    const fetchInitialData = async () => {
+      // Pembaruan kunci cache v3 agar data tunggal dari cache lama terhapus
+      const cachedProps = sessionStorage.getItem('ch_properties_cache_v3');
+      const cachedWishlist = sessionStorage.getItem('ch_wishlist_cache');
+
+      if (cachedProps && isMounted) {
+        try {
+          const parsed = JSON.parse(cachedProps);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProperties(parsed);
+            if (cachedWishlist) {
+              setWishlistIds(new Set(JSON.parse(cachedWishlist)));
+            }
+            setLoading(false);
+          }
+        } catch {
+          sessionStorage.removeItem('ch_properties_cache_v3');
+        }
+      }
+
+      try {
         const [resProp, resWishlist] = await Promise.allSettled([
           API.get('/properties'),
           API.get('/wishlist')
         ]);
 
-        // 1. Process Wishlist
-        if (resWishlist.status === 'fulfilled') {
+        if (resWishlist.status === 'fulfilled' && isMounted) {
           const rawWishlist = resWishlist.value.data?.data || (Array.isArray(resWishlist.value.data) ? resWishlist.value.data : []);
           const ids = rawWishlist.map(w => w.properti_id || w.properti?.id || w.id);
           setWishlistIds(new Set(ids));
+          sessionStorage.setItem('ch_wishlist_cache', JSON.stringify(ids));
         }
 
-        // 2. Process Properties
-        if (resProp.status === 'fulfilled') {
-          const apiData = resProp.value.data?.data || resProp.value.data?.properties || (Array.isArray(resProp.value.data) ? resProp.value.data : []);
-
-          if (apiData.length === 0) {
-            setProperties(getFallbackData());
-            return;
+        if (resProp.status === 'fulfilled' && isMounted) {
+          const res = resProp.value.data;
+          // PENYESUAIAN EKSTRAKSI DATA BACKEND (Termasuk jika backend menggunakan Laravel Pagination)
+          let apiData = [];
+          if (Array.isArray(res)) {
+            apiData = res;
+          } else if (Array.isArray(res?.data)) {
+            apiData = res.data;
+          } else if (Array.isArray(res?.data?.data)) {
+            apiData = res.data.data;
+          } else if (Array.isArray(res?.properties)) {
+            apiData = res.properties;
           }
 
-          const formatted = apiData.map((item, idx) => {
-            let rawFacilities = item?.facilities || item?.fasilitas || [];
-            let tagsArray = [];
-            if (typeof rawFacilities === 'string') {
-              tagsArray = rawFacilities.split(',').map(f => f.trim()).filter(Boolean);
-            } else if (Array.isArray(rawFacilities)) {
-              tagsArray = rawFacilities;
-            }
-            if (tagsArray.length === 0) tagsArray = ['Wi-Fi', 'AC', 'Lengkap'];
-
-            const priceVal = item?.price_per_month ?? item?.harga ?? item?.price ?? 0;
-            const numPrice = Number(String(priceVal).replace(/[^0-9]/g, '')) || 0;
-
-            const avgRating = item?.reviews_avg_rating ?? item?.avg_rating ?? item?.rating ?? 0;
-            const reviewsCount = item?.reviews_count ?? item?.total_reviews ?? item?.reviews ?? 0;
-
-            const getLatLng = (location) => {
-              const loc = location.toLowerCase();
-              if (loc.includes('bojongsoang')) return { lat: -6.9745, lng: 107.6338 };
-              if (loc.includes('buahbatu')) return { lat: -6.9372, lng: 107.6547 };
-              if (loc.includes('coblong')) return { lat: -6.8915, lng: 107.6107 };
-              if (loc.includes('lembang')) return { lat: -6.8214, lng: 107.6222 };
-              if (loc.includes('dago')) return { lat: -6.8842, lng: 107.5981 };
-              if (loc.includes('nanggleng')) return { lat: -6.9342, lng: 106.9156 };
-              if (loc.includes('cikole')) return { lat: -6.9056, lng: 106.9289 };
-              if (loc.includes('limusnunggal')) return { lat: -6.9212, lng: 106.9356 };
-              if (loc.includes('baros')) return { lat: -6.9567, lng: 106.8923 };
-              if (loc.includes('cisaat')) return { lat: -6.9834, lng: 106.8745 };
-              return { lat: -6.9175 + (Math.random() - 0.5) * 0.1, lng: 107.6191 + (Math.random() - 0.5) * 0.1 };
-            };
-
-            const coords = item?.latitude && item?.longitude 
-              ? { lat: Number(item.latitude), lng: Number(item.longitude) }
-              : getLatLng(item?.address || item?.alamat || item?.lokasi || 'Bandung');
-
-            return {
-              id: item?.id || idx + 1,
-              type: item?.type || item?.kategori || 'Kost',
-              gender: item?.gender_type || item?.gender || 'Campur',
-              title: item?.title || item?.nama_properti || item?.nama || 'Hunian Tanpa Nama',
-              location: item?.address || item?.alamat || item?.lokasi || 'Lokasi tidak tersedia',
-              rawPrice: numPrice,
-              price: formatPrice(priceVal),
-              period: item?.periode || item?.period || 'bulan',
-              rating: Number(avgRating).toFixed(1),
-              reviews: Number(reviewsCount),
-              image: formatImage(item),
-              tags: tagsArray,
-              isAvailable: item?.is_available !== undefined ? Boolean(item.is_available) : (item?.status !== 'Penuh'),
-              desc: item?.description || item?.deskripsi || item?.facilities || 'Tidak ada deskripsi tambahan.',
-              lat: coords.lat,
-              lng: coords.lng
-            };
-          });
+          const finalRaw = apiData.length > 0 ? apiData : getFallbackData();
+          const formatted = normalizePropertyData(finalRaw);
 
           setProperties(formatted);
-        } else {
-          setProperties(getFallbackData());
+          sessionStorage.setItem('ch_properties_cache_v3', JSON.stringify(formatted));
+        } else if (!cachedProps && isMounted) {
+          setProperties(normalizePropertyData(getFallbackData()));
         }
       } catch {
-        setProperties(getFallbackData());
+        if (!cachedProps && isMounted) {
+          setProperties(normalizePropertyData(getFallbackData()));
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchInitialData();
+
+    return () => { isMounted = false; };
   }, []);
 
-  // 💖 LOGIKA TOGGLE WISHLIST REAL-TIME (OPTIMISTIC UPDATE & API SYNC)
   const handleToggleWishlist = async (e, propertiId) => {
-    e.stopPropagation(); // Mencegah modal detail terbuka saat tombol hati diklik
-
-    if (togglingWishlistId === propertiId) return; // Mencegah spaming klik
+    e.stopPropagation();
+    if (togglingWishlistId === propertiId) return;
 
     const isCurrentlyWishlist = wishlistIds.has(propertiId);
 
-    // 1. Optimistic UI Update (Ubah state warna instan)
     setWishlistIds(prev => {
       const next = new Set(prev);
       if (isCurrentlyWishlist) {
@@ -273,13 +325,13 @@ export default function CariHunian() {
       } else {
         next.add(propertiId);
       }
+      sessionStorage.setItem('ch_wishlist_cache', JSON.stringify(Array.from(next)));
       return next;
     });
 
     setTogglingWishlistId(propertiId);
 
     try {
-      // 2. Kirim Request ke Backend
       const res = await API.post('/wishlist/toggle', { properti_id: propertiId });
       const isWishlist = res.data?.is_wishlist;
 
@@ -288,9 +340,6 @@ export default function CariHunian() {
         isWishlist ? 'success' : 'info'
       );
     } catch (err) {
-      console.error("Gagal toggle wishlist:", err);
-      
-      // 3. Rollback State jika API Gagal
       setWishlistIds(prev => {
         const rollback = new Set(prev);
         if (isCurrentlyWishlist) {
@@ -298,6 +347,7 @@ export default function CariHunian() {
         } else {
           rollback.delete(propertiId);
         }
+        sessionStorage.setItem('ch_wishlist_cache', JSON.stringify(Array.from(rollback)));
         return rollback;
       });
 
@@ -311,7 +361,6 @@ export default function CariHunian() {
     }
   };
 
-  // Handlers Filter
   const handleAreaToggle = (area) => {
     setSelectedAreas(prev => 
       prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area]
@@ -352,45 +401,53 @@ export default function CariHunian() {
 
   // FILTER & SORTING LOGIC
   const filteredProperties = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    const isQuickCatAll = quickCategory === 'Semua Properti';
+    const isKotaAll = selectedKota === 'Semua';
+    const isPeriodAll = selectedPeriod === 'Semua';
+
+    const selectedKotaLower = selectedKota.toLowerCase();
+    const selectedAreasLower = selectedAreas.map(a => a.toLowerCase());
+    const selectedGenderLower = selectedGender.map(g => g.toLowerCase());
+    const selectedFacilitiesLower = selectedFacilities.map(f => f.toLowerCase());
+    const selectedPeriodLower = selectedPeriod.toLowerCase();
+
     return properties.filter((item) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch = !q || 
-        item.title.toLowerCase().includes(q) || 
-        item.location.toLowerCase().includes(q) || 
-        item.type.toLowerCase().includes(q);
+      if (q) {
+        const matchSearch = item.titleLower.includes(q) || 
+                            item.locationLower.includes(q) || 
+                            item.typeLower.includes(q);
+        if (!matchSearch) return false;
+      }
 
-      if (!matchSearch) return false;
-
-      if (quickCategory !== 'Semua Properti' && item.type.toLowerCase() !== quickCategory.toLowerCase()) {
+      if (!isQuickCatAll && item.typeLower !== quickCategory.toLowerCase()) {
         return false;
       }
 
-      if (selectedKota !== 'Semua') {
-        if (!item.location.toLowerCase().includes(selectedKota.toLowerCase())) {
-          return false;
-        }
+      if (!isKotaAll && !item.locationLower.includes(selectedKotaLower)) {
+        return false;
       }
 
-      if (selectedAreas.length > 0) {
-        const hasArea = selectedAreas.some(area => item.location.toLowerCase().includes(area.toLowerCase()));
+      if (selectedAreasLower.length > 0) {
+        const hasArea = selectedAreasLower.some(area => item.locationLower.includes(area));
         if (!hasArea) return false;
       }
 
-      if (selectedGender.length > 0) {
-        const hasGender = selectedGender.some(g => item.gender.toLowerCase().includes(g.toLowerCase()));
+      if (selectedGenderLower.length > 0) {
+        const hasGender = selectedGenderLower.some(g => item.genderLower.includes(g));
         if (!hasGender) return false;
       }
 
-      if (selectedFacilities.length > 0) {
-        const itemTagsLower = item.tags.map(t => t.toLowerCase());
-        const hasAllFacs = selectedFacilities.every(fac => 
-          itemTagsLower.some(tag => tag.includes(fac.toLowerCase()))
+      // PENYESUAIAN FILTER FASILITAS (.some agar lebih inklusif dan tidak mengeliminasi semua properti)
+      if (selectedFacilitiesLower.length > 0) {
+        const hasFacs = selectedFacilitiesLower.some(fac => 
+          item.tagsLower.some(tag => tag.includes(fac))
         );
-        if (!hasAllFacs) return false;
+        if (!hasFacs) return false;
       }
 
-      if (selectedPeriod !== 'Semua') {
-        if (item.period.toLowerCase() !== selectedPeriod.toLowerCase()) return false;
+      if (!isPeriodAll && item.periodLower !== selectedPeriodLower) {
+        return false;
       }
 
       return true;
@@ -413,17 +470,13 @@ export default function CariHunian() {
     <SidebarUser>
       <div className="min-h-screen bg-[#FAF6F0] text-[#261C19] font-sans selection:bg-[#C5A059] selection:text-white pb-16 relative">
         
-        {/* AMBIENT BACKGROUND GLOW DEKORATIF */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#C5A059]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* LUXURY SEARCH CONSOLE HEADER */}
         <div className="bg-[#FAF6F0] border-b border-[#E5D7C5] py-5 px-4 md:px-8 shadow-xs transition-all">
           <div className="max-w-7xl mx-auto space-y-3">
             
-            {/* MAIN SEARCH ROW */}
             <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
               
-              {/* SEARCH INPUT BAR */}
               <div className="relative w-full md:flex-1 bg-white border border-[#E5D7C5] hover:border-[#C5A059] focus-within:border-[#C5A059] focus-within:ring-2 focus-within:ring-[#C5A059]/30 rounded-2xl shadow-sm transition-all duration-300 flex items-center px-4 py-2.5">
                 <span className="text-[#C5A059] text-base mr-3 flex-shrink-0 animate-pulse">📍</span>
                 <input 
@@ -443,10 +496,9 @@ export default function CariHunian() {
                 )}
               </div>
 
-              {/* QUICK CATEGORY PILLS */}
               <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end overflow-x-auto no-scrollbar pb-1 md:pb-0">
                 <div className="bg-white border border-[#E5D7C5] p-1.5 rounded-2xl flex items-center gap-1 shadow-xs flex-shrink-0">
-                  {['Semua Properti', 'Kost', ''].map((cat) => (
+                  {['Semua Properti', 'Kost', 'Kontrakan'].map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setQuickCategory(cat)}
@@ -472,7 +524,6 @@ export default function CariHunian() {
 
             </div>
 
-            {/* QUICK CITY SHORTCUTS & ACTIVE FILTER CHIPS BAR */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#E5D7C5]/50">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#C5A059]">Fokus Kota:</span>
@@ -520,11 +571,9 @@ export default function CariHunian() {
           </div>
         </div>
 
-        {/* MAIN CONTENT & SIDEBAR */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            {/* SIDEBAR FILTER */}
             <div className={`lg:block lg:col-span-3 bg-white border border-[#E5D7C5] rounded-3xl p-5 sticky top-24 h-fit max-h-[85vh] overflow-y-auto no-scrollbar shadow-xs transition-all duration-300 ${
               showFilterMobile ? 'block mb-6' : 'hidden'
             }`}>
@@ -535,12 +584,10 @@ export default function CariHunian() {
                 </h3>
               </div>
 
-              {/* KOTA & AREA DAERAH */}
               <div className="space-y-4 mb-6">
                 <label className="block text-[10px] uppercase tracking-widest font-black text-[#C5A059]">Area &amp; Wilayah</label>
                 
                 <div className="space-y-3">
-                  {/* Kota Bandung */}
                   <div className="space-y-2">
                     <button 
                       onClick={() => {
@@ -572,7 +619,6 @@ export default function CariHunian() {
                     )}
                   </div>
 
-                  {/* Kota Sukabumi */}
                   <div className="space-y-2">
                     <button 
                       onClick={() => {
@@ -606,25 +652,27 @@ export default function CariHunian() {
                 </div>
               </div>
 
-              {/* Tipe Penghuni */}
               <div className="space-y-4 pt-4 border-t border-slate-100 mb-6">
                 <label className="block text-[10px] uppercase tracking-widest font-black text-[#C5A059]">Tipe Penghuni</label>
                 <div className="space-y-3 text-sm font-medium text-[#261C19]">
-                  {['male', 'female', 'mixed'].map((g) => (
-                    <label key={g} className="flex items-center gap-3 cursor-pointer group">
+                  {[
+                    { label: 'Kost Putra', val: 'male' },
+                    { label: 'Kost Putri', val: 'female' },
+                    { label: 'Kost Campur', val: 'mixed' }
+                  ].map((g) => (
+                    <label key={g.val} className="flex items-center gap-3 cursor-pointer group">
                       <input 
                         type="checkbox" 
-                        checked={selectedGender.includes(g)}
-                        onChange={() => handleGenderToggle(g)}
+                        checked={selectedGender.includes(g.val)}
+                        onChange={() => handleGenderToggle(g.val)}
                         className="w-4 h-4 accent-[#C5A059] cursor-pointer rounded" 
                       /> 
-                      <span className="group-hover:text-[#C5A059] transition-colors capitalize">Kost {g}</span>
+                      <span className="group-hover:text-[#C5A059] transition-colors">{g.label}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              {/* Filter Fasilitas */}
               <div className="space-y-4 pt-4 border-t border-slate-100 mb-6">
                 <label className="block text-[10px] uppercase tracking-widest font-black text-[#C5A059]">Fasilitas Utama</label>
                 <div className="space-y-3 text-sm font-medium text-[#261C19]">
@@ -642,7 +690,6 @@ export default function CariHunian() {
                 </div>
               </div>
 
-              {/* Sistem Sewa */}
               <div className="space-y-4 pt-4 border-t border-slate-100">
                 <label className="block text-[10px] uppercase tracking-widest font-black text-[#C5A059]">Sistem Sewa</label>
                 <div className="space-y-3 text-sm font-medium text-[#261C19]">
@@ -665,18 +712,14 @@ export default function CariHunian() {
                 </div>
               </div>
 
-              {/* IKLAN SIDEBAR */}
               <AdBanner placement="search_sidebar" variant="sidebar" className="mt-6" />
 
             </div>
 
-            {/* CATALOG / LISTING HUNIAN */}
             <div className="lg:col-span-9 flex flex-col space-y-6">
               
-              {/* IKLAN ATAS KATALOG */}
               <AdBanner placement="catalog_top" variant="horizontal" className="mb-6" />
 
-              {/* Map Toggle & Controls Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-[#E5D7C5] rounded-3xl p-5 shadow-xs">
                 <div>
                   <h2 className="text-lg font-black text-[#261C19]">Temukan Hunian Impianmu</h2>
@@ -713,7 +756,6 @@ export default function CariHunian() {
                 </div>
               </div>
 
-              {/* MAP BANNER FULL WIDTH */}
               {showMap && (
                 <div className="w-full h-[400px] bg-white border border-[#E5D7C5] rounded-3xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 z-0 relative">
                    <InteractiveMap
@@ -728,7 +770,6 @@ export default function CariHunian() {
                 </div>
               )}
               
-              {/* CARDS LISTING HUNIAN */}
               <div className="w-full">
                 {loading ? (
                   <div className="p-20 text-center bg-white rounded-3xl border border-[#E5D7C5] space-y-4">
@@ -754,14 +795,12 @@ export default function CariHunian() {
                                 onError={handleImageError}
                               />
                               
-                              {/* Label Tipe Properti */}
                               <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                                 <span className="bg-[#261C19]/90 backdrop-blur-sm text-[#FAF5EF] text-[10px] tracking-widest font-black uppercase px-3 py-1.5 rounded-full shadow-sm w-fit">
                                   {item.type}
                                 </span>
                               </div>
 
-                              {/* 💖 TOMBOL WISHLIST FLOATING (POJOK KANAN ATAS GAMBAR) */}
                               <button
                                 onClick={(e) => handleToggleWishlist(e, item.id)}
                                 disabled={isToggling}
@@ -783,7 +822,6 @@ export default function CariHunian() {
                                 )}
                               </button>
 
-                              {/* Ketersediaan */}
                               {!item.isAvailable && (
                                 <div className="absolute inset-0 bg-[#261C19]/70 backdrop-blur-[2px] flex items-center justify-center z-10">
                                   <span className="bg-rose-600 text-white text-xs font-black tracking-widest uppercase px-5 py-2.5 rounded-full shadow-lg border-2 border-white/20">
@@ -860,7 +898,6 @@ export default function CariHunian() {
                             </div>
                           </div>
 
-                          {/* IKLAN IN-FEED */}
                           {itemIndex === 3 && (
                             <AdBanner
                               placement="catalog_in_feed"
@@ -891,7 +928,6 @@ export default function CariHunian() {
           </div>
         </div>
 
-        {/* MODAL DETAIL HUNIAN */}
         {selectedRoom && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
@@ -904,7 +940,6 @@ export default function CariHunian() {
                   onError={handleImageError}
                 />
                 
-                {/* 💖 TOMBOL WISHLIST FLOATING PADA MODAL DETAIL */}
                 <button
                   onClick={(e) => handleToggleWishlist(e, selectedRoom.id)}
                   disabled={togglingWishlistId === selectedRoom.id}
@@ -992,7 +1027,6 @@ export default function CariHunian() {
 
               </div>
 
-              {/* FOOTER MODAL */}
               <div className="p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 flex-shrink-0">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Harga Sewa</p>
