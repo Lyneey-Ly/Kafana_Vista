@@ -303,11 +303,11 @@ export default function UserProfile() {
             <div className="flex flex-col space-y-6">
 
               {/* DATA PROFIL USER & HEADER CARD */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#1E1614] via-[#2A1F1D] to-[#17100E] text-[#FAF5EF] p-6 md:p-8 rounded-3xl border border-[#4A3B32] shadow-2xl flex flex-col md:flex-row items-center md:items-center justify-between gap-6">
+              <div className="relative overflow-hidden bg-gradient-to-br from-[#1E1614] via-[#2A1F1D] to-[#17100E] text-[#FAF5EF] p-6 md:p-8 rounded-3xl border border-[#4A3B32] shadow-2xl flex flex-col sm:flex-row items-center sm:items-center justify-between gap-6">
                 <div className="absolute -top-16 -left-16 w-48 h-48 bg-[#C5A059]/20 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-[#C5A059]/15 rounded-full blur-3xl pointer-events-none"></div>
 
-                <div className="flex flex-col md:flex-row items-center gap-6 relative z-10 w-full md:w-auto">
+                <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10 w-full sm:w-auto">
                   <div className="relative inline-block group shrink-0">
                     <div className="p-1.5 rounded-full bg-gradient-to-tr from-[#C5A059] via-[#E5D7C5] to-[#8F6E45] shadow-xl">
                       <img 
@@ -406,7 +406,7 @@ export default function UserProfile() {
                     <button 
                       type="button"
                       onClick={() => setActiveTab('overview')}
-                      className={`text-xs md:text-sm font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                      className={`text-xs md:text-sm font-bold px-4 py-3 min-h-11 rounded-xl transition-all cursor-pointer ${
                         activeTab === 'overview' 
                           ? 'bg-[#261C19] text-white shadow-md' 
                           : 'text-slate-500 hover:text-[#261C19]'
@@ -417,7 +417,7 @@ export default function UserProfile() {
                     <button 
                       type="button"
                       onClick={() => setActiveTab('security')}
-                      className={`text-xs md:text-sm font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                      className={`text-xs md:text-sm font-bold px-4 py-3 min-h-11 rounded-xl transition-all cursor-pointer ${
                         activeTab === 'security' 
                           ? 'bg-[#261C19] text-white shadow-md' 
                           : 'text-slate-500 hover:text-[#261C19]'
@@ -568,7 +568,7 @@ export default function UserProfile() {
                 </div>
 
                 {rentStatus && rentStatus.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-1">
                     {rentStatus.map((item, index) => {
                       const cleanDuration = String(item.duration_months || '').replace(/bulan/gi, '').trim();
                       const nomorKamarNum = item.kamar?.nomor_kamar || item.nomor_kamar || item.properti?.nomor_kamar || null;

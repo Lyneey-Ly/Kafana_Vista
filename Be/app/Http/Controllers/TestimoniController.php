@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Testimoni;
+use App\Services\SuperAdminNotificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class TestimoniController extends Controller
 {
@@ -41,6 +43,20 @@ class TestimoniController extends Controller
         ]);
 
         $testimoni->load('user');
+
+        // NOTIFIKASI: ke SuperAdmin — testimoni baru
+        try {
+            $user = Auth::guard('sanctum')->user();
+            $userName = $user->name ?? 'User';
+            SuperAdminNotificationService::send(
+                'testimoni',
+                'Testimoni Baru',
+                "{$userName} mengirim testimoni rating {$request->rating}/5.",
+                '/superadmin/testimonis'
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif testimoni: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Terima kasih atas ulasannya!', 

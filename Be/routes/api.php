@@ -29,9 +29,11 @@ use App\Http\Controllers\Api\PlaylistController;
 
 // Import Controller Subscription (Premium Account)
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\SubscriptionPackageController;
 
 // Import Middleware Custom
 use App\Http\Middleware\EnsureIsAdmin; 
+use App\Http\Middleware\EnsureIsSuperAdmin;
 use App\Http\Middleware\EnsureUserIsPremium;
 
 /*
@@ -58,6 +60,9 @@ Route::get('/site-settings', [SiteSettingController::class, 'index']);
 
 // --- ENDPOINT WEBHOOK MIDTRANS ---
 Route::post('/midtrans/webhook', [PembayaranController::class, 'handleMidtransWebhook']);
+
+// --- ENDPOINT PUBLIK SUBSCRIPTION PACKAGES (dinamis, tanpa auth agar bisa lihat harga sebelum login) ---
+Route::get('/packages', [SubscriptionPackageController::class, 'indexPublic']);
 
 /*
 |--------------------------------------------------------------------------
@@ -213,6 +218,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
         Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
 
+        // --- KELOLA SUBSCRIPTION PACKAGES (HARGA PAKET PREMIUM - SUPERADMIN ONLY, alias /admin/packages) ---
+        // Alias langsung di /admin/packages sesuai spec (hanya superadmin yang diizinkan via controller check)
+        Route::get('/packages', [SubscriptionPackageController::class, 'indexAdmin']);
+        Route::post('/packages', [SubscriptionPackageController::class, 'store']);
+        Route::put('/packages/{id}', [SubscriptionPackageController::class, 'update']);
+        Route::delete('/packages/{id}', [SubscriptionPackageController::class, 'destroy']);
+        Route::patch('/packages/{id}/toggle', [SubscriptionPackageController::class, 'toggleStatus']);
+
         // Kelola SuperAdmin Akses
         Route::prefix('superadmin')->group(function () {
             Route::get('/stats', [SuperAdminController::class, 'dashboardStats']);
@@ -252,6 +265,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/vendor-ads/{id}', [VendorAdController::class, 'update']);
             Route::delete('/vendor-ads/{id}', [VendorAdController::class, 'destroy']);
             Route::get('/administrators/{id}/properties', [SuperAdminController::class, 'getAdminProperties']);
+
+            // --- KELOLA SUBSCRIPTION PACKAGES (SUPERADMIN - kanonik) ---
+            Route::get('/packages', [SubscriptionPackageController::class, 'indexAdmin']);
+            Route::post('/packages', [SubscriptionPackageController::class, 'store']);
+            Route::put('/packages/{id}', [SubscriptionPackageController::class, 'update']);
+            Route::delete('/packages/{id}', [SubscriptionPackageController::class, 'destroy']);
+            Route::patch('/packages/{id}/toggle', [SubscriptionPackageController::class, 'toggleStatus']);
 
             // --- KELOLA SUBSCRIPTION / PREMIUM (SUPERADMIN LEVEL) ---
             Route::get('/subscriptions', [SubscriptionController::class, 'indexSuperAdmin']);

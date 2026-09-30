@@ -59,6 +59,7 @@ import FinanceTrackerPage from './pages/superadmin/FinanceTrackerPage';
 import SettingsPage from './pages/superadmin/SettingsPage';
 import VerifikasiIklanAdmin from './pages/VerifikasiIklanAdmin';
 import VerifikasiPropertiSuperAdmin from './pages/VerifikasiPropertiSuperAdmin'; 
+import ManagePackages from './pages/superadmin/ManagePackages';
 import NotificationBell from './components/NotificationBell';
 import Footer from './components/footer';
 import RandomizerMakan from './pages/RandomizerMakan';
@@ -87,7 +88,7 @@ export default function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <PlayerProvider> {/* <--- Bungkus di sini */}
         <Router>
-          <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+          <div className="min-h-screen bg-slate-50 text-slate-800 font-sans overflow-x-hidden">
             <Routes>
               {/* Main Landing & Public Pages */}
               <Route path="/" element={<Home />} />
@@ -169,6 +170,7 @@ export default function App() {
                 <Route path="revenue-analytics" element={<RevenueAnalyticsPage />} />
                 <Route path="bank-accounts" element={<BankAccountsPage />} />
                 <Route path="finance-tracker" element={<FinanceTrackerPage />} />
+                <Route path="packages" element={<ManagePackages />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="VerifikasiIklanAdmin" element={<VerifikasiIklanAdmin />} />
                 <Route path="SuperAdminSubscriptions" element={<SuperAdminSubscriptions />} />

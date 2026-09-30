@@ -28,4 +28,24 @@ class DokumenSewa extends Model
     {
         return $this->belongsTo(Pemesanan::class, 'pemesanan_id');
     }
+
+    /**
+     * Accessor fallback: parsed lease_agreement jika masih mengandung placeholder.
+     * Tidak overwrite kolom asli, hanya untuk response API jika dipanggil.
+     */
+    public function getLeaseAgreementParsedAttribute(): string
+    {
+        $raw = $this->lease_agreement ?? '';
+        if (empty($raw)) return '';
+        // Jika masih ada placeholder, parse otomatis
+        if (\App\Services\LeaseAgreementService::containsPlaceholder($raw)) {
+            // Ensure relasi ter-load untuk parsing optimal
+            if (!$this->relationLoaded('pemesanan')) {
+                $this->loadMissing(['pemesanan.customer', 'pemesanan.properti', 'pemesanan.kamar']);
+            }
+            $properti = $this->pemesanan?->properti;
+            return \App\Services\LeaseAgreementService::parse($raw, $properti, $this->pemesanan, $this);
+        }
+        return $raw;
+    }
 }

@@ -144,7 +144,7 @@ export default function HomeUser() {
        
 
         <motion.main 
-          className="max-w-7xl mx-auto px-6 md:px-12 py-8 space-y-16"
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -152,7 +152,7 @@ export default function HomeUser() {
           {/* SECTION 1: PERSONALIZED WELCOME & ACTIVE LEASE / EMPTY STATE */}
           <motion.section variants={itemVariants} className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-[#261C19] capitalize">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-[#261C19] capitalize">
                 Selamat Datang Kembali, {userProfile.name.split(' ')[0]} <Sparkles className="inline-block text-[#B38E5D] pb-2" size={32} />
               </h1>
             </div>
@@ -183,7 +183,7 @@ export default function HomeUser() {
                           <select 
                             value={selectedLeaseIndex}
                             onChange={(e) => setSelectedLeaseIndex(Number(e.target.value))}
-                            className="bg-black/20 text-xs font-bold text-[#E5D7C5] border border-[#4A3B32] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#C5A059] cursor-pointer"
+                            className="bg-black/20 text-xs font-bold text-[#E5D7C5] border border-[#4A3B32] rounded-lg px-3 py-3 min-h-11 focus:outline-none focus:border-[#C5A059] cursor-pointer"
                           >
                             {activeLeases.map((lease, idx) => (
                               <option key={lease.id} value={idx} className="bg-[#261C19] text-white">
@@ -288,7 +288,7 @@ export default function HomeUser() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-[#C5A059] bg-[#C5A059]/10 px-3 py-1 rounded-full border border-[#C5A059]/20 inline-block">
                     Eksplorasi Properti
                   </span>
-                  <h3 className="text-3xl md:text-4xl font-black text-[#FAF5EF] leading-tight">
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#FAF5EF] leading-tight">
                     Ingin Mencari Tempat Tinggal Baru?
                   </h3>
                   <p className="text-[#E5D7C5] font-medium leading-relaxed">

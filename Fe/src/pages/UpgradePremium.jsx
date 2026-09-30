@@ -95,65 +95,9 @@ const IconRefresh = ({ className = "w-5 h-5" }) => (
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 const STORAGE_URL = 'http://127.0.0.1:8000/storage';
 
-const PACKAGES = {
-  monthly: {
-    id: 'monthly',
-    name: 'Paket Bulanan',
-    subtitle: 'Akses fleksibel tanpa komitmen jangka panjang',
-    price: 50000,
-    period: '/ bulan',
-    durationDays: 30,
-    badge: null,
-    savingsText: null,
-    isPopular: false,
-    features: [
-      'Akses Tanpa Batas Finance Tracker',
-      'Randomizer Makan & Resep Hemat Kost',
-      'Kalkulator Survival & Budget Planner',
-      'Game Launcher Hub Premium Access',
-      'Music Dashboard Stream Quality High',
-      'Dukungan Prioritas 24/7',
-    ],
-  },
-  yearly: {
-    id: 'yearly',
-    name: 'Paket Tahunan',
-    subtitle: 'Pilihan paling populer bagi pengguna hemat',
-    price: 500000,
-    period: '/ tahun',
-    durationDays: 365,
-    badge: 'Hemat 17%',
-    savingsText: 'Hemat Rp 100.000 dibanding bulanan',
-    isPopular: true,
-    features: [
-      'Semua Fitur Paket Bulanan',
-      'Bonus 2 Bulan Gratis',
-      'Ekspor Laporan Keuangan ke PDF/Excel',
-      'Kustomisasi Tema Dashboard Premium',
-      'Prioritas Pertama Verifikasi Transaksi',
-      'Bebas Iklan Sepenuhnya',
-    ],
-  },
-  lifetime: {
-    id: 'lifetime',
-    name: 'Paket Lifetime',
-    subtitle: 'Bayar sekali untuk akses seumur hidup',
-    price: 1200000,
-    period: 'sekali bayar',
-    durationDays: 36500,
-    badge: 'Best Value',
-    savingsText: 'Akses selamanya tanpa biaya tambahan',
-    isPopular: false,
-    features: [
-      'Semua Fitur Paket Tahunan',
-      'Akses Selamanya Tanpa Batas',
-      'Akses Dini Fitur Baru (Beta Tester)',
-      'Lencana Eksklusif Founder Member',
-      'Sesi Konsultasi Finansial Kost 1-on-1',
-      'Jaminan Tanpa Kenaikan Harga',
-    ],
-  },
-};
+// PACKAGES kini dinamis dari BE: GET /api/packages (single source of truth)
+// Fallback skeleton jika belum ter-load - tidak lagi hardcode di frontend
+// Struktur paket mengikuti BE field: id/slug, name, subtitle, price, period, durationDays, badge, savingsText, isPopular, features, is_active
 
 const FEATURES_COMPARISON = [
   { name: 'Finance Tracker Basic', free: true, premium: true },
@@ -448,7 +392,7 @@ const StepIndicator = ({ currentStep, setStep }) => {
               <button
                 disabled={step.number > currentStep}
                 onClick={() => setStep(step.number)}
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                className={`w-11 h-11 min-h-11 min-w-11 rounded-2xl flex items-center justify-center font-bold text-xs transition-all duration-300 ${
                   isCompleted
                     ? 'bg-[#B38E5D] text-white shadow-md shadow-[#B38E5D]/20'
                     : isActive
@@ -632,9 +576,48 @@ const BenefitShowcase = () => {
 };
 
 // =====================================================================
-// STEP 1: PLAN SELECTION
+// STEP 1: PLAN SELECTION (DINAMIS - fetch dari BE)
 // =====================================================================
-const Step1PlanSelection = ({ selectedPackage, setSelectedPackage, onNext }) => {
+const Step1PlanSelection = ({ packages, selectedPackage, setSelectedPackage, onNext, loadingPackages }) => {
+  if (loadingPackages) {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-300">
+        <div className="text-center space-y-2">
+          <h2 className="text-xl md:text-2xl font-black text-[#261C19]">Langkah 1: Pilih Paket Langganan</h2>
+          <p className="text-xs text-slate-500">Memuat paket premium terbaru dari server...</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white border-2 border-[#E5D7C5]/40 rounded-[2rem] p-6 animate-pulse space-y-4">
+              <div className="h-5 bg-[#E5D7C5]/40 rounded w-1/2"></div>
+              <div className="h-3 bg-[#E5D7C5]/30 rounded w-full"></div>
+              <div className="h-8 bg-[#B38E5D]/20 rounded w-2/3"></div>
+              <div className="space-y-2 pt-4">
+                <div className="h-3 bg-slate-100 rounded"></div>
+                <div className="h-3 bg-slate-100 rounded"></div>
+                <div className="h-3 bg-slate-100 rounded w-5/6"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!packages || packages.length === 0) {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-300">
+        <div className="text-center space-y-2">
+          <h2 className="text-xl md:text-2xl font-black text-[#261C19]">Langkah 1: Pilih Paket Langganan</h2>
+          <p className="text-xs text-rose-500 font-semibold">Gagal memuat paket. Silakan refresh halaman.</p>
+        </div>
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center text-xs text-rose-600">
+          Tidak ada paket aktif tersedia saat ini. Hubungi Superadmin.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <div className="text-center space-y-2">
@@ -643,7 +626,7 @@ const Step1PlanSelection = ({ selectedPackage, setSelectedPackage, onNext }) => 
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {Object.values(PACKAGES).map((pkg) => {
+        {packages.map((pkg) => {
           const isSelected = selectedPackage === pkg.id;
 
           return (
@@ -729,6 +712,7 @@ const Step1PlanSelection = ({ selectedPackage, setSelectedPackage, onNext }) => 
 // STEP 2: PAYMENT METHOD & REKENING (INCL. UNIQUE CODE & TIMER)
 // =====================================================================
 const Step2PaymentMethod = ({
+  packages,
   selectedPackage,
   bankAccounts,
   uniqueCode,
@@ -740,7 +724,14 @@ const Step2PaymentMethod = ({
   onNext,
   onPrev,
 }) => {
-  const pkg = PACKAGES[selectedPackage];
+  const pkg = packages?.find((p) => p.id === selectedPackage) || packages?.[0];
+  if (!pkg) {
+    return (
+      <div className="bg-white border border-[#E5D7C5] rounded-[2rem] p-8 text-center text-xs text-rose-500">
+        Paket tidak ditemukan. Silakan kembali ke Langkah 1 dan pilih paket.
+      </div>
+    );
+  }
   const totalPrice = pkg.price + uniqueCode;
 
   const [timeLeft, setTimeLeft] = useState(900);
@@ -767,7 +758,7 @@ const Step2PaymentMethod = ({
       </div>
 
       {/* Countdown Timer Warning Banner */}
-      <div className="bg-[#B38E5D]/10 border border-[#B38E5D]/30 p-4 rounded-2xl flex items-center justify-between text-xs text-[#261C19]">
+      <div className="bg-[#B38E5D]/10 border border-[#B38E5D]/30 p-4 rounded-2xl flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-xs text-[#261C19]">
         <div className="flex items-center gap-3">
           <IconTimer className="w-5 h-5 text-[#B38E5D] animate-pulse" />
           <span className="font-semibold">Selesaikan pembayaran dalam waktu:</span>
@@ -810,7 +801,7 @@ const Step2PaymentMethod = ({
       {/* Tab Pilihan Metode Pembayaran */}
       <div className="space-y-4">
         <p className="text-xs font-black uppercase tracking-widest text-[#B38E5D]">Pilih Metode Bayar</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { id: 'bank', label: 'Bank Transfer', icon: IconCreditCard },
             { id: 'qris', label: 'QRIS Instant', icon: IconQrcode },
@@ -900,7 +891,7 @@ const Step2PaymentMethod = ({
                     : 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=KAVANA_PREMIUM_QRIS_PAYMENT'
                 }
                 alt="QRIS Pembayaran"
-                className="w-48 h-48 mx-auto object-contain"
+                className="w-40 h-40 sm:w-48 sm:h-48 max-w-full mx-auto object-contain"
               />
             </div>
             <p className="text-[11px] text-slate-500">NMI: ID1029384756102 • QRIS Resmi Kavana Vista</p>
@@ -1121,10 +1112,17 @@ const Step3UploadProof = ({
 };
 
 // =====================================================================
-// STEP 4: DIGITAL RECEIPT & CONFIRMATION
+// STEP 4: DIGITAL RECEIPT & CONFIRMATION (DINAMIS)
 // =====================================================================
-const Step4DigitalReceipt = ({ selectedPackage, uniqueCode, senderName, refNumber, onFinish }) => {
-  const pkg = PACKAGES[selectedPackage];
+const Step4DigitalReceipt = ({ packages, selectedPackage, uniqueCode, senderName, refNumber, onFinish }) => {
+  const pkg = packages?.find((p) => p.id === selectedPackage) || packages?.[0];
+  if (!pkg) {
+    return (
+      <div className="bg-white border border-[#E5D7C5] rounded-[2rem] p-8 text-center text-xs text-rose-500">
+        Paket tidak ditemukan untuk struk. Silakan refresh halaman.
+      </div>
+    );
+  }
   const totalPaid = pkg.price + uniqueCode;
   const transactionId = `KVN-${Math.floor(100000 + Math.random() * 900000)}`;
   const currentDate = new Date().toLocaleDateString('id-ID', {
@@ -1250,6 +1248,11 @@ export default function UpgradePremium() {
   const [mySubscription, setMySubscription] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
 
+  // DINAMIS: state paket dari BE (single source of truth)
+  const [packages, setPackages] = useState([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+  const [packagesError, setPackagesError] = useState(null);
+
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const triggerToast = useCallback((message, type = 'success') => {
@@ -1298,10 +1301,52 @@ export default function UpgradePremium() {
     }
   }, []);
 
+  const fetchPackages = useCallback(async () => {
+    setLoadingPackages(true);
+    setPackagesError(null);
+    try {
+      // Public endpoint, tanpa auth agar calon user bisa lihat harga
+      const res = await axios.get(`${API_BASE_URL}/packages`, {
+        headers: { Accept: 'application/json' },
+      });
+      const list = res.data?.data || res.data || [];
+      // Normalisasi snake->camel sudah dari BE, tapi pastikan numeric
+      const normalized = list.map((p) => ({
+        id: p.id || p.slug,
+        slug: p.slug || p.id,
+        name: p.name,
+        subtitle: p.subtitle,
+        price: Number(p.price),
+        period: p.period,
+        durationDays: Number(p.durationDays ?? p.duration_days ?? 30),
+        badge: p.badge,
+        savingsText: p.savingsText ?? p.savings_text,
+        isPopular: Boolean(p.isPopular ?? p.is_popular),
+        features: Array.isArray(p.features) ? p.features : [],
+        isActive: p.isActive ?? p.is_active ?? true,
+      }));
+      setPackages(normalized);
+      // Set default selected ke yang popular atau pertama jika belum ada / tidak ditemukan
+      if (normalized.length > 0) {
+        const popular = normalized.find((x) => x.isPopular);
+        const fallback = popular ? popular.id : normalized[0].id;
+        // Hanya set jika current selected tidak ada di list (mis: yearly tapi paket diubah superadmin)
+        setSelectedPackage((prev) => (normalized.find((x) => x.id === prev) ? prev : fallback));
+      }
+    } catch (err) {
+      console.error('Gagal memuat paket premium:', err);
+      setPackagesError(err.response?.data?.message || 'Gagal memuat paket.');
+      // Tidak trigger toast error berlebihan, Step1 akan tampilkan empty state
+    } finally {
+      setLoadingPackages(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMySubscription();
     fetchBankAccounts();
-  }, [fetchMySubscription, fetchBankAccounts]);
+    fetchPackages();
+  }, [fetchMySubscription, fetchBankAccounts, fetchPackages]);
 
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
@@ -1347,7 +1392,12 @@ export default function UpgradePremium() {
     setSubmitting(true);
 
     const formData = new FormData();
+    // Kompatibel: kirim package_type (slug legacy) + package_id/slug baru
     formData.append('package_type', selectedPackage);
+    formData.append('slug', selectedPackage);
+    // Jika paket punya numeric id terpisah, coba cari (saat ini id=slug)
+    const pkgSelected = packages.find((p) => p.id === selectedPackage);
+    if (pkgSelected && pkgSelected.slug) formData.append('slug', pkgSelected.slug);
     formData.append('proof_of_payment', file);
     if (senderName) formData.append('sender_name', senderName);
     if (refNumber) formData.append('reference_number', refNumber);
@@ -1442,9 +1492,11 @@ export default function UpgradePremium() {
           {step === 1 && (
             <>
               <Step1PlanSelection
+                packages={packages}
                 selectedPackage={selectedPackage}
                 setSelectedPackage={setSelectedPackage}
                 onNext={() => setStep(2)}
+                loadingPackages={loadingPackages}
               />
               <BenefitShowcase />
             </>
@@ -1452,6 +1504,7 @@ export default function UpgradePremium() {
 
           {step === 2 && (
             <Step2PaymentMethod
+              packages={packages}
               selectedPackage={selectedPackage}
               bankAccounts={bankAccounts}
               uniqueCode={uniqueCode}
@@ -1483,6 +1536,7 @@ export default function UpgradePremium() {
 
           {step === 4 && (
             <Step4DigitalReceipt
+              packages={packages}
               selectedPackage={selectedPackage}
               uniqueCode={uniqueCode}
               senderName={senderName}

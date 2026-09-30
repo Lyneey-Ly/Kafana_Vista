@@ -57,7 +57,7 @@ export default function GalleryViewer({ mainImage, galleryImages = [], title = '
 
       {/* Grid Thumbnail Foto Galeri */}
       {images.length > 1 && (
-        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3">
           {images.map((img, idx) => {
             const isActive = activeImage === img;
             return (

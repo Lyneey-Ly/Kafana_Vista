@@ -188,7 +188,7 @@ export default function SidebarAdmin({ children }) {
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(adminProfile?.name || adminProfile?.nama || 'Admin')}&background=B38E5D&color=fff&bold=true`;
 
   return (
-    <div className="flex h-screen bg-[#FAF5EF] overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#FAF5EF] overflow-hidden overflow-x-hidden font-sans">
       {/* SIDEBAR DESKTOP */}
       <aside
         className={`hidden md:flex flex-col bg-[#261C19] text-[#FAF5EF] border-r border-[#B38E5D]/20 h-full flex-shrink-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative z-30 shadow-2xl ${
@@ -210,7 +210,7 @@ export default function SidebarAdmin({ children }) {
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`p-2 rounded-xl text-[#FAF5EF]/70 hover:text-white hover:bg-[#B38E5D]/20 hover:border-[#B38E5D]/40 border border-transparent transition-all duration-200 cursor-pointer ${
+            className={`p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center rounded-xl text-[#FAF5EF]/70 hover:text-white hover:bg-[#B38E5D]/20 hover:border-[#B38E5D]/40 border border-transparent transition-all duration-200 cursor-pointer ${
               isCollapsed ? 'mx-auto' : ''
             }`}
             title={isCollapsed ? "Buka Sidebar" : "Kecilkan Sidebar"}
@@ -267,7 +267,7 @@ export default function SidebarAdmin({ children }) {
         </div>
 
         {/* NAVIGASI MENU UTAMA */}
-        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto overflow-x-hidden custom-scrollbar min-w-0">
           {menuItems.map((item, index) => {
             if (item.isGroup) {
               const isExpanded = expandedGroups[item.name] ?? item.isExpanded;
@@ -379,7 +379,7 @@ export default function SidebarAdmin({ children }) {
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-72 bg-[#261C19] text-[#FAF5EF] z-50 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) md:hidden flex flex-col border-r border-[#B38E5D]/30 shadow-2xl ${
+        className={`fixed top-0 left-0 bottom-0 w-[min(18rem,85vw)] max-w-[85vw] max-h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#261C19] text-[#FAF5EF] z-50 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) md:hidden flex flex-col border-r border-[#B38E5D]/30 shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -394,7 +394,7 @@ export default function SidebarAdmin({ children }) {
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
+            className="p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -420,7 +420,7 @@ export default function SidebarAdmin({ children }) {
         </div>
 
         {/* Navigasi Mobile */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto overflow-x-hidden min-w-0">
           {menuItems.map((item, index) => {
             if (item.isGroup) {
               const isExpanded = expandedGroups[item.name] ?? item.isExpanded;
@@ -499,12 +499,12 @@ export default function SidebarAdmin({ children }) {
       </aside>
 
       {/* AREA KONTEN UTAMA */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="bg-[#261C19]/95 backdrop-blur-md text-white px-4 md:px-8 py-3.5 flex justify-between items-center shadow-md border-b border-[#B38E5D]/20 sticky top-0 z-20">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden overflow-x-hidden min-w-0">
+        <header className="bg-[#261C19]/95 backdrop-blur-md text-white px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap gap-2 sm:flex-row justify-between items-center shadow-md border-b border-[#B38E5D]/20 sticky top-0 z-20 overflow-x-hidden">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpen(true)}
-              className="md:hidden p-2 rounded-lg bg-[#B38E5D]/20 text-[#B38E5D] hover:text-white hover:bg-[#B38E5D] transition cursor-pointer"
+              className="md:hidden p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center rounded-lg bg-[#B38E5D]/20 text-[#B38E5D] hover:text-white hover:bg-[#B38E5D] transition cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -524,12 +524,12 @@ export default function SidebarAdmin({ children }) {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1412]/60 border border-[#B38E5D]/20 text-xs text-[#FAF5EF]">
-              <NotificationBell endpoint="http://localhost:8000/api/notifications" />
+              <NotificationBell endpoint="/notifications" />
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#FAF5EF]">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 bg-[#FAF5EF] min-w-0 max-w-full">
           {children}
         </main>
       </div>

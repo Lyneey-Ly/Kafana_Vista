@@ -14,9 +14,11 @@ use App\Models\SuperAdminBankAccount;
 use App\Models\SuperAdminFinance;
 use App\Models\SiteSetting;
 use App\Services\FinanceService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -658,6 +660,8 @@ class SuperAdminController extends Controller
 
         $request->validate([
             'approval_status' => 'required|in:pending_payment,active,rejected',
+            'rejection_reason' => 'nullable|string|max:1000',
+            'admin_notes' => 'nullable|string|max:1000',
         ]);
 
         $property = Properti::find($id);
@@ -686,6 +690,33 @@ class SuperAdminController extends Controller
         }
 
         $property->save();
+
+        // NOTIFIKASI: ke pemilik properti — approval active/rejected
+        try {
+            if ($property->pemilik_id) {
+                $rejectionReason = $request->input('rejection_reason') ?? $request->input('admin_notes') ?? null;
+                if ($request->approval_status === 'active') {
+                    NotificationService::send(
+                        $property->pemilik_id,
+                        'Properti Disetujui',
+                        "Properti \"{$property->title}\" telah disetujui SuperAdmin dan kini aktif di katalog.",
+                        '/admin/properties',
+                        'property_approved'
+                    );
+                } elseif ($request->approval_status === 'rejected') {
+                    $alasan = $rejectionReason ? " Alasan: {$rejectionReason}" : '';
+                    NotificationService::send(
+                        $property->pemilik_id,
+                        'Properti Ditolak',
+                        "Properti \"{$property->title}\" ditolak SuperAdmin.{$alasan}",
+                        '/admin/properties',
+                        'property_rejected'
+                    );
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif property approval: ' . $e->getMessage());
+        }
 
         return response()->json([
             'status'  => 'success',
@@ -816,6 +847,19 @@ class SuperAdminController extends Controller
         $profileRequest->rejection_reason = null;
         $profileRequest->save();
 
+        // NOTIFIKASI: ke admin pemilik — pengajuan disetujui
+        try {
+            NotificationService::send(
+                $admin->id,
+                'Pengajuan Profil Disetujui',
+                'Pengajuan perubahan profil Anda telah disetujui SuperAdmin dan kini telah diterapkan.',
+                '/admin/profile',
+                'profile_approved'
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif approve profile: ' . $e->getMessage());
+        }
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Perubahan profil admin berhasil disetujui dan diterapkan.',
@@ -855,6 +899,19 @@ class SuperAdminController extends Controller
         $profileRequest->status = 'rejected';
         $profileRequest->rejection_reason = $request->rejection_reason;
         $profileRequest->save();
+
+        // NOTIFIKASI: ke admin pemilik — pengajuan ditolak + alasan
+        try {
+            NotificationService::send(
+                $profileRequest->administrator_id,
+                'Pengajuan Profil Ditolak',
+                "Pengajuan perubahan profil Anda ditolak SuperAdmin. Alasan: {$request->rejection_reason}",
+                '/admin/profile',
+                'profile_rejected'
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif reject profile: ' . $e->getMessage());
+        }
 
         return response()->json([
             'status'  => 'success',

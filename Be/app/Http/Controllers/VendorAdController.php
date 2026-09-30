@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\VendorAdvertisement;
 use App\Models\Administrator;
 use App\Services\FinanceService;
+use App\Services\NotificationService;
+use App\Services\SuperAdminNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class VendorAdController extends Controller
@@ -107,6 +111,17 @@ class VendorAdController extends Controller
 
         $ad = VendorAdvertisement::create($validated);
 
+        // NOTIFIKASI: ke SuperAdmin — pengajuan iklan baru
+        try {
+            $ownerName = $currentUser->name ?? $currentUser->email ?? 'Pengguna';
+            SuperAdminNotificationService::send(
+                'vendor_ad',
+                'Pengajuan Iklan Baru',
+                "{$ownerName} mengajukan iklan vendor \"{$ad->vendor_name}\" ({$ad->placement}) menunggu verifikasi.",
+                '/superadmin/vendor-ads'
+            );
+        } catch (\Throwable $e) { Log::warning('Gagal notif vendor store: '.$e->getMessage()); }
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Iklan vendor berhasil ditambahkan.',
@@ -160,6 +175,24 @@ class VendorAdController extends Controller
         }
 
         $ad->update($validated);
+
+        // NOTIFIKASI: ke pemilik iklan — status iklan berubah + alasan jika rejected
+        try {
+            $ownerId = $ad->user_id ?? $ad->administrator_id;
+            if ($ownerId) {
+                $statusLabel = ucfirst($validated['status']);
+                $alasan = !empty($validated['rejection_reason']) ? " Alasan: {$validated['rejection_reason']}" : '';
+                $title = $validated['status'] === 'active' ? 'Iklan Disetujui' : ($validated['status'] === 'rejected' ? 'Iklan Ditolak' : "Iklan {$statusLabel}");
+                $type = $validated['status'] === 'active' ? 'vendor_ad_approved' : ($validated['status'] === 'rejected' ? 'vendor_ad_rejected' : 'vendor_ad');
+                NotificationService::send(
+                    $ownerId,
+                    $title,
+                    "Iklan \"{$ad->vendor_name}\" status: {$statusLabel}.{$alasan}",
+                    '/vendor-ads/my-ads',
+                    $type
+                );
+            }
+        } catch (\Throwable $e) { Log::warning('Gagal notif vendor verify: '.$e->getMessage()); }
 
         return response()->json([
             'status'  => 'success',
@@ -252,6 +285,20 @@ class VendorAdController extends Controller
 
         // Hapus juga catatan keuangan yang terkait jika ada
         FinanceService::removeIncome('vendor_ad', "AD-{$ad->id}");
+
+        // NOTIFIKASI: ke pemilik — iklan dihapus
+        try {
+            $ownerId = $ad->user_id ?? $ad->administrator_id;
+            if ($ownerId) {
+                NotificationService::send(
+                    $ownerId,
+                    'Iklan Dihapus',
+                    "Iklan \"{$ad->vendor_name}\" telah dihapus oleh admin.",
+                    '/vendor-ads/my-ads',
+                    'vendor_ad'
+                );
+            }
+        } catch (\Throwable $e) { Log::warning('Gagal notif vendor destroy: '.$e->getMessage()); }
 
         $ad->delete();
 

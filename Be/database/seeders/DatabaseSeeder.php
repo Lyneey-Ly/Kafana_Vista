@@ -90,5 +90,8 @@ class DatabaseSeeder extends Seeder
             'new_status' => 'Diverifikasi',
             'admin_id' => $admin->id,
         ]);
+
+        // 8. Subscription Packages (Premium)
+        $this->call(SubscriptionPackageSeeder::class);
     }
 }

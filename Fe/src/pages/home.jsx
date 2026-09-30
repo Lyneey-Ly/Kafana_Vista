@@ -388,7 +388,7 @@ export default function Home() {
                       <button
                         onClick={(e) => toggleFavorite(e, room.id)}
                         disabled={isBtnLoading}
-                        className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 shadow-md cursor-pointer ${
+                        className={`absolute top-3 right-3 p-3 min-h-11 rounded-full backdrop-blur-md transition-all duration-300 shadow-md cursor-pointer ${
                           isFav 
                             ? 'bg-rose-500 text-white scale-105' 
                             : 'bg-white/80 text-gray-500 hover:text-rose-500 hover:bg-white'
@@ -437,7 +437,7 @@ export default function Home() {
                             className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-[#261C19] text-xs font-bold rounded-lg transition cursor-pointer"
                             title="Detail Properti"
                           >
-                            👁️
+                            👁️‍🗨️
                           </button>
                           
                           <button 
@@ -528,7 +528,7 @@ export default function Home() {
         {/* MODAL DETAIL */}
         {selectedRoom && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-[#D7C4B0] animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-[#D7C4B0] animate-in fade-in zoom-in duration-200">
               <div className="relative h-56 bg-gray-200">
                 <img 
                   src={selectedRoom.image} 

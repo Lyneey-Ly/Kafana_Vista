@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import API from '../api'; // Sesuaikan path jika berbeda
+import API from '../api';
 
 export default function useNotifications(endpoint = '/notifications') {
   const [notifications, setNotifications] = useState([]);
@@ -11,7 +11,7 @@ export default function useNotifications(endpoint = '/notifications') {
   const audioUnlockedRef = useRef(false);
   const token = sessionStorage.getItem('token');
 
-  // 🔊 Unlock Audio Browser pada Interaksi Pertama User
+  // Unlock Audio Browser pada Interaksi Pertama User
   useEffect(() => {
     const unlockAudio = () => {
       audioUnlockedRef.current = true;
@@ -26,7 +26,7 @@ export default function useNotifications(endpoint = '/notifications') {
     };
   }, []);
 
-  // 🔊 Pemutar Suara Synthesizer Fallback
+  // Pemutar Suara Synthesizer Fallback
   const playChimeSound = useCallback(() => {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -58,68 +58,86 @@ export default function useNotifications(endpoint = '/notifications') {
     }
   }, []);
 
-  // 🔊 Fungsi Panggil Suara
+  // Fungsi Panggil Suara
   const triggerSound = useCallback(() => {
-    // Pastikan user sudah pernah klik di halaman agar audio tidak diblokir browser
     if (!audioUnlockedRef.current) return;
-
     const audio = new Audio('/sounds/notification.mp3');
     audio.volume = 0.6;
     audio.play().catch(() => {
-      // Fallback ke synth chime jika audio file diblokir/tidak ada
       playChimeSound();
     });
   }, [playChimeSound]);
 
-  // 🔄 Polling Notifikasi API
+  // Untuk testing manual (dipakai SuperAdmin bell Volume2)
+  const testNotification = useCallback(() => {
+    audioUnlockedRef.current = true;
+    const dummy = {
+      id: Date.now(),
+      title: 'Tes Notifikasi',
+      message: 'Suara dan toast berfungsi dengan baik!',
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+    setToastNotif(dummy);
+    triggerSound();
+  }, [triggerSound]);
+
+  // Polling Notifikasi API — visibility-aware (pause saat tab hidden)
   useEffect(() => {
     if (!token) return;
 
     let isFirstLoad = true;
     let cancelled = false;
+    let interval = null;
 
     const fetchNotifications = async () => {
+      if (document.hidden) return;
       try {
         const res = await API.get(endpoint);
-        const items = res.data?.data || res.data || [];
-        const itemsArray = Array.isArray(items) ? items : [];
-
-        const unread = itemsArray.filter((n) => !n.is_read).length;
-        const newItems = itemsArray.filter((n) => !knownIdsRef.current.has(n.id));
+        const raw = res.data?.data ?? res.data ?? [];
+        const itemsArray = Array.isArray(raw) ? raw : (raw?.data && Array.isArray(raw.data) ? raw.data : []);
+        // Normalisasi is_read ke boolean
+        const normalized = itemsArray.map((n) => ({ ...n, is_read: !!n.is_read }));
+        const unread = normalized.filter((n) => !n.is_read).length;
+        const newItems = normalized.filter((n) => !knownIdsRef.current.has(n.id));
 
         if (!cancelled) {
-          setNotifications(itemsArray);
+          setNotifications(normalized);
           setUnreadCount(unread);
         }
 
-        // Jalankan pertama kali hanya untuk mencatat ID yang sudah ada
         if (isFirstLoad) {
           isFirstLoad = false;
-          itemsArray.forEach((n) => knownIdsRef.current.add(n.id));
+          normalized.forEach((n) => knownIdsRef.current.add(n.id));
           return;
         }
 
-        // Jika ada notifikasi baru yang masuk
         if (newItems.length > 0) {
           const newest = newItems[0];
           newItems.forEach((n) => knownIdsRef.current.add(n.id));
-
           if (!cancelled) {
             setToastNotif(newest);
             triggerSound();
           }
         }
       } catch (err) {
+        if (err.response?.status === 401) return;
         console.error(`Error polling ${endpoint}:`, err);
       }
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000); // Polling 10 detik
+    interval = setInterval(fetchNotifications, 10000);
+
+    const handleVisibility = () => {
+      if (!document.hidden) fetchNotifications();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       cancelled = true;
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [token, endpoint, triggerSound]);
 
@@ -127,7 +145,6 @@ export default function useNotifications(endpoint = '/notifications') {
     setIsOpen(false);
     setToastNotif(null);
     if (!notif) return;
-
     try {
       if (!notif.is_read) {
         await API.patch(`${endpoint}/${notif.id}/read`);
@@ -138,6 +155,14 @@ export default function useNotifications(endpoint = '/notifications') {
       }
     } catch (err) {
       console.warn('Gagal menandai notifikasi dibaca:', err);
+    }
+    // Navigasi jika ada target_url / action_url
+    const target = notif.target_url || notif.action_url;
+    if (target) {
+      // Biarkan caller juga handle navigate; fallback pakai window jika di luar router
+      // Hook tidak import navigate agar tetap reusable — caller bisa override
+      // Tapi kita coba soft navigate via window.location jika target adalah path internal
+      // Caller (SidebarUser) sudah handle navigate secara eksplisit
     }
   };
 
@@ -160,5 +185,7 @@ export default function useNotifications(endpoint = '/notifications') {
     handleItemClick,
     handleMarkAllRead,
     closeToast: () => setToastNotif(null),
+    testNotification,
+    triggerSound,
   };
 }

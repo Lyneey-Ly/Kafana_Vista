@@ -186,11 +186,11 @@ function Register() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAF5EF] w-full items-center justify-center p-4 font-sans selection:bg-[#B38E5D] selection:text-white">
+    <div className="flex min-h-screen bg-[#FAF5EF] w-full items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#B38E5D] selection:text-white">
       <div className="flex w-full max-w-[1050px] min-h-[700px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#D7C4B0]/60 my-6 transition-all">
         
         {/* BANNER KIRI */}
-        <div className="hidden md:flex flex-1 bg-[#261C19] text-[#FAF5EF] p-12 flex-col justify-between items-center relative select-none">
+        <div className="hidden md:flex flex-1 bg-[#261C19] text-[#FAF5EF] p-8 sm:p-10 lg:p-12 flex-col justify-between items-center relative select-none">
           <div className="absolute inset-0 opacity-30 mix-blend-luminosity pointer-events-none">
             <img 
               src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=600&auto=format&fit=crop" 
@@ -228,7 +228,7 @@ function Register() {
         </div>
 
         {/* FORM REGISTRASI KANAN */}
-        <div className="flex-1 bg-white p-8 md:p-12 flex flex-col justify-between items-center text-[#261C19]">
+        <div className="flex-1 bg-white p-6 sm:p-8 lg:p-12 flex flex-col justify-between items-center text-[#261C19]">
           <div className="w-full max-w-[390px] mx-auto my-auto space-y-5">
             
             <div className="text-center space-y-1">
@@ -247,7 +247,7 @@ function Register() {
                   <span className="text-sm">🏢</span>
                   <span className="truncate">{bookingData.namaProperti}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5 text-[11px] text-gray-600 font-medium bg-white/80 p-2.5 rounded-xl border border-[#D7C4B0]/60">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-gray-600 font-medium bg-white/80 p-2.5 rounded-xl border border-[#D7C4B0]/60">
                   <p>Unit: <span className="font-bold text-[#B38E5D]">{bookingData.nomorKamar}</span></p>
                   <p>Durasi: <span className="font-bold text-[#261C19]">{bookingData.durasiSewaText}</span></p>
                   <p>Check-in: <span className="font-bold text-[#261C19]">{bookingData.tanggalMasukFormatted}</span></p>
@@ -270,7 +270,7 @@ function Register() {
                   placeholder="Masukkan nama lengkap"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30"
+                  className="w-full px-3.5 py-3.5 min-h-11 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30"
                 />
               </div>
 
@@ -285,7 +285,7 @@ function Register() {
                   placeholder="nama@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30"
+                  className="w-full px-3.5 py-3.5 min-h-11 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30"
                 />
               </div>
 
@@ -300,7 +300,7 @@ function Register() {
                   placeholder="08123456789"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30"
+                  className="w-full px-3.5 py-3.5 min-h-11 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30"
                 />
               </div>
 
@@ -323,7 +323,7 @@ function Register() {
                     placeholder="Minimal 6 karakter"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30 pr-10"
+                    className="w-full px-3.5 py-3.5 min-h-11 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30 pr-10"
                   />
                   <button
                     type="button"
@@ -356,7 +356,7 @@ function Register() {
                     placeholder="Ulangi kata sandi"
                     value={passwordConfirmation}
                     onChange={(e) => setPasswordConfirmation(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30 pr-10"
+                    className="w-full px-3.5 py-3.5 min-h-11 rounded-xl border border-[#D7C4B0] text-xs font-medium focus:outline-hidden focus:border-[#B38E5D] transition bg-[#FAF5EF]/30 pr-10"
                   />
                   <button
                     type="button"

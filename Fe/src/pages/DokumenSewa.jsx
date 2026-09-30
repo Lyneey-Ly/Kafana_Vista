@@ -183,6 +183,65 @@ export default function DokumenSewa() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number || 0);
   };
 
+  // Fallback client-side parser (mirror backend LeaseAgreementService) jika BE masih kirim raw template
+  const parseLeaseAgreement = useCallback((templateText, dok) => {
+    if (!templateText || typeof templateText !== 'string') return templateText || '-';
+    if (!templateText.includes('{')) return templateText;
+    const properti = dok?.pemesanan?.properti || {};
+    const pemesanan = dok?.pemesanan || {};
+    const kamar = pemesanan?.kamar || dok?.kamar || {};
+    const customer = pemesanan?.customer || {};
+
+    const namaProperti = properti.title || properti.nama_properti || '-';
+    const alamatProperti = properti.address || properti.alamat || '-';
+    const hargaSewa = formatRupiah(properti.price_per_month ?? pemesanan.total_price ?? 0);
+    let fasilitas = properti.facilities || '-';
+    if (properti.public_facilities) fasilitas += ', ' + properti.public_facilities;
+    else if (properti.fasilitas_bersama) fasilitas += ', ' + properti.fasilitas_bersama;
+    const aturan = properti.rules || properti.aturan || properti.aturan_kos || '-';
+    const nomorKamar = kamar.nomor_kamar || kamar.nama_kamar || pemesanan.nomor_kamar || '-';
+    const durasi = pemesanan.duration_months ? `${pemesanan.duration_months} Bulan` : '-';
+    const namaPenyewa = customer.name || '-';
+    const tglMulai = formatDate(dok?.start_date || pemesanan.check_in_date);
+    let tglSelesai = formatDate(dok?.end_date);
+    if (tglSelesai === '-' && pemesanan.check_in_date && pemesanan.duration_months) {
+      try {
+        const d = new Date(pemesanan.check_in_date);
+        d.setMonth(d.getMonth() + Number(pemesanan.duration_months));
+        tglSelesai = formatDate(d.toISOString());
+      } catch {}
+    }
+
+    const map = {
+      '{NAMA_PROPERTI}': namaProperti,
+      '{ALAMAT_PROPERTI}': alamatProperti,
+      '{HARGA_SEWA}': hargaSewa,
+      '{FASILITAS}': fasilitas,
+      '{ATURAN}': aturan,
+      '{NOMOR_KAMAR}': nomorKamar,
+      '{DURASI}': durasi,
+      '{NAMA_PENYEWA}': namaPenyewa,
+      '{TANGGAL_MULAI}': tglMulai,
+      '{TANGGAL_SELESAI}': tglSelesai,
+    };
+    let result = templateText;
+    Object.entries(map).forEach(([k, v]) => {
+      result = result.split(k).join(v);
+    });
+    return result;
+  }, []);
+
+  const displayedLeaseAgreement = useMemo(() => {
+    if (!dokumen?.lease_agreement) return '-';
+    // Jika accessor backend sudah parsed, gunakan langsung; fallback client jika masih mengandung placeholder
+    if (dokumen.lease_agreement.includes('{') && dokumen.lease_agreement.includes('}')) {
+      // Jika BE kirim juga lease_agreement_parsed, prefer itu
+      if (dokumen.lease_agreement_parsed) return dokumen.lease_agreement_parsed;
+      return parseLeaseAgreement(dokumen.lease_agreement, dokumen);
+    }
+    return dokumen.lease_agreement;
+  }, [dokumen, parseLeaseAgreement]);
+
   const customerSig = dokumen?.customer_signature || dokumen?.signature;
   const nomorKamarDokumen = dokumen?.pemesanan?.kamar?.nomor_kamar || dokumen?.pemesanan?.nomor_kamar || dokumen?.kamar?.nomor_kamar || '-';
 
@@ -225,7 +284,7 @@ export default function DokumenSewa() {
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
                   <button
                     onClick={() => setFilterStatus('all')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    className={`px-4 py-3 min-h-11 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                       filterStatus === 'all'
                         ? 'bg-[#261C19] text-white shadow-xs'
                         : 'bg-[#FAF6F0] text-slate-600 hover:bg-[#E5D7C5]/40'
@@ -235,7 +294,7 @@ export default function DokumenSewa() {
                   </button>
                   <button
                     onClick={() => setFilterStatus('pending')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    className={`px-4 py-3 min-h-11 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                       filterStatus === 'pending'
                         ? 'bg-amber-600 text-white shadow-xs'
                         : 'bg-[#FAF6F0] text-amber-700 hover:bg-amber-50'
@@ -245,7 +304,7 @@ export default function DokumenSewa() {
                   </button>
                   <button
                     onClick={() => setFilterStatus('signed')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    className={`px-4 py-3 min-h-11 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                       filterStatus === 'signed'
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-[#FAF6F0] text-blue-700 hover:bg-blue-50'
@@ -255,7 +314,7 @@ export default function DokumenSewa() {
                   </button>
                   <button
                     onClick={() => setFilterStatus('sah')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    className={`px-4 py-3 min-h-11 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                       filterStatus === 'sah'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'bg-[#FAF6F0] text-emerald-700 hover:bg-emerald-50'
@@ -370,7 +429,7 @@ export default function DokumenSewa() {
                 </div>
 
                 <div className="bg-[#FAF6F0]/60 p-6 rounded-2xl border border-[#E5D7C5]/80 text-sm leading-relaxed text-[#261C19] whitespace-pre-line font-serif">
-                  {dokumen.lease_agreement}
+                  {displayedLeaseAgreement}
                 </div>
 
                 <div className="space-y-3">
@@ -403,7 +462,7 @@ export default function DokumenSewa() {
                 <div className="pt-6 border-t border-slate-200">
                   <h4 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 text-center mb-6">Pengesahan Para Pihak</h4>
                   
-                  <div className="grid grid-cols-2 gap-6 text-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-center">
                     
                     {/* PIHAK 1 (ADMIN) */}
                     <div className="space-y-3 flex flex-col items-center">

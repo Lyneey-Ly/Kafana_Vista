@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\DokumenSewa;
 use App\Models\Pemesanan;
 use App\Models\Properti;
+use App\Services\LeaseAgreementService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class DokumenSewaController extends Controller
@@ -33,13 +36,13 @@ class DokumenSewaController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        // Otomatis terbitkan DokumenSewa jika belum ada
+        // Otomatis terbitkan DokumenSewa jika belum ada (AUTO-FILL placeholder)
         foreach ($pemesanans as $p) {
             if (!$p->dokumenSewa) {
                 $startDate = Carbon::parse($p->check_in_date);
                 $endDate = $startDate->copy()->addMonths($p->duration_months);
 
-                // ⚡ AMBIL TEMPLATE DARI PROPERTI
+                // ⚡ AMBIL TEMPLATE DARI PROPERTI + AUTO-PARSE PLACEHOLDER
                 $agreementText = $p->properti->template_perjanjian;
 
                 if (empty($agreementText)) {
@@ -56,6 +59,14 @@ class DokumenSewaController extends Controller
                         . "terhitung mulai tanggal " . $startDate->toDateString() . " sampai dengan " . $endDate->toDateString() . " "
                         . "dengan total biaya sebesar Rp " . number_format($p->total_price, 0, ',', '.') . ".\n\n"
                         . "Perjanjian ini dibuat secara sadar dan tanpa paksaan dari pihak manapun.";
+                } else {
+                    // Parse placeholder dinamis jika template mengandung tag
+                    $tempDok = new DokumenSewa([
+                        'start_date' => $startDate->toDateString(),
+                        'end_date'   => $endDate->toDateString(),
+                    ]);
+                    $tempDok->setRelation('pemesanan', $p);
+                    $agreementText = LeaseAgreementService::parse($agreementText, $p->properti, $p, $tempDok);
                 }
 
                 DokumenSewa::create([
@@ -74,6 +85,17 @@ class DokumenSewaController extends Controller
             ->with(['pemesanan.customer', 'pemesanan.properti', 'pemesanan.kamar'])
             ->orderBy('id', 'desc')
             ->get();
+
+        // Fallback: auto-parse jika masih mengandung placeholder (data lama)
+        $dokumens->each(function ($dok) {
+            if (LeaseAgreementService::containsPlaceholder($dok->lease_agreement)) {
+                $dok->lease_agreement = LeaseAgreementService::parse($dok->lease_agreement, $dok->pemesanan->properti ?? null, $dok->pemesanan, $dok);
+                // Opsional: simpan hasil parse agar next fetch tidak perlu re-parse (jika belum SAH)
+                if (!($dok->customer_signature && $dok->admin_signature)) {
+                    $dok->save();
+                }
+            }
+        });
 
         return response()->json([
             'message' => 'Berhasil mengambil daftar dokumen sewa admin',
@@ -118,7 +140,7 @@ class DokumenSewaController extends Controller
         $startDate = Carbon::parse($pemesanan->check_in_date);
         $endDate = $startDate->copy()->addMonths($pemesanan->duration_months);
 
-        // ⚡ AMBIL TEMPLATE DARI PROPERTI
+        // ⚡ AMBIL TEMPLATE DARI PROPERTI + AUTO-PARSE
         $agreementText = $pemesanan->properti->template_perjanjian;
 
         if (empty($agreementText)) {
@@ -131,6 +153,15 @@ class DokumenSewaController extends Controller
                 . "terhitung mulai tanggal " . $startDate->toDateString() . " sampai dengan " . $endDate->toDateString() . " "
                 . "dengan total biaya sebesar Rp " . number_format($pemesanan->total_price, 0, ',', '.') . ".\n\n"
                 . "Perjanjian ini dibuat secara sadar dan tanpa paksaan dari pihak manapun.";
+        } else {
+            // Load kamar untuk nomor kamar
+            $pemesanan->loadMissing(['kamar']);
+            $tempDok = new DokumenSewa([
+                'start_date' => $startDate->toDateString(),
+                'end_date'   => $endDate->toDateString(),
+            ]);
+            $tempDok->setRelation('pemesanan', $pemesanan);
+            $agreementText = LeaseAgreementService::parse($agreementText, $pemesanan->properti, $pemesanan, $tempDok);
         }
 
         $dokumen = DokumenSewa::updateOrCreate(
@@ -184,6 +215,25 @@ class DokumenSewaController extends Controller
             $dokumen->customer_signature = $path;
             $dokumen->save();
 
+            // NOTIFIKASI: ke pemilik — penyewa sudah TTD
+            try {
+                if ($dokumen->pemesanan->properti && $dokumen->pemesanan->properti->pemilik_id) {
+                    NotificationService::send(
+                        $dokumen->pemesanan->properti->pemilik_id,
+                        'Dokumen Ditandatangani Penyewa',
+                        ($user->name ?? 'Penyewa') . " menandatangani dokumen sewa #{$dokumen->id}. Giliran Anda menandatangani.",
+                        '/admin/dokumen-sewa',
+                        'dokumen_signed'
+                    );
+                }
+                // Jika SAH (kedua TTD), notif kedua pihak
+                $fresh = $dokumen->fresh();
+                if ($fresh->customer_signature && $fresh->admin_signature) {
+                    NotificationService::send($fresh->pemesanan->customer_id, 'Dokumen Sewa SAH', "Dokumen sewa #{$fresh->id} telah SAH kedua pihak.", '/riwayattransaksi', 'dokumen_signed');
+                    NotificationService::send($fresh->pemesanan->properti->pemilik_id, 'Dokumen Sewa SAH', "Dokumen sewa #{$fresh->id} telah SAH kedua pihak.", '/admin/dokumen-sewa', 'dokumen_signed');
+                }
+            } catch (\Throwable $e) { Log::warning('Gagal notif dokumen cust: '.$e->getMessage()); }
+
             return response()->json([
                 'message' => 'Tanda tangan penyewa berhasil diunggah!',
                 'data'    => $dokumen
@@ -196,6 +246,22 @@ class DokumenSewaController extends Controller
             
             $dokumen->admin_signature = $path;
             $dokumen->save();
+
+            // NOTIFIKASI: ke customer — pengelola sudah TTD
+            try {
+                NotificationService::send(
+                    $dokumen->pemesanan->customer_id,
+                    'Dokumen Ditandatangani Pengelola',
+                    "Pengelola telah menandatangani dokumen sewa #{$dokumen->id}. Silakan lengkapi tanda tangan Anda.",
+                    '/riwayattransaksi',
+                    'dokumen_signed'
+                );
+                $fresh = $dokumen->fresh();
+                if ($fresh->customer_signature && $fresh->admin_signature) {
+                    NotificationService::send($fresh->pemesanan->customer_id, 'Dokumen Sewa SAH', "Dokumen sewa #{$fresh->id} telah SAH kedua pihak.", '/riwayattransaksi', 'dokumen_signed');
+                    NotificationService::send($fresh->pemesanan->properti->pemilik_id, 'Dokumen Sewa SAH', "Dokumen sewa #{$fresh->id} telah SAH kedua pihak.", '/admin/dokumen-sewa', 'dokumen_signed');
+                }
+            } catch (\Throwable $e) { Log::warning('Gagal notif dokumen admin: '.$e->getMessage()); }
 
             return response()->json([
                 'message' => 'Tanda tangan pengelola berhasil diunggah!',
@@ -250,6 +316,14 @@ class DokumenSewaController extends Controller
             ], 403);
         }
 
+        // Fallback auto-parse jika masih placeholder
+        if (LeaseAgreementService::containsPlaceholder($dokumen->lease_agreement)) {
+            $dokumen->lease_agreement = LeaseAgreementService::parse($dokumen->lease_agreement, $dokumen->pemesanan->properti ?? null, $dokumen->pemesanan, $dokumen);
+            if (!($dokumen->customer_signature && $dokumen->admin_signature)) {
+                $dokumen->save();
+            }
+        }
+
         return response()->json([
             'message' => 'Berhasil mengambil dokumen sewa',
             'data'    => $dokumen
@@ -274,6 +348,16 @@ class DokumenSewaController extends Controller
             ->with(['pemesanan.customer', 'pemesanan.properti', 'pemesanan.kamar'])
             ->orderBy('id', 'desc')
             ->get();
+
+        // Fallback auto-parse untuk data lama yang masih mengandung {PLACEHOLDER}
+        $dokumens->each(function ($dok) {
+            if (LeaseAgreementService::containsPlaceholder($dok->lease_agreement)) {
+                $dok->lease_agreement = LeaseAgreementService::parse($dok->lease_agreement, $dok->pemesanan->properti ?? null, $dok->pemesanan, $dok);
+                if (!($dok->customer_signature && $dok->admin_signature)) {
+                    $dok->save();
+                }
+            }
+        });
 
         return response()->json([
             'message' => 'Berhasil mengambil daftar dokumen sewa penyewa',

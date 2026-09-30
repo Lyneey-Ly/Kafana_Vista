@@ -65,19 +65,19 @@ export default function Footer() {
             <div className="flex items-center gap-3 pt-1">
               {settings.social_facebook && (
                 <a href={settings.social_facebook} target="_blank" rel="noreferrer" aria-label="Facebook"
-                  className="w-9 h-9 rounded-full bg-white/5 border border-[#B38E5D]/20 flex items-center justify-center text-sm hover:bg-[#B38E5D] hover:text-white transition-colors">
+                  className="w-11 h-11 min-h-11 min-w-11 rounded-full bg-white/5 border border-[#B38E5D]/20 flex items-center justify-center text-sm hover:bg-[#B38E5D] hover:text-white transition-colors">
                   f
                 </a>
               )}
               {settings.social_instagram && (
                 <a href={settings.social_instagram} target="_blank" rel="noreferrer" aria-label="Instagram"
-                  className="w-9 h-9 rounded-full bg-white/5 border border-[#B38E5D]/20 flex items-center justify-center text-sm hover:bg-[#B38E5D] hover:text-white transition-colors">
+                  className="w-11 h-11 min-h-11 min-w-11 rounded-full bg-white/5 border border-[#B38E5D]/20 flex items-center justify-center text-sm hover:bg-[#B38E5D] hover:text-white transition-colors">
                   ◎
                 </a>
               )}
               {settings.social_tiktok && (
                 <a href={settings.social_tiktok} target="_blank" rel="noreferrer" aria-label="TikTok"
-                  className="w-9 h-9 rounded-full bg-white/5 border border-[#B38E5D]/20 flex items-center justify-center text-sm hover:bg-[#B38E5D] hover:text-white transition-colors">
+                  className="w-11 h-11 min-h-11 min-w-11 rounded-full bg-white/5 border border-[#B38E5D]/20 flex items-center justify-center text-sm hover:bg-[#B38E5D] hover:text-white transition-colors">
                   ♪
                 </a>
               )}
@@ -174,7 +174,7 @@ export default function Footer() {
       </div>
 
       {/* BOTTOM BAR / COPYRIGHT & LEGAL */}
-      <div className="border-t border-[#B38E5D]/20 bg-[#1d1513] px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-[#FAF5EF]/60">
+      <div className="border-t border-[#B38E5D]/20 bg-[#1d1513] px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-[#FAF5EF]/60">
         <p className="text-center sm:text-left">
           {settings.footer_copyright}
         </p>

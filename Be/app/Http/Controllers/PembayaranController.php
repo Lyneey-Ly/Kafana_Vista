@@ -197,6 +197,30 @@ class PembayaranController extends Controller
         $pemesanan->status = 'Diverifikasi';
         $pemesanan->save();
 
+        // NOTIFIKASI: ke pemilik properti + superadmin — bukti bayar baru
+        try {
+            $pemesanan->loadMissing(['properti']);
+            $propertiNama = $pemesanan->properti->title ?? $pemesanan->properti->nama_properti ?? 'Properti';
+            $customerName = $user->name ?? 'Customer';
+            if ($pemesanan->properti && $pemesanan->properti->pemilik_id) {
+                NotificationService::send(
+                    $pemesanan->properti->pemilik_id,
+                    'Bukti Pembayaran Baru',
+                    "{$customerName} mengunggah bukti pembayaran untuk {$propertiNama} (Pemesanan #{$pemesanan->id}). Harap verifikasi.",
+                    '/admin/tagihan-order',
+                    'payment_uploaded'
+                );
+            }
+            SuperAdminNotificationService::send(
+                'transaction',
+                'Bukti Pembayaran Diverifikasi',
+                "{$customerName} mengunggah bukti pembayaran untuk {$propertiNama} sebesar Rp " . number_format($request->amount, 0, ',', '.') . ".",
+                '/superadmin/transactions'
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif bayar: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Bukti pembayaran berhasil diunggah!',
             'data'    => $pembayaran

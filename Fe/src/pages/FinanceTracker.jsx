@@ -259,7 +259,7 @@ export default function FinanceTracker() {
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, type: 'pemasukan' }))}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                      className={`py-3 min-h-11 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
                         formData.type === 'pemasukan'
                           ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                           : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
@@ -270,7 +270,7 @@ export default function FinanceTracker() {
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, type: 'pengeluaran' }))}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                      className={`py-3 min-h-11 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
                         formData.type === 'pengeluaran'
                           ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
                           : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
@@ -354,7 +354,7 @@ export default function FinanceTracker() {
                 </div>
 
                 <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left text-sm border-collapse">
+                  <table className="w-full min-w-[640px] text-left text-sm border-collapse">
                     <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 text-xs uppercase tracking-wider">
                       <tr>
                         <th className="px-4 py-3.5 w-28">Tanggal</th>
@@ -383,7 +383,7 @@ export default function FinanceTracker() {
                             <button 
                               onClick={() => handleDelete(trx.id)} 
                               title="Hapus" 
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                              className="p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                             >
                               🗑️
                             </button>

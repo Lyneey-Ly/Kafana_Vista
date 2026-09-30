@@ -502,7 +502,7 @@ export default function CariHunian() {
                     <button
                       key={cat}
                       onClick={() => setQuickCategory(cat)}
-                      className={`px-4 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition-all duration-300 cursor-pointer whitespace-nowrap ${
+                      className={`px-4 py-3 min-h-11 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition-all duration-300 cursor-pointer whitespace-nowrap ${
                         quickCategory === cat
                           ? 'bg-[#261C19] text-[#FAF5EF] shadow-md'
                           : 'text-slate-500 hover:bg-[#FAF6F0] hover:text-[#261C19]'
@@ -515,7 +515,7 @@ export default function CariHunian() {
 
                 <button 
                   onClick={() => setShowFilterMobile(!showFilterMobile)}
-                  className="md:hidden bg-[#261C19] text-white px-4 py-2.5 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-center shadow-md cursor-pointer flex items-center gap-1.5 flex-shrink-0"
+                  className="lg:hidden bg-[#261C19] text-white px-4 py-2.5 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-center shadow-md cursor-pointer flex items-center gap-1.5 flex-shrink-0"
                 >
                   <span>⚙️</span>
                   <span>{showFilterMobile ? 'Tutup' : 'Filter'}</span>
@@ -574,14 +574,21 @@ export default function CariHunian() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <div className={`lg:block lg:col-span-3 bg-white border border-[#E5D7C5] rounded-3xl p-5 sticky top-24 h-fit max-h-[85vh] overflow-y-auto no-scrollbar shadow-xs transition-all duration-300 ${
-              showFilterMobile ? 'block mb-6' : 'hidden'
+            <div className={`lg:col-span-3 bg-white border border-[#E5D7C5] rounded-3xl p-5 lg:sticky lg:top-24 h-fit lg:max-h-[85vh] overflow-y-auto no-scrollbar shadow-xs transition-all duration-300 ${
+              showFilterMobile ? 'fixed inset-y-0 left-0 z-40 w-[85%] max-w-sm rounded-r-3xl rounded-l-none overflow-y-auto block lg:static lg:inset-auto lg:w-auto lg:max-w-none lg:rounded-3xl' : 'hidden lg:block'
             }`}>
               
               <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-5">
                 <h3 className="font-extrabold text-[#261C19] text-base tracking-wide flex items-center gap-2">
                   <span>⚙️</span> Filter Detail
                 </h3>
+                <button
+                  onClick={() => setShowFilterMobile(false)}
+                  className="lg:hidden p-3 min-h-11 min-w-11 rounded-full bg-[#FAF6F0] border border-[#E5D7C5] text-[#261C19] flex items-center justify-center hover:bg-[#E5D7C5] transition cursor-pointer"
+                  aria-label="Tutup filter"
+                >
+                  ✕
+                </button>
               </div>
 
               <div className="space-y-4 mb-6">
@@ -716,6 +723,14 @@ export default function CariHunian() {
 
             </div>
 
+            {showFilterMobile && (
+              <div
+                onClick={() => setShowFilterMobile(false)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden"
+                aria-hidden="true"
+              />
+            )}
+
             <div className="lg:col-span-9 flex flex-col space-y-6">
               
               <AdBanner placement="catalog_top" variant="horizontal" className="mb-6" />
@@ -757,7 +772,7 @@ export default function CariHunian() {
               </div>
 
               {showMap && (
-                <div className="w-full h-[400px] bg-white border border-[#E5D7C5] rounded-3xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 z-0 relative">
+                <div className="w-full h-[300px] sm:h-[400px] md:h-[460px] bg-white border border-[#E5D7C5] rounded-3xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 z-0 relative">
                    <InteractiveMap
                       properties={filteredProperties}
                       selectedProperty={mapSelectedProperty}
@@ -885,7 +900,7 @@ export default function CariHunian() {
                                   <button 
                                     disabled={!item.isAvailable}
                                     onClick={() => handleBooking(item)}
-                                    className={`flex-[2] py-2.5 rounded-xl text-[11px] tracking-widest font-extrabold uppercase transition-all duration-300 cursor-pointer ${
+                                    className={`flex-[2] py-3.5 min-h-11 rounded-xl text-[11px] tracking-widest font-extrabold uppercase transition-all duration-300 cursor-pointer ${
                                       item.isAvailable 
                                         ? 'bg-[#261C19] text-white hover:bg-[#C5A059] hover:text-[#261C19] shadow-md hover:shadow-lg' 
                                         : 'bg-slate-100 text-slate-400 cursor-not-allowed'

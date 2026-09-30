@@ -381,7 +381,7 @@ export default function Pembayaran() {
                   </div>
                   <div className="pt-1">
                     <span className="text-[#5C4A42] block mb-1 uppercase text-[10px] tracking-wider font-bold">NOMOR REKENING / VA:</span>
-                    <div className="flex justify-between items-center bg-[#FAF5EF] p-3 border border-[#D7C4B0] rounded-lg">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center bg-[#FAF5EF] p-3 border border-[#D7C4B0] rounded-lg">
                       <span className="font-mono text-base md:text-lg font-bold text-[#B38E5D] tracking-wider">
                         {activeBank.account_number || 'Belum diatur'}
                       </span>
@@ -410,10 +410,10 @@ export default function Pembayaran() {
                       <img 
                         src={qrisImageUrl} 
                         alt="QRIS Resmi All Payment" 
-                        className="w-56 h-56 object-contain mx-auto rounded-lg"
+                        className="w-full max-w-[224px] h-auto aspect-square object-contain mx-auto rounded-lg"
                       />
                     ) : (
-                      <div className="w-56 h-56 bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold rounded-lg">
+                      <div className="w-full max-w-[224px] h-auto aspect-square bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold rounded-lg">
                         Gambar QRIS Belum Diunggah Admin
                       </div>
                     )}

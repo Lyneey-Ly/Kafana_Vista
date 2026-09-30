@@ -11,16 +11,29 @@ class Subscription extends Model
 
     protected $fillable = [
         'user_id',
+        'subscription_package_id',
         'package_type',
         'amount',
+        'unique_code',
         'proof_of_payment',
         'status',
         'rejection_reason',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'unique_code' => 'integer',
+        'approved_at' => 'datetime',
     ];
 
     public function user()
     {
-        // Ubah $table menjadi $this
         return $this->belongsTo(User::class);
+    }
+
+    public function package()
+    {
+        return $this->belongsTo(SubscriptionPackage::class, 'subscription_package_id');
     }
 }

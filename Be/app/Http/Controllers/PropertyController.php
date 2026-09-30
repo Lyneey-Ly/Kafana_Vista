@@ -328,6 +328,20 @@ class PropertyController extends Controller
             $freshProperty->status = 'Tersedia';
         }
 
+        // NOTIFIKASI: ke SuperAdmin — properti diupdate pemilik
+        try {
+            if ($user && strtolower($user->role ?? '') !== 'superadmin' && strtolower($user->role ?? '') !== 'super_admin') {
+                SuperAdminNotificationService::send(
+                    'property_approval',
+                    'Properti Diperbarui',
+                    'Properti "' . $freshProperty->title . '" diperbarui oleh ' . ($user->name ?? 'Pemilik Kost') . '.',
+                    '/superadmin/approval'
+                );
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal notif property update: '.$e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Property updated successfully!',
             'data'    => $freshProperty

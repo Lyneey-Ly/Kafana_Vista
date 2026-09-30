@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Chat;
 use App\Models\Pemesanan;
 use App\Models\Properti;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class ChatController extends Controller
@@ -63,6 +65,22 @@ class ChatController extends Controller
                 'receiver_id' => $request->receiver_id,
                 'message'     => $request->message,
             ]);
+
+            // NOTIFIKASI: DM ke receiver
+            try {
+                $sender = Auth::user();
+                $senderName = $sender->name ?? 'Pengguna';
+                $preview = mb_strimwidth($request->message, 0, 60, '...');
+                NotificationService::send(
+                    (int) $request->receiver_id,
+                    'Pesan Baru dari ' . $senderName,
+                    $preview,
+                    '/chat',
+                    'chat'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notif DM: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'message' => 'Pesan terkirim!',
@@ -121,6 +139,52 @@ class ChatController extends Controller
                 'properti_id' => $request->properti_id,
                 'message'     => $request->message,
             ]);
+
+            // NOTIFIKASI: ke semua anggota grup (pemilik + tenant aktif) kecuali pengirim
+            try {
+                $sender = Auth::user();
+                $senderName = $sender->name ?? 'Pengguna';
+                $preview = mb_strimwidth($request->message, 0, 60, '...');
+                $properti = Properti::find($request->properti_id);
+
+                $recipientIds = collect();
+
+                // Pemilik properti
+                if ($properti && $properti->pemilik_id && (int)$properti->pemilik_id !== (int)$userId) {
+                    $recipientIds->push((int)$properti->pemilik_id);
+                }
+
+                // Semua tenant aktif di properti ini
+                $tenantIds = Pemesanan::where('properti_id', $request->properti_id)
+                    ->whereIn('status', ['Dikonfirmasi', 'aktif', 'approved', 'disetujui'])
+                    ->pluck('customer_id')
+                    ->map(fn($id) => (int)$id)
+                    ->filter(fn($id) => $id !== (int)$userId)
+                    ->unique();
+
+                $recipientIds = $recipientIds->merge($tenantIds)->unique()->values();
+
+                $propertiTitle = $properti->title ?? 'Grup Kost';
+                foreach ($recipientIds as $rid) {
+                    // Anti-spam: jangan kirim duplikat dalam 30 detik untuk grup yang sama
+                    $recent = \App\Models\Notification::where('user_id', $rid)
+                        ->where('type', 'chat')
+                        ->where('title', 'like', '%'.$propertiTitle.'%')
+                        ->where('created_at', '>', now()->subSeconds(30))
+                        ->exists();
+                    if ($recent) continue;
+
+                    NotificationService::send(
+                        $rid,
+                        'Pesan Grup ' . $propertiTitle,
+                        $senderName . ': ' . $preview,
+                        '/chat?properti_id=' . $request->properti_id,
+                        'chat'
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notif grup: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'message' => 'Pesan grup terkirim!',

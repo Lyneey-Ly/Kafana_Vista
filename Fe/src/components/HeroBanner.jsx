@@ -104,14 +104,14 @@ export default function HeroBanner({ autoSlideInterval = 1000 }) {
       {/* TOMBOL PREV & NEXT (Muncul Pas Hover) */}
       <button 
         onClick={prevSlide}
-        className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-[#B38E5D] text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition duration-300 z-20"
+        className="absolute top-1/2 left-4 -translate-y-1/2 w-11 h-11 min-h-11 min-w-11 rounded-full bg-black/30 hover:bg-[#B38E5D] text-white flex items-center justify-center backdrop-blur-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition duration-300 z-20"
       >
         ❮
       </button>
 
       <button 
         onClick={nextSlide}
-        className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-[#B38E5D] text-white flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition duration-300 z-20"
+        className="absolute top-1/2 right-4 -translate-y-1/2 w-11 h-11 min-h-11 min-w-11 rounded-full bg-black/30 hover:bg-[#B38E5D] text-white flex items-center justify-center backdrop-blur-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition duration-300 z-20"
       >
         ❯
       </button>
@@ -122,12 +122,17 @@ export default function HeroBanner({ autoSlideInterval = 1000 }) {
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`h-2.5 rounded-full transition-all duration-300 ${
-              currentIndex === index 
-                ? 'w-8 bg-[#B38E5D]' 
-                : 'w-2.5 bg-white/50 hover:bg-white'
-            }`}
-          />
+            aria-label={`Go to slide ${index + 1}`}
+            className="min-h-11 min-w-11 p-2 flex items-center justify-center"
+          >
+            <span
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                currentIndex === index 
+                  ? 'w-8 bg-[#B38E5D]' 
+                  : 'w-2.5 bg-white/50 hover:bg-white'
+              }`}
+            />
+          </button>
         ))}
       </div>
     </div>

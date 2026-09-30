@@ -338,7 +338,7 @@ export default function AdminDashboard() {
               <button
                 onClick={handleExportPDF}
                 disabled={filteredTransactions.length === 0}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#B38E5D] hover:bg-[#8F6E45] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md cursor-pointer"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 min-h-11 bg-[#B38E5D] hover:bg-[#8F6E45] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                 <span>Export PDF</span>
@@ -487,9 +487,9 @@ export default function AdminDashboard() {
               Menampilkan <strong className="text-[#2D2321]">{filteredTransactions.length}</strong> dari <strong className="text-[#2D2321]">{recentTransactions.length}</strong> total transaksi
             </div>
             <div className="flex items-center gap-1.5">
-              <button disabled className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#D7C4B0] text-slate-400 bg-white cursor-not-allowed">&lt;</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#B38E5D] text-white font-bold shadow-sm">1</button>
-              <button disabled className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#D7C4B0] text-slate-400 bg-white cursor-not-allowed">&gt;</button>
+              <button disabled className="w-11 h-11 min-h-11 min-w-11 p-3 flex items-center justify-center rounded-lg border border-[#D7C4B0] text-slate-400 bg-white cursor-not-allowed">&lt;</button>
+              <button className="w-11 h-11 min-h-11 min-w-11 p-3 flex items-center justify-center rounded-lg bg-[#B38E5D] text-white font-bold shadow-sm">1</button>
+              <button disabled className="w-11 h-11 min-h-11 min-w-11 p-3 flex items-center justify-center rounded-lg border border-[#D7C4B0] text-slate-400 bg-white cursor-not-allowed">&gt;</button>
             </div>
           </div>
 

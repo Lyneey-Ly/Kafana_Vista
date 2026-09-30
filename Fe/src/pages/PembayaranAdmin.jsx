@@ -256,8 +256,8 @@ const isFirstProperty = property?.is_first_property === true || property?.is_fir
 
   return (
     <SidebarAdmin>
-      <div className="min-h-screen bg-[#FAF5EF] font-sans text-slate-800 p-8">
-        <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center">
+      <div className="min-h-screen bg-[#FAF5EF] font-sans text-slate-800 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto mb-6 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
           <div>
             <button 
               onClick={() => navigate('/admin/riwayat-pembayaran')}

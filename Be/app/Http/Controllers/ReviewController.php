@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Review;
 use App\Models\Pemesanan;
+use App\Models\Properti;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReviewController extends Controller
 {
@@ -56,6 +59,24 @@ class ReviewController extends Controller
             'rating'      => $request->rating,
             'comment'     => $request->comment,
         ]);
+
+        // NOTIFIKASI: ke pemilik properti — ulasan baru
+        try {
+            $properti = Properti::find($request->properti_id);
+            if ($properti && $properti->pemilik_id) {
+                $reviewer = Auth::user();
+                $reviewerName = $reviewer->name ?? 'Penyewa';
+                NotificationService::send(
+                    $properti->pemilik_id,
+                    'Ulasan Baru ★' . $request->rating,
+                    "{$reviewerName} memberi rating {$request->rating}/5 untuk \"{$properti->title}\".",
+                    '/admin/properties/' . $properti->id,
+                    'review'
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif review: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Ulasan berhasil disimpan!',

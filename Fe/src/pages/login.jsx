@@ -138,7 +138,7 @@ export default function Login() {
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#261C19]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* MAIN CONTAINER CARD */}
-      <div className="flex w-full max-w-[1100px] min-h-[720px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_25px_70px_-15px_rgba(38,28,25,0.18)] overflow-hidden border border-[#D7C4B0]/50 relative z-10 transition-all">
+      <div className="flex w-full max-w-[1100px] min-h-[min(720px,90dvh)] lg:min-h-[720px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_25px_70px_-15px_rgba(38,28,25,0.18)] overflow-hidden border border-[#D7C4B0]/50 relative z-10 transition-all">
         
         {/* ================= SISI KIRI: ELEGANT BRAND BANNER ================= */}
         <div className="hidden lg:flex flex-1 bg-[#261C19] text-[#FAF5EF] p-12 flex-col justify-between items-start relative select-none overflow-hidden">
@@ -198,7 +198,7 @@ export default function Login() {
                   </span>
                   <input 
                     type="email" placeholder="nama@email.com" 
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#FAF5EF]/50 border border-[#D7C4B0]/80 rounded-xl text-sm text-[#261C19] placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#B38E5D]/50 focus:border-[#B38E5D] focus:bg-white transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-3.5 min-h-11 bg-[#FAF5EF]/50 border border-[#D7C4B0]/80 rounded-xl text-sm text-[#261C19] placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#B38E5D]/50 focus:border-[#B38E5D] focus:bg-white transition-all shadow-sm"
                     value={email} onChange={(e) => setEmail(e.target.value)} required 
                   />
                 </div>
@@ -213,7 +213,7 @@ export default function Login() {
                   </span>
                   <input 
                     type={showPassword ? 'text' : 'password'} placeholder="••••••••" 
-                    className="w-full pl-10 pr-10 py-2.5 bg-[#FAF5EF]/50 border border-[#D7C4B0]/80 rounded-xl text-sm text-[#261C19] placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#B38E5D]/50 focus:border-[#B38E5D] focus:bg-white transition-all shadow-sm"
+                    className="w-full pl-10 pr-10 py-3.5 min-h-11 bg-[#FAF5EF]/50 border border-[#D7C4B0]/80 rounded-xl text-sm text-[#261C19] placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#B38E5D]/50 focus:border-[#B38E5D] focus:bg-white transition-all shadow-sm"
                     value={password} onChange={(e) => setPassword(e.target.value)} required 
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 text-gray-400 hover:text-[#B38E5D] transition-colors focus:outline-none">

@@ -18,6 +18,17 @@ export default function SuperAdminNotificationBell() {
     closeToast,
     testNotification,
   } = useNotifications('/admin/superadmin/notifications');
+  // Fallback jika hook belum expose testNotification (versi lama)
+  const handleTest = testNotification || (() => {});
+
+  // Navigasi saat klik notif superadmin
+  const onItemClick = async (item) => {
+    const target = item.action_url || item.target_url;
+    await handleItemClick(item);
+    if (target) {
+      window.location.href = target;
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -66,7 +77,7 @@ export default function SuperAdminNotificationBell() {
               <div className="flex items-center gap-2">
                 {/* 🔊 Tombol Tes Suara & Toast Manual */}
                 <button
-                  onClick={testNotification}
+                  onClick={handleTest}
                   title="Uji Coba Suara & Toast"
                   className="p-1 rounded hover:bg-[#B38E5D]/30 text-[#F5C15D] transition cursor-pointer"
                 >
@@ -96,7 +107,7 @@ export default function SuperAdminNotificationBell() {
                 notifications.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => handleItemClick(item)}
+                    onClick={() => onItemClick(item)}
                     className={`w-full text-left px-4 py-3 border-b border-[#D7C4B0]/40 hover:bg-[#B38E5D]/10 transition-all duration-150 cursor-pointer flex gap-3 ${
                       !item.is_read ? 'bg-[#B38E5D]/10' : ''
                     }`}
@@ -130,7 +141,7 @@ export default function SuperAdminNotificationBell() {
         <NotificationToast
           key={toastNotif.id}
           notification={toastNotif}
-          onOpen={() => handleItemClick(toastNotif)}
+          onOpen={() => onItemClick(toastNotif)}
           onClose={closeToast}
         />
       )}

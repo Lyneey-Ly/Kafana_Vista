@@ -14,6 +14,7 @@ const TAB_TITLES = {
   'revenue-analytics': 'Analitik Pendapatan Platform',
   'bank-accounts': 'Rekening Bank Resmi',
   'finance-tracker': 'Finance Tracker Superadmin',
+  packages: 'Manajemen Harga Paket Premium',
   settings: 'Pengaturan Website',
 };
 
@@ -27,6 +28,7 @@ const SUBTITLES = {
   'revenue-analytics': 'Total pendapatan platform dari slot, iklan, dan komisi booking.',
   'bank-accounts': 'Rekening bank resmi tujuan pembayaran slot properti & iklan vendor.',
   'finance-tracker': 'Catat arus kas pemasukan dan pengeluaran operasional.',
+  packages: 'Atur harga, badge, fitur & status paket premium. Perubahan langsung tayang di Upgrade Premium pengguna.',
   settings: 'Atur nama, logo, kontak, biaya slot, dan komisi platform.',
 };
 
@@ -47,17 +49,17 @@ export default function SuperAdminLayout() {
 
   return (
     <SidebarSuperAdmin>
-      <div className="p-6 lg:p-8 text-[#261C19] font-sans overflow-y-auto">
+      <div className="p-4 sm:p-6 lg:p-8 text-[#261C19] font-sans overflow-y-auto overflow-x-hidden w-full max-w-full">
         {/* HEADER SECTION */}
-        <header className="mb-8 bg-white p-6 rounded-2xl border border-[#D7C4B0] shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold text-[#B38E5D] uppercase tracking-widest block mb-1">
+        <header className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-2xl border border-[#D7C4B0] shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-bold text-[#B38E5D] uppercase tracking-widest block mb-1">
               Superadmin Control Center
             </span>
-            <h1 className="text-2xl lg:text-3xl font-bold font-serif tracking-tight text-[#261C19]">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold font-serif tracking-tight text-[#261C19] leading-tight">
               {TAB_TITLES[activeTab] || 'Dashboard Analitik Platform'}
             </h1>
-            <p className="text-[#5C4A42] text-xs lg:text-sm mt-1">
+            <p className="text-[#5C4A42] text-xs lg:text-sm mt-1 line-clamp-2">
               {SUBTITLES[activeTab] ||
                 'Kelola sistem terpusat, monetisasi slot properti, dan pantau aktivitas platform secara realtime.'}
             </p>

@@ -12,6 +12,7 @@ use App\Models\FinanceTracker;
 use App\Models\Notification;
 use App\Services\NotificationService;
 use App\Services\SuperAdminNotificationService;
+use App\Services\LeaseAgreementService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,28 @@ class PemesananController extends Controller
             if ($booking->kamar_id) {
                 Kamar::where('id', $booking->kamar_id)->update(['status' => 'kosong']);
                 $this->updatePropertiStatus($booking->properti_id);
+            }
+
+            // NOTIFIKASI: booking kadaluarsa → customer
+            try {
+                $propertiNama = $booking->properti->title ?? $booking->properti->nama_properti ?? 'Properti';
+                // Cegah duplikat: hanya kirim jika belum ada notif expired unread yang sama
+                $sudahAda = Notification::where('user_id', $booking->customer_id)
+                    ->where('type', 'booking_expired')
+                    ->where('is_read', false)
+                    ->where('message', 'like', '%#' . $booking->id . '%')
+                    ->exists();
+                if (!$sudahAda) {
+                    NotificationService::send(
+                        $booking->customer_id,
+                        'Booking Kadaluarsa',
+                        "Pemesanan #{$booking->id} untuk {$propertiNama} telah kadaluarsa karena pembayaran tidak diselesaikan dalam 1 jam.",
+                        '/riwayattransaksi',
+                        'booking_expired'
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notif booking expired: ' . $e->getMessage());
             }
         }
     }
@@ -170,6 +193,23 @@ class PemesananController extends Controller
                     . "- Durasi: " . $request->duration_months . " Bulan\n"
                     . "- Total Biaya: Rp " . number_format($totalPrice, 0, ',', '.') . "\n\n"
                     . "Dengan melakukan pembayaran, Penyewa menyatakan setuju dengan seluruh syarat dan ketentuan yang berlaku.";
+            } else {
+                // AUTO-PARSE placeholder dinamis saat booking dibuat
+                $tempDok = new DokumenSewa([
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date'   => $endDate->format('Y-m-d'),
+                ]);
+                // Buat pemesanan dummy untuk parsing (belum ada id, tapi relasi bisa di-set manual)
+                $tempPemesanan = new Pemesanan([
+                    'duration_months' => $pemesanan->duration_months,
+                    'total_price'     => $pemesanan->total_price,
+                    'check_in_date'   => $pemesanan->check_in_date,
+                ]);
+                $tempPemesanan->setRelation('customer', $user);
+                $tempPemesanan->setRelation('properti', $properti);
+                $tempPemesanan->setRelation('kamar', $kamar);
+                $tempDok->setRelation('pemesanan', $tempPemesanan);
+                $leaseAgreementText = LeaseAgreementService::parse($leaseAgreementText, $properti, $tempPemesanan, $tempDok);
             }
 
             DokumenSewa::create([
@@ -226,7 +266,6 @@ class PemesananController extends Controller
     }
 
     /**
-<<<<<<< HEAD
      * CUSTOMER: Menyimpan Tanda Tangan Digital Dokumen Sewa
      */
     public function saveSignature(Request $request, $id)
@@ -235,7 +274,7 @@ class PemesananController extends Controller
             'signature' => 'required|string',
         ]);
 
-        $booking = Pemesanan::findOrFail($id);
+        $booking = Pemesanan::with(['properti'])->findOrFail($id);
 
         $dokumen = DokumenSewa::updateOrCreate(
             ['pemesanan_id' => $booking->id],
@@ -246,6 +285,42 @@ class PemesananController extends Controller
             ]
         );
 
+        // NOTIFIKASI: ke pemilik properti — dokumen ditandatangani customer
+        try {
+            if ($booking->properti && $booking->properti->pemilik_id) {
+                $custName = Auth::guard('sanctum')->user()->name ?? 'Penyewa';
+                NotificationService::send(
+                    $booking->properti->pemilik_id,
+                    'Dokumen Ditandatangani Penyewa',
+                    "{$custName} telah menandatangani dokumen sewa untuk pemesanan #{$booking->id}. Silakan lanjutkan tanda tangan pengelola.",
+                    '/admin/dokumen-sewa',
+                    'dokumen_signed'
+                );
+            }
+            // Jika sudah SAH (kedua TTD), notif juga ke customer sebagai konfirmasi SAH
+            $fresh = $dokumen->fresh();
+            if ($fresh->customer_signature && $fresh->admin_signature) {
+                NotificationService::send(
+                    $booking->customer_id,
+                    'Dokumen Sewa SAH',
+                    "Dokumen sewa pemesanan #{$booking->id} telah SAH ditandatangani kedua pihak.",
+                    '/riwayattransaksi',
+                    'dokumen_signed'
+                );
+                if ($booking->properti && $booking->properti->pemilik_id) {
+                    NotificationService::send(
+                        $booking->properti->pemilik_id,
+                        'Dokumen Sewa SAH',
+                        "Dokumen sewa pemesanan #{$booking->id} telah SAH ditandatangani kedua pihak.",
+                        '/admin/dokumen-sewa',
+                        'dokumen_signed'
+                    );
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notif saveSignature: ' . $e->getMessage());
+        }
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Tanda tangan digital berhasil disimpan.',
@@ -254,8 +329,6 @@ class PemesananController extends Controller
     }
 
     /**
-     * ADMIN: Memperbarui Status Pemesanan & Unit Kamar
-=======
      * 🛑 ADMIN: Menolak Pemesanan dengan Mengisikan Alasan Penolakan
      */
     public function rejectBooking(Request $request, $id)
@@ -320,6 +393,20 @@ class PemesananController extends Controller
                 'catatan'      => $request->alasan_penolakan,
             ]);
 
+            // NOTIFIKASI: ke Customer — booking ditolak + alasan
+            try {
+                $propertiNama = $pemesanan->properti->title ?? $pemesanan->properti->nama_properti ?? 'Properti';
+                NotificationService::send(
+                    $pemesanan->customer_id,
+                    'Booking Ditolak',
+                    "Pemesanan Anda untuk {$propertiNama} ditolak. Alasan: {$request->alasan_penolakan}",
+                    '/riwayattransaksi',
+                    'booking_rejected'
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notif booking ditolak: ' . $e->getMessage());
+            }
+
             DB::commit();
 
             return response()->json([
@@ -341,7 +428,6 @@ class PemesananController extends Controller
 
     /**
      * 🔒 ADMIN: Memperbarui Status Pemesanan & Unit Kamar (Akses Terkunci per Pemilik)
->>>>>>> 29e83abdbe58caa3f8e06dede78358f183d7587e
      */
     public function updateStatus(Request $request, $id)
     {

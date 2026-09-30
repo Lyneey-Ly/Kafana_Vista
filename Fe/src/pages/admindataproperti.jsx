@@ -4,19 +4,19 @@ import API from '../api';
 import SidebarAdmin from '../components/SidebarAdmin';
 import Swal from 'sweetalert2';
 
-// Template default surat perjanjian sewa
+// Template default surat perjanjian sewa (lengkap 10 placeholder dinamis)
 const DEFAULT_LEASE_TEMPLATE = `PASAL 1: OBJEK SEWA
-Pihak Pertama menyewakan properti {NAMA_PROPERTI} yang beralamat di {ALAMAT_PROPERTI} kepada Pihak Kedua.
+Pihak Pertama menyewakan properti {NAMA_PROPERTI} yang beralamat di {ALAMAT_PROPERTI} dengan nomor kamar {NOMOR_KAMAR} kepada {NAMA_PENYEWA}.
 
-PASAL 2: BIAYA SEWA
-Biaya sewa disepakati sebesar {HARGA_SEWA} per bulan.
+PASAL 2: BIAYA & DURASI SEWA
+Biaya sewa disepakati sebesar {HARGA_SEWA} per bulan untuk durasi {DURASI}, terhitung mulai tanggal {TANGGAL_MULAI} sampai dengan {TANGGAL_SELESAI}.
 
 PASAL 3: TATA TERTIB & FASILITAS
 Fasilitas yang disediakan meliputi: {FASILITAS}.
 Aturan properti yang wajib dipatuhi: {ATURAN}.
 
 PASAL 4: HAK DAN KEWAJIBAN
-1. Pihak Kedua wajib menjaga kebersihan dan keutuhan fasilitas unit.
+1. Pihak Kedua wajib menjaga kebersihan dan keutuhan fasilitas unit {NOMOR_KAMAR} di {NAMA_PROPERTI}.
 2. Dilarang menyewakan kembali unit kepada pihak ketiga tanpa izin Pihak Pertama.`;
 
 export default function AdminDataProperti() {
@@ -537,7 +537,7 @@ export default function AdminDataProperti() {
       <div className="flex h-screen bg-[#FAF5EF] font-sans text-slate-800 overflow-hidden relative">
         <main className="flex-1 flex flex-col h-full overflow-hidden">
           <div className="flex-1 overflow-y-auto p-8">
-            <div className="flex justify-between items-end mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Data Kamar / Properti</h1>
                 <p className="text-slate-500 mt-1">Kelola data properti, unit kamar, dan template dokumen perjanjian sewa.</p>
@@ -649,7 +649,7 @@ export default function AdminDataProperti() {
                 <h3 className="text-lg font-bold text-slate-800">
                   {formData.id ? 'Edit Data Properti & Dokumen Sewa' : 'Tambah Properti & Dokumen Sewa'}
                 </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer">
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-rose-500 p-3 min-h-11 min-w-11 flex items-center justify-center cursor-pointer">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
               </div>
@@ -678,7 +678,7 @@ export default function AdminDataProperti() {
                   </label>
                   
                   {galleryPreviews.length > 0 && (
-                    <div className="mb-2 grid grid-cols-4 gap-2 border border-slate-200 p-2 rounded-lg bg-slate-50 max-h-36 overflow-y-auto">
+                    <div className="mb-2 grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 border border-slate-200 p-2 rounded-lg bg-slate-50 max-h-36 overflow-y-auto">
                       {galleryPreviews.map((src, idx) => (
                         <div key={idx} className="relative group w-full h-16 rounded-md overflow-hidden border border-slate-200">
                           <img src={src} alt={`Preview Galeri ${idx + 1}`} className="w-full h-full object-cover" />
@@ -711,7 +711,7 @@ export default function AdminDataProperti() {
                   <input required type="text" name="title" value={formData.title} onChange={handleChange} placeholder="Contoh: Kost Executive Dipatiukur" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label>
                     <select name="type" value={formData.type} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer">
@@ -728,18 +728,10 @@ export default function AdminDataProperti() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Harga / Bln (Rp)</label>
                     <input required type="number" name="price_per_month" value={formData.price_per_month} onChange={handleChange} placeholder="1500000" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Status Properti</label>
-                    <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer">
-                      <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
-                      <option value="Tersedia">Tersedia</option>
-                      <option value="Terisi Penuh">Terisi Penuh</option>
-                    </select>
                   </div>
                 </div>
 
@@ -784,7 +776,7 @@ export default function AdminDataProperti() {
                   
                   <div className="flex flex-wrap gap-1.5 py-1">
                     <span className="text-[11px] text-slate-500 font-semibold self-center mr-1">Klik untuk sisip tag:</span>
-                    {['{NAMA_PROPERTI}', '{ALAMAT_PROPERTI}', '{HARGA_SEWA}', '{FASILITAS}', '{ATURAN}'].map((tag) => (
+                    {['{NAMA_PROPERTI}', '{ALAMAT_PROPERTI}', '{HARGA_SEWA}', '{FASILITAS}', '{ATURAN}', '{NOMOR_KAMAR}', '{NAMA_PENYEWA}', '{DURASI}', '{TANGGAL_MULAI}', '{TANGGAL_SELESAI}'].map((tag) => (
                       <button
                         key={tag}
                         type="button"
@@ -832,7 +824,7 @@ export default function AdminDataProperti() {
                   <h3 className="text-base font-bold text-slate-800">Unit Kamar - {selectedProperty.title}</h3>
                   <p className="text-xs text-slate-500">Tambah / ubah ketersediaan nomor kamar</p>
                 </div>
-                <button onClick={() => setIsRoomModalOpen(false)} className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer">
+                <button onClick={() => setIsRoomModalOpen(false)} className="text-slate-400 hover:text-rose-500 p-3 min-h-11 min-w-11 flex items-center justify-center cursor-pointer">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
               </div>

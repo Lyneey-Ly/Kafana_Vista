@@ -1,2 +1,28 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
+
+@layer base {
+  html { overflow-x: hidden; scroll-behavior: smooth; }
+  body { overflow-x: hidden; min-width: 320px; -webkit-text-size-adjust: 100%; }
+  * { min-width: 0; }
+  /* Prevent iOS auto-zoom on inputs <16px */
+  input, select, textarea { font-size: max(16px, 1rem); }
+  @media (min-width: 640px) {
+    input, select, textarea { font-size: 0.875rem; }
+  }
+}
+
+@layer utilities {
+  .touch-target { min-height: 44px; min-width: 44px; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .safe-top { padding-top: max(1rem, env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+}
+
+/* Leaflet popup responsive override */
+.leaflet-popup-content { max-width: 85vw !important; }
+@media (min-width: 640px) { .leaflet-popup-content { max-width: 300px !important; } }
+
+/* Ensure images never overflow */
+img { max-width: 100%; height: auto; }

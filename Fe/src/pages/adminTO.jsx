@@ -606,7 +606,7 @@ export default function AdminTagihanOrder() {
 
             {/* TABEL DATA UTAMA */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
+              <table className="w-full min-w-[960px] text-left text-xs whitespace-nowrap">
                 <thead className="bg-[#FAF6F0] text-slate-500 font-black uppercase tracking-widest border-b border-[#E5D7C5]">
                   <tr>
                     <th className="px-6 py-4">ID Invoice</th>
@@ -718,7 +718,7 @@ export default function AdminTagihanOrder() {
                                   setSelectedInvoice(inv);
                                   setIsModalOpen(true);
                                 }}
-                                className="p-2 text-[#261C19] bg-white border border-[#E5D7C5] hover:bg-[#261C19] hover:text-white rounded-xl transition cursor-pointer shadow-xs"
+                                className="p-3 min-h-11 min-w-11 flex items-center justify-center text-[#261C19] bg-white border border-[#E5D7C5] hover:bg-[#261C19] hover:text-white rounded-xl transition cursor-pointer shadow-xs"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
@@ -728,7 +728,7 @@ export default function AdminTagihanOrder() {
                                 <button
                                   title="Tolak Booking ini"
                                   onClick={() => openRejectModal(inv)}
-                                  className="p-2 text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-600 hover:text-white rounded-xl transition cursor-pointer shadow-xs"
+                                  className="p-3 min-h-11 min-w-11 flex items-center justify-center text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-600 hover:text-white rounded-xl transition cursor-pointer shadow-xs"
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
                                 </button>
@@ -738,7 +738,7 @@ export default function AdminTagihanOrder() {
                               <button
                                 title="Kirim Pengingat WhatsApp"
                                 onClick={() => sendWhatsAppReminder(inv)}
-                                className="p-2 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white rounded-xl transition cursor-pointer shadow-xs"
+                                className="p-3 min-h-11 min-w-11 flex items-center justify-center text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white rounded-xl transition cursor-pointer shadow-xs"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
                               </button>
@@ -747,7 +747,7 @@ export default function AdminTagihanOrder() {
                               <button
                                 title="Cetak / Export Kwitansi"
                                 onClick={() => handlePrintInvoice(inv)}
-                                className="p-2 text-[#C5A059] bg-[#FAF6F0] border border-[#E5D7C5] hover:bg-[#C5A059] hover:text-white rounded-xl transition cursor-pointer shadow-xs"
+                                className="p-3 min-h-11 min-w-11 flex items-center justify-center text-[#C5A059] bg-[#FAF6F0] border border-[#E5D7C5] hover:bg-[#C5A059] hover:text-white rounded-xl transition cursor-pointer shadow-xs"
                               >
                                 <Download className="w-3.5 h-3.5" />
                               </button>
@@ -788,7 +788,7 @@ export default function AdminTagihanOrder() {
             <img src={previewImage} alt="Bukti Transfer Large" className="w-full h-full object-contain max-h-[85vh]" />
             <button 
               onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 w-9 h-9 bg-black/60 hover:bg-rose-600 text-white rounded-full flex items-center justify-center transition cursor-pointer"
+              className="absolute top-4 right-4 w-11 h-11 min-h-11 min-w-11 flex items-center justify-center bg-black/60 hover:bg-rose-600 text-white rounded-full transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>

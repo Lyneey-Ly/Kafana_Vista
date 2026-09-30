@@ -47,94 +47,73 @@ function KatalogProperti({ onPilihProperti }) {
   });
 
   return (
-    <div style={{ backgroundColor: '#121212', color: '#e0e0e0', minHeight: '100vh', padding: '32px 24px', fontFamily: 'sans-serif' }}>
-      
-      {/* Header Judul */}
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ color: '#fff', fontSize: '28px', marginBottom: '8px' }}>Pilih Hunian Impianmu</h1>
-        <p style={{ color: '#aaa', fontSize: '14px' }}>Temukan Kos Putra, Kos Putri, atau Kontrakan sesuai kebutuhanmu</p>
-      </div>
+    <div className="max-w-full overflow-x-hidden bg-gray-50 text-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Header Judul */}
+        <div className="text-center mb-8 sm:mb-10">
+          <h1 className="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl mb-2">Pilih Hunian Impianmu</h1>
+          <p className="text-gray-500 text-xs sm:text-sm">Temukan Kos Putra, Kos Putri, atau Kontrakan sesuai kebutuhanmu</p>
+        </div>
 
-      {/* Tombol Filter Kategori */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        {['Semua', 'Kos Putra', 'Kos Putri', 'Kontrakan'].map((kat) => (
-          <button
-            key={kat}
-            onClick={() => setFilter(kat)}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '20px',
-              border: filter === kat ? '1px solid #d4af37' : '1px solid #333',
-              backgroundColor: filter === kat ? '#d4af37' : '#1e1e1e',
-              color: filter === kat ? '#000' : '#fff',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: '0.2s'
-            }}
-          >
-            {kat}
-          </button>
-        ))}
-      </div>
+        {/* Tombol Filter Kategori */}
+        <div className="flex justify-center gap-3 mb-8 sm:mb-10 flex-wrap">
+          {['Semua', 'Kos Putra', 'Kos Putri', 'Kontrakan'].map((kat) => (
+            <button
+              key={kat}
+              onClick={() => setFilter(kat)}
+              className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold border transition-colors duration-200 min-h-11 min-w-11 cursor-pointer ${
+                filter === kat
+                  ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300'
+              }`}
+            >
+              {kat}
+            </button>
+          ))}
+        </div>
 
-      {/* Grid Kartu Properti */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', maxWidth: '1100px', margin: '0 auto' }}>
-        {propertiFiltered.map((item) => (
-          <div 
-            key={item.id}
-            style={{
-              backgroundColor: '#1e1e1e',
-              borderRadius: '8px',
-              border: '1px solid #2a2a2a',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              justify: 'space-between'
-            }}
-          >
-            <div>
-              {/* Gambar Properti */}
-              <div style={{ height: '180px', overflow: 'hidden' }}>
-                <img src={item.gambar} alt={item.nama} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
+        {/* Grid Kartu Properti */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {propertiFiltered.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between border border-gray-100"
+            >
+              <div>
+                {/* Gambar Properti */}
+                <div className="overflow-hidden">
+                  <img src={item.gambar} alt={item.nama} className="w-full h-48 object-cover" />
+                </div>
 
-              {/* Detail Singkat */}
-              <div style={{ padding: '16px' }}>
-                <span style={{ color: '#d4af37', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                  {item.tipe}
-                </span>
-                <h3 style={{ color: '#fff', margin: '6px 0', fontSize: '18px' }}>{item.nama}</h3>
-                <p style={{ color: '#aaa', fontSize: '12px', margin: '0 0 12px 0' }}>📍 {item.alamat}</p>
-                <div style={{ color: '#d4af37', fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>
-                  Rp {item.hargaPerBulan.toLocaleString('id-ID')} <span style={{ fontSize: '12px', color: '#aaa' }}>/ bulan</span>
+                {/* Detail Singkat */}
+                <div className="p-4 sm:p-5">
+                  <span className="text-amber-600 text-[11px] sm:text-xs font-bold uppercase tracking-wide">
+                    {item.tipe}
+                  </span>
+                  <h3 className="text-gray-900 font-semibold mt-1.5 mb-1 text-base sm:text-lg leading-tight">{item.nama}</h3>
+                  <p className="text-gray-500 text-xs sm:text-sm mb-3 flex items-start gap-1">
+                    <span aria-hidden>📍</span>
+                    <span>{item.alamat}</span>
+                  </p>
+                  <div className="text-amber-600 text-lg sm:text-xl font-bold mb-1">
+                    Rp {item.hargaPerBulan.toLocaleString('id-ID')} <span className="text-xs sm:text-sm font-normal text-gray-500">/ bulan</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Tombol Lihat Detail */}
-            <div style={{ padding: '0 16px 16px 16px' }}>
-              <button
-                onClick={() => onPilihProperti(item)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #d4af37',
-                  color: '#d4af37',
-                  borderRadius: '6px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  transition: '0.2s'
-                }}
-              >
-                Lihat Detail Kamar →
-              </button>
+              {/* Tombol Lihat Detail */}
+              <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                <button
+                  onClick={() => onPilihProperti(item)}
+                  className="w-full py-3.5 min-h-11 min-w-11 bg-white border border-amber-500 text-amber-600 rounded-xl font-bold text-xs sm:text-sm hover:bg-amber-50 active:bg-amber-100 transition-colors duration-200 cursor-pointer flex items-center justify-center gap-1"
+                >
+                  Lihat Detail Kamar <span aria-hidden>→</span>
+                </button>
+              </div>
             </div>
-
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-
     </div>
   );
 }

@@ -272,13 +272,13 @@ export default function AdminLaporanKeuangan() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowExpenseModal(true)}
-            className="bg-[#261C19] hover:bg-[#3D2D29] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+            className="bg-[#261C19] hover:bg-[#3D2D29] text-white px-4 py-3 min-h-11 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
           >
             <span>💸</span> + Catat Pengeluaran
           </button>
           <button
             onClick={handleExportCSV}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 min-h-11 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
           >
             <span>📥</span> Export CSV
           </button>
@@ -364,7 +364,7 @@ export default function AdminLaporanKeuangan() {
         <div className="flex items-center gap-1 bg-[#FAF6F0] p-1 rounded-xl border border-[#E5D7C5]">
           <button
             onClick={() => setFilters((prev) => ({ ...prev, type: 'all' }))}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-3 min-h-11 rounded-lg text-xs font-bold transition-all ${
               filters.type === 'all' ? 'bg-[#261C19] text-white' : 'text-slate-600'
             }`}
           >
@@ -372,7 +372,7 @@ export default function AdminLaporanKeuangan() {
           </button>
           <button
             onClick={() => setFilters((prev) => ({ ...prev, type: 'income' }))}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-3 min-h-11 rounded-lg text-xs font-bold transition-all ${
               filters.type === 'income' ? 'bg-emerald-700 text-white' : 'text-slate-600'
             }`}
           >
@@ -380,7 +380,7 @@ export default function AdminLaporanKeuangan() {
           </button>
           <button
             onClick={() => setFilters((prev) => ({ ...prev, type: 'expense' }))}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-3 py-3 min-h-11 rounded-lg text-xs font-bold transition-all ${
               filters.type === 'expense' ? 'bg-rose-700 text-white' : 'text-slate-600'
             }`}
           >
@@ -406,7 +406,7 @@ export default function AdminLaporanKeuangan() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[720px] text-left text-xs">
               <thead className="bg-[#FAF6F0] border-b border-[#E5D7C5] text-[#261C19] font-extrabold uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="p-4">Tanggal</th>
@@ -463,7 +463,7 @@ export default function AdminLaporanKeuangan() {
       {/* MODAL FORM TAMBAH PENGELUARAN */}
       {showExpenseModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full rounded-3xl p-6 border border-[#E5D7C5] shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto rounded-3xl p-6 border border-[#E5D7C5] shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#C5A059]">

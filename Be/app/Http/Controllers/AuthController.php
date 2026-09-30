@@ -65,6 +65,17 @@ class AuthController extends Controller
                     'role'              => 'customer',
                     'terms_accepted_at' => $request->terms_accepted ? now() : null,
                 ]);
+                // NOTIFIKASI: SuperAdmin — customer baru via Google
+                try {
+                    SuperAdminNotificationService::send(
+                        'new_user',
+                        'Customer Baru (Google) Terdaftar',
+                        $user->name . ' (' . $user->email . ') mendaftar via Google.',
+                        '/superadmin/users'
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Gagal notif google new user: '.$e->getMessage());
+                }
             } else {
                 // Tautkan google_id jika belum terhubung
                 if (!$user->google_id) {
@@ -136,6 +147,18 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('customer_token')->plainTextToken;
+
+        // NOTIFIKASI: SuperAdmin — customer baru terdaftar
+        try {
+            SuperAdminNotificationService::send(
+                'new_user',
+                'Customer Baru Terdaftar',
+                $user->name . ' (' . $user->email . ') baru saja mendaftar sebagai customer.',
+                '/superadmin/users'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal notif new customer: '.$e->getMessage());
+        }
 
         return response()->json([
             'message'    => 'Customer registered successfully!',

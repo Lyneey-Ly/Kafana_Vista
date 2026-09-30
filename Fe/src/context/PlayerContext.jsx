@@ -2,18 +2,15 @@ import React, { createContext, useContext, useState, useRef, useEffect, useCallb
 
 const PlayerContext = createContext();
 
-// Helper untuk format URL backend
+// Helper untuk format URL backend — sinkron dengan api.js (VITE_API_URL) agar tidak 404/CORS localhost vs 127.0.0.1
 export const getFullUrl = (url) => {
   if (!url) return '';
-  // Jika sudah URL lengkap, langsung kembalikan agar tidak double URL
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
+  const backendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
+  // Hilangkan /api suffix jika ada agar storage tetap di root
+  const base = backendUrl.replace(/\/api\/?$/, '');
   const cleanPath = url.replace(/^\//, '');
-  
-  return cleanPath.startsWith('storage/') 
-    ? `${backendUrl}/${cleanPath}` 
-    : `${backendUrl}/storage/${cleanPath}`;
+  return cleanPath.startsWith('storage/') ? `${base}/${cleanPath}` : `${base}/storage/${cleanPath}`;
 };
 
 export const PlayerProvider = ({ children }) => {
@@ -60,7 +57,7 @@ export const PlayerProvider = ({ children }) => {
     setIsPlaying(true);
   }, [playlist.length]);
 
-  // Audio Playback Sync Effect
+  // Audio Playback Sync Effect — hanya reload jika URL track berubah, bukan saat playlist ref berubah
   useEffect(() => {
     const audio = audioRef.current;
     if (!currentTrack) return;
@@ -68,7 +65,17 @@ export const PlayerProvider = ({ children }) => {
     const rawAudioUrl = currentTrack.audio_url || currentTrack.url;
     const fullAudioUrl = getFullUrl(rawAudioUrl);
 
-    if (audio.src !== fullAudioUrl) {
+    // Bandingkan pathname agar tidak tertipu localhost vs 127.0.0.1 / encoded char
+    let needLoad = false;
+    try {
+      const cur = audio.src ? new URL(audio.src).pathname : '';
+      const nxt = fullAudioUrl ? new URL(fullAudioUrl).pathname : '';
+      needLoad = cur !== nxt || !audio.src;
+    } catch {
+      needLoad = audio.src !== fullAudioUrl;
+    }
+
+    if (needLoad) {
       audio.src = fullAudioUrl;
       audio.load();
     }
@@ -82,23 +89,40 @@ export const PlayerProvider = ({ children }) => {
     } else {
       audio.pause();
     }
-  }, [currentIndex, playlist, isPlaying, isMuted, volume]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTrack?.id, isPlaying]); // sengaja tidak depend pada playlist/currentIndex agar tidak reset saat filter/search ubah array
 
-  // Audio Event Listeners (Timeupdate, Metadata, Ended)
+  // Sinkron volume/mute terpisah agar tidak trigger load()
+  useEffect(() => {
+    audioRef.current.volume = isMuted ? 0 : volume;
+  }, [volume, isMuted]);
+
+  // Audio Event Listeners (Timeupdate, Metadata, DurationChange, Seeked)
   useEffect(() => {
     const audio = audioRef.current;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime || 0);
+    const handleTimeUpdate = () => {
+      // Jangan timpa currentTime saat user sedang drag/seeking (biar slider tidak jitter)
+      if (!audio.seeking) setCurrentTime(audio.currentTime || 0);
+    };
     const handleLoadedMetadata = () => setDuration(audio.duration || 0);
+    const handleDurationChange = () => {
+      if (audio.duration && isFinite(audio.duration)) setDuration(audio.duration);
+    };
+    const handleSeeked = () => setCurrentTime(audio.currentTime || 0);
     const handleEnded = () => handleNext();
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('seeked', handleSeeked);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('seeked', handleSeeked);
       audio.removeEventListener('ended', handleEnded);
     };
   }, [handleNext]);
@@ -134,9 +158,22 @@ export const PlayerProvider = ({ children }) => {
   };
 
   const seek = (seconds) => {
-    if (audioRef.current && !isNaN(seconds) && isFinite(seconds)) {
-      audioRef.current.currentTime = seconds;
-      setCurrentTime(seconds);
+    const audio = audioRef.current;
+    if (!audio || isNaN(seconds) || !isFinite(seconds)) return;
+    // Guard: jangan seek jika metadata belum siap / duration invalid
+    const d = audio.duration;
+    if (!d || !isFinite(d) || d <= 0) {
+      // Jika duration belum ada, tetap clamp ke 0..seekable
+      const clamped = Math.max(0, seconds);
+      try { audio.currentTime = clamped; setCurrentTime(clamped); } catch {}
+      return;
+    }
+    const clamped = Math.max(0, Math.min(seconds, d));
+    try {
+      audio.currentTime = clamped;
+      setCurrentTime(clamped);
+    } catch (e) {
+      console.warn('Seek gagal:', e);
     }
   };
 

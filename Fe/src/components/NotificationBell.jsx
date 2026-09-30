@@ -1,19 +1,27 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
-import useNotifications from '../hooks/useNotifications'; // Pastikan path hook benar
+import { useNavigate } from 'react-router-dom';
+import useNotifications from '../hooks/useNotifications';
 import NotificationToast from './NotificationToast';
 
-export default function NotificationBell({ endpoint = 'http://localhost:8000/api/admin/notifications' }) {
+export default function NotificationBell({ endpoint = '/notifications' }) {
+  const navigate = useNavigate();
   const {
     notifications,
     unreadCount,
     isOpen,
     setIsOpen,
-    toastNotif, // SUDAH DIPERBAIKI (sebelumnya: activeToast)
+    toastNotif,
     closeToast,
     handleItemClick,
     handleMarkAllRead
   } = useNotifications(endpoint);
+
+  const onItemClick = async (item) => {
+    const target = item.target_url || item.action_url;
+    await handleItemClick(item);
+    if (target) navigate(target);
+  };
 
   return (
     <>
@@ -21,7 +29,7 @@ export default function NotificationBell({ endpoint = 'http://localhost:8000/api
       {toastNotif && (
         <NotificationToast
           notification={toastNotif}
-          onOpen={() => handleItemClick(toastNotif)}
+          onOpen={() => onItemClick(toastNotif)}
           onClose={closeToast}
           duration={5000}
         />
@@ -62,7 +70,7 @@ export default function NotificationBell({ endpoint = 'http://localhost:8000/api
                 notifications.map((item) => (
                   <div
                     key={item.id}
-                    onClick={() => handleItemClick(item)}
+                    onClick={() => onItemClick(item)}
                     className={`p-3 text-xs cursor-pointer hover:bg-[#B38E5D]/10 transition ${
                       !item.is_read ? 'bg-[#B38E5D]/10 border-l-2 border-[#B38E5D]' : ''
                     }`}

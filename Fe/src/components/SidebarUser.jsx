@@ -38,11 +38,13 @@ import {
   Zap,
   BookText,
   Sparkles,
-  Lock
+  Lock,
+  Unlock
 } from 'lucide-react';
 import API from '../api';
 import { kafanaWarning, kafanaConfirm } from '../components/kafanaAlert';
 import NotificationToast from './NotificationToast';
+import useNotifications from '../hooks/useNotifications';
 
 export default function SidebarUser({ children }) {
   const navigate = useNavigate();
@@ -61,6 +63,9 @@ export default function SidebarUser({ children }) {
 
   const [loadingDoc, setLoadingDoc] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+
+  // Cek Status Premium User
+  const isPremiumUser = userProfile?.is_premium === true || userProfile?.status === 'premium';
 
   // Cek Status Login
   const token = sessionStorage.getItem('token');
@@ -90,135 +95,38 @@ export default function SidebarUser({ children }) {
     }
   }, [token]);
 
-  // 🔔 STATE & LOGIKA NOTIFIKASI USER
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [toastNotif, setToastNotif] = useState(null);
-  const knownIdsRef = useRef(new Set());
-
-  // 🔊 Efek Suara Notifikasi (fallback Web Audio API jika file mp3 belum ada)
-  const synthNotificationChime = () => {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = new Ctx();
-      const now = ctx.currentTime;
-      const tones = [
-        { freq: 880, start: 0, dur: 0.25, vol: 0.35 },
-        { freq: 1174.66, start: 0.12, dur: 0.4, vol: 0.28 },
-      ];
-      tones.forEach(({ freq, start, dur, vol }) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0, now + start);
-        gain.gain.linearRampToValueAtTime(vol, now + start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
-        osc.start(now + start);
-        osc.stop(now + start + dur + 0.1);
-      });
-    } catch (e) {
-      console.warn('Audio notifikasi tidak dapat diputar:', e);
-    }
-  };
-
-  const playNotificationSound = useCallback(() => {
-    try {
-      const audio = new Audio('/sounds/notification.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(() => synthNotificationChime());
-    } catch {
-      synthNotificationChime();
-    }
-  }, []);
-
-  // Polling GET /notifications setiap 12 detik untuk deteksi notifikasi baru
-  useEffect(() => {
-    if (!token) return;
-
-    let isFirstLoad = true;
-    let interval = null;
-    let cancelled = false;
-
-    const fetchNotifications = async () => {
-      try {
-        const res = await API.get('/notifications');
-        const items = res.data?.data || [];
-        const newItems = items.filter((n) => !knownIdsRef.current.has(n.id));
-        const unread = items.filter((n) => !n.is_read).length;
-
-        if (!cancelled) {
-          setNotifications(items);
-          setUnreadCount(unread);
-        }
-
-        if (isFirstLoad) {
-          isFirstLoad = false;
-          items.forEach((n) => knownIdsRef.current.add(n.id));
-          return;
-        }
-
-        if (newItems.length > 0) {
-          const newest = newItems[0];
-          newItems.forEach((n) => knownIdsRef.current.add(n.id));
-          if (!cancelled) {
-            setToastNotif(newest);
-            playNotificationSound();
-          }
-        }
-      } catch (err) {
-        if (err.response?.status === 401) return;
-        console.warn('Gagal memuat notifikasi:', err);
-      }
-    };
-
-    fetchNotifications();
-    interval = setInterval(fetchNotifications, 12000);
-
-    return () => {
-      cancelled = true;
-      if (interval) clearInterval(interval);
-    };
-  }, [token, playNotificationSound]);
+  // 🔔 NOTIFIKASI USER — via shared hook (polling 10s, visibility-aware, sound+toast)
+  const {
+    notifications,
+    unreadCount,
+    isOpen: notifOpen,
+    setIsOpen: setNotifOpen,
+    toastNotif,
+    handleItemClick: hookHandleItemClick,
+    handleMarkAllRead: hookMarkAllRead,
+    closeToast,
+  } = useNotifications('/notifications');
 
   const handleNotifClick = async (notif) => {
-    setNotifOpen(false);
-    setToastNotif(null);
-
     if (!notif) return;
-
-    try {
-      if (!notif.is_read) {
-        await API.patch(`/notifications/${notif.id}/read`);
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
-        );
-        setUnreadCount((c) => Math.max(0, c - 1));
-      }
-    } catch (err) {
-      console.warn('Gagal menandai notifikasi:', err);
-    }
-
-    if (notif.target_url) {
-      navigate(notif.target_url);
-    } else {
-      navigate('/beranda');
+    const target = notif.target_url || notif.action_url;
+    await hookHandleItemClick(notif);
+    closeToast();
+    if (target) {
+      navigate(target);
+    } else if (notif.type === 'chat') {
+      navigate('/roomchat');
+    } else if (notif.type?.startsWith('subscription')) {
+      navigate('/my-subscription');
+    } else if (notif.type === 'dokumen_signed') {
+      navigate('/riwayattransaksi');
+    } else if (notif.type === 'vendor_ad' || notif.type?.startsWith('vendor_ad')) {
+      navigate('/riwayat-iklan');
     }
   };
 
-  const handleMarkAllRead = async () => {
-    try {
-      await API.patch('/notifications/mark-all-read');
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.warn('Gagal menandai semua notifikasi:', err);
-    }
-  };
+  const handleMarkAllRead = hookMarkAllRead;
+  const handleToastClose = closeToast;
 
   const handleLogout = async () => {
     const isConfirmed = await kafanaConfirm(
@@ -397,7 +305,7 @@ export default function SidebarUser({ children }) {
   if (!token) {
     return (
       <div className="min-h-screen bg-[#FAF5EF] text-[#261C19] flex flex-col">
-        <header className="bg-[#261C19]/95 backdrop-blur-md text-[#FAF5EF] px-6 py-4 flex items-center justify-between sticky top-0 z-40 border-b border-[#B38E5D]/20 shadow-xl">
+        <header className="bg-[#261C19]/95 backdrop-blur-md text-[#FAF5EF] px-6 py-4 flex flex-wrap gap-2 items-center justify-between sticky top-0 z-40 border-b border-[#B38E5D]/20 shadow-xl">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#B38E5D] to-[#8F6E45] flex items-center justify-center text-white shadow-md shadow-[#B38E5D]/20">
               <Building2 className="w-5 h-5" />
@@ -438,7 +346,7 @@ export default function SidebarUser({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl mx-auto w-full">
           {children}
         </main>
       </div>
@@ -453,7 +361,7 @@ export default function SidebarUser({ children }) {
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
-        <div className="p-4 border-b border-[#B38E5D]/20 flex justify-between items-center min-h-[72px] relative">
+        <div className="p-4 border-b border-[#B38E5D]/20 flex flex-wrap gap-2 justify-between items-center min-h-[72px] relative">
           {!isCollapsed && (
             <div className="truncate transition-opacity duration-300">
               <h1 className="text-xl font-bold font-serif tracking-wider text-white">
@@ -465,7 +373,7 @@ export default function SidebarUser({ children }) {
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`p-2 rounded-xl text-[#FAF5EF]/70 hover:text-white hover:bg-[#B38E5D]/20 hover:border-[#B38E5D]/40 border border-transparent transition-all duration-200 cursor-pointer ${
+            className={`p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center rounded-xl text-[#FAF5EF]/70 hover:text-white hover:bg-[#B38E5D]/20 hover:border-[#B38E5D]/40 border border-transparent transition-all duration-200 cursor-pointer ${
               isCollapsed ? 'mx-auto' : ''
             }`}
             title={isCollapsed ? "Buka Sidebar" : "Kecilkan Sidebar"}
@@ -541,7 +449,7 @@ export default function SidebarUser({ children }) {
           </button>
 
           {notifOpen && (
-            <div className="absolute left-full top-2 ml-3 w-[340px] max-w-[calc(100vw-96px)] bg-[#FAF5EF] rounded-2xl border border-[#D7C4B0] shadow-2xl shadow-black/40 overflow-hidden z-[60]">
+            <div className="absolute left-full top-2 ml-3 w-[min(340px,calc(100vw-24px))] max-w-[calc(100vw-24px)] bg-[#FAF5EF] rounded-2xl border border-[#D7C4B0] shadow-2xl shadow-black/40 overflow-hidden z-[60]">
               <div className="flex items-center justify-between px-4 py-3 bg-[#2D2321] text-[#FAF5EF]">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-[#B38E5D]" />
@@ -678,7 +586,11 @@ export default function SidebarUser({ children }) {
                               >
                                 <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#B38E5D]'}`} />
                                 <span className="truncate flex-1">{subItem.name}</span>
-                                <Lock className="w-3.5 h-3.5 flex-shrink-0 text-[#B38E5D]/70" title="Fitur Premium" />
+                                {isPremiumUser ? (
+                                <Unlock className="w-3.5 h-3.5 flex-shrink-0 text-amber-400" title="Fitur Premium Terbuka" />
+                              ) : (
+                                <Lock className="w-3.5 h-3.5 flex-shrink-0 text-[#B38E5D]/70" title="Fitur Premium Terkunci" />
+                              )}
                               </button>
                             </div>
                           );
@@ -816,11 +728,11 @@ export default function SidebarUser({ children }) {
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-72 bg-[#261C19] text-[#FAF5EF] z-50 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) md:hidden flex flex-col border-r border-[#B38E5D]/30 shadow-2xl ${
+        className={`fixed top-0 left-0 bottom-0 w-[min(18rem,85vw)] max-w-[85vw] bg-[#261C19] text-[#FAF5EF] z-50 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) md:hidden flex flex-col border-r border-[#B38E5D]/30 shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-5 border-b border-[#B38E5D]/20 flex justify-between items-center bg-[#1C1412]">
+        <div className="p-5 border-b border-[#B38E5D]/20 flex flex-wrap gap-2 justify-between items-center bg-[#1C1412]">
           <div>
             <h1 className="text-xl font-bold font-serif text-white">
               Kafana<span className="text-[#B38E5D]">Vista</span>
@@ -829,7 +741,7 @@ export default function SidebarUser({ children }) {
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
+            className="p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -915,7 +827,11 @@ export default function SidebarUser({ children }) {
                             >
                               <SubIcon className="w-4 h-4 text-[#B38E5D]" />
                               <span className="flex-1">{subItem.name}</span>
-                              <Lock className="w-4 h-4 text-[#B38E5D]/70" title="Fitur Premium" />
+                              {isPremiumUser ? (
+                                <Unlock className="w-4 h-4 text-amber-400" title="Fitur Premium Terbuka" />
+                              ) : (
+                                <Lock className="w-4 h-4 text-[#B38E5D]/70" title="Fitur Premium Terkunci" />
+                              )}
                             </button>
                           );
                         }
@@ -1000,7 +916,7 @@ export default function SidebarUser({ children }) {
 
       {/* AREA KONTEN UTAMA */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="md:hidden relative bg-[#261C19]/95 backdrop-blur-md text-white px-4 py-3 flex justify-between items-center shadow-md border-b border-[#B38E5D]/20 sticky top-0 z-20">
+        <header className="md:hidden relative bg-[#261C19]/95 backdrop-blur-md text-white px-4 py-3 flex flex-wrap gap-2 justify-between items-center shadow-md border-b border-[#B38E5D]/20 sticky top-0 z-20">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-[#B38E5D] flex items-center justify-center text-white">
               <Building2 className="w-4 h-4" />
@@ -1012,7 +928,7 @@ export default function SidebarUser({ children }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setNotifOpen((o) => !o)}
-              className={`relative p-2 rounded-lg cursor-pointer transition active:scale-95 ${
+              className={`relative p-3 min-h-11 min-w-11 w-11 h-11 flex items-center justify-center rounded-lg cursor-pointer transition active:scale-95 ${
                 notifOpen ? 'bg-[#B38E5D]/30 text-white' : 'hover:bg-[#B38E5D]/20 text-[#FAF5EF]/80'
               }`}
               title="Notifikasi"
@@ -1027,7 +943,7 @@ export default function SidebarUser({ children }) {
 
             <button
               onClick={() => setIsOpen(true)}
-              className="px-3 py-2 bg-[#B38E5D] hover:bg-[#967447] text-white rounded-lg text-xs font-bold cursor-pointer shadow flex items-center gap-2 transition active:scale-95"
+              className="p-3 min-h-11 min-w-11 bg-[#B38E5D] hover:bg-[#967447] text-white rounded-lg text-xs font-bold cursor-pointer shadow flex items-center justify-center gap-2 transition active:scale-95"
             >
               <Menu className="w-4 h-4" />
               <span>Menu</span>
@@ -1035,7 +951,7 @@ export default function SidebarUser({ children }) {
           </div>
 
           {notifOpen && (
-            <div className="absolute right-3 top-full mt-2 w-[340px] max-w-[calc(100vw-24px)] bg-[#FAF5EF] rounded-2xl border border-[#D7C4B0] shadow-2xl shadow-black/40 overflow-hidden z-[60]">
+            <div className="absolute right-3 top-full mt-2 w-[min(340px,calc(100vw-24px))] max-w-[calc(100vw-24px)] bg-[#FAF5EF] rounded-2xl border border-[#D7C4B0] shadow-2xl shadow-black/40 overflow-hidden z-[60]">
               <div className="flex items-center justify-between px-4 py-3 bg-[#2D2321] text-[#FAF5EF]">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-[#B38E5D]" />
@@ -1097,7 +1013,7 @@ export default function SidebarUser({ children }) {
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#FAF5EF]">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 bg-[#FAF5EF]">
           {children}
         </main>
       </div>
@@ -1107,7 +1023,7 @@ export default function SidebarUser({ children }) {
           key={toastNotif.id}
           notification={toastNotif}
           onOpen={() => handleNotifClick(toastNotif)}
-          onClose={() => setToastNotif(null)}
+          onClose={handleToastClose}
         />
       )}
     </div>

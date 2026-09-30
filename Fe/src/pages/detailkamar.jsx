@@ -593,10 +593,10 @@ export default function DetailKamar() {
       {/* POP-UP MODAL DOKUMEN SEWA & TTD DIGITAL */}
       {showDokumenModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
-          <div className="bg-white border border-[#D7C4B0] max-w-2xl w-full rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl relative my-8">
+          <div className="bg-white border border-[#D7C4B0] max-w-2xl w-full max-h-[90dvh] overflow-y-auto rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl relative my-8">
             <button 
               onClick={() => setShowDokumenModal(false)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-black text-xl font-bold p-2 cursor-pointer"
+              className="absolute top-5 right-5 text-gray-400 hover:text-black text-xl font-bold p-3 min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
             >
               ✕
             </button>
@@ -657,7 +657,8 @@ export default function DetailKamar() {
                   onTouchStart={startDrawing}
                   onTouchMove={draw}
                   onTouchEnd={stopDrawing}
-                  className="cursor-crosshair w-full h-[150px]"
+                  className="cursor-crosshair w-full max-w-[500px] h-[150px]"
+                  style={{ width: '100%', maxWidth: '500px', height: '150px' }}
                 />
                 {!hasSigned && (
                   <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
@@ -693,7 +694,7 @@ export default function DetailKamar() {
                 navigator.clipboard.writeText(window.location.href);
                 showSwalToast('success', '🔗 Tautan kost berhasil disalin!');
               }}
-              className="p-2 bg-[#FAF5EF] hover:bg-slate-200 rounded-full border border-[#D7C4B0] text-sm transition cursor-pointer"
+              className="p-3 min-h-11 min-w-11 bg-[#FAF5EF] hover:bg-slate-200 rounded-full border border-[#D7C4B0] text-sm transition cursor-pointer flex items-center justify-center"
               title="Bagikan Kost"
             >
               🔗
@@ -761,7 +762,7 @@ export default function DetailKamar() {
               </div>
 
               {properti.galeri && properti.galeri.length > 0 && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
                   {properti.galeri.map((img, index) => (
                     <button
                       key={index}

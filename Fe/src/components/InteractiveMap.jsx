@@ -92,7 +92,7 @@ function PropertyMarker({ property, onClick, isSelected }) {
         closeButton={false}
         className={`property-popup ${isSelected ? 'selected' : ''}`}
       >
-        <div className="p-2 min-w-[220px]">
+        <div className="p-2 min-w-[180px] sm:min-w-[220px] max-w-[85vw]">
           <img
             src={property.image || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=400&q=80'}
             alt={property.title || property.name}
@@ -137,7 +137,7 @@ export default function InteractiveMap({
   onPropertyClick = () => {},
   center = CITY_CENTERS.Bandung,
   zoom = 13,
-  height = '500px',
+  height,
   className = '',
 }) {
   const [bounds, setBounds] = useState(null);
@@ -148,7 +148,7 @@ export default function InteractiveMap({
   );
 
   return (
-    <div className={`relative w-full ${className}`} style={{ height }}>
+    <div className={`relative w-full h-[360px] sm:h-[420px] md:h-[500px] ${className}`} style={height ? { height } : undefined}>
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={zoom}
