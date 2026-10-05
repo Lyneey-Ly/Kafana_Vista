@@ -23,6 +23,7 @@ import {
   Sparkles,
   Crown,
   Package,
+  Image as ImageIcon,
 } from 'lucide-react';
 import SuperAdminNotificationBell from './superadmin/SuperAdminNotificationBell';
 
@@ -109,6 +110,7 @@ export default function SidebarSuperAdmin({ children }) {
         { name: 'Verifikasi Properti', path: '/VerifikasiPropertiSuperAdmin', icon: ShieldCheck },
         { name: 'Kelola Iklan Banner', path: '/KelolaIklanSuperAdmin', icon: Megaphone },
         { name: 'Verifikasi Iklan', path: '/superadmin/VerifikasiIklanAdmin', icon: Megaphone },
+        { name: 'Atur Slot Iklan', path: '/superadmin/ad-slots', icon: ImageIcon },
         { name: 'Verifikasi Premium', path: '/superadmin/SuperAdminSubscriptions', icon: Crown },
       ]
     },

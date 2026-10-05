@@ -19,6 +19,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\SuperAdminNotificationController;
 use App\Http\Controllers\VendorAdController;
+use App\Http\Controllers\AdSlotConfigController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\SiteSettingController;
@@ -54,6 +55,10 @@ Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 
 // --- ENDPOINT PUBLIK VENDOR ADVERTISEMENTS ---
 Route::get('/vendor-ads/active', [VendorAdController::class, 'getActiveAds']);
+
+// --- ENDPOINT PUBLIK AD SLOT CONFIGS (dinamis, untuk validator FE) ---
+Route::get('/ad-slot-configs', [AdSlotConfigController::class, 'index']);
+Route::get('/ad-slot-configs/{placement}', [AdSlotConfigController::class, 'show']);
 
 // --- ENDPOINT PUBLIK SITE SETTINGS ---
 Route::get('/site-settings', [SiteSettingController::class, 'index']);
@@ -211,6 +216,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/penyewa-aktif', [DashboardAdminController::class, 'penyewaAktif']);
         Route::get('/tagihan-order', [PembayaranController::class, 'indexTagihanOrder']);
 
+        // --- KELOLA AD SLOT CONFIGS (ADMIN: read-only, SUPERADMIN: CRUD) ---
+        Route::get('/ad-slot-configs', [AdSlotConfigController::class, 'indexAdmin']);
+        Route::post('/ad-slot-configs', [AdSlotConfigController::class, 'store']);
+        Route::put('/ad-slot-configs/{id}', [AdSlotConfigController::class, 'update']);
+        Route::delete('/ad-slot-configs/{id}', [AdSlotConfigController::class, 'destroy']);
+
         // --- KELOLA VENDOR ADVERTISEMENT (ADMIN LEVEL) ---
         Route::get('/vendor-ads', [VendorAdController::class, 'index']);
         Route::get('/vendor-ads/{id}', [VendorAdController::class, 'show']);
@@ -257,6 +268,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/finance-tracker/{id}', [SuperAdminController::class, 'destroyFinanceRecord']);
 
             Route::get('/revenue-analytics', [SuperAdminController::class, 'revenueAnalytics']);
+
+            // --- KELOLA AD SLOT CONFIGS (SUPERADMIN) ---
+            Route::get('/ad-slot-configs', [AdSlotConfigController::class, 'indexAdmin']);
+            Route::post('/ad-slot-configs', [AdSlotConfigController::class, 'store']);
+            Route::put('/ad-slot-configs/{id}', [AdSlotConfigController::class, 'update']);
+            Route::delete('/ad-slot-configs/{id}', [AdSlotConfigController::class, 'destroy']);
 
             // --- KELOLA VENDOR ADVERTISEMENT (SUPERADMIN LEVEL) ---
             Route::get('/vendor-ads', [VendorAdController::class, 'index']);

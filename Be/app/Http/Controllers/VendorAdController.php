@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\VendorAdvertisement;
+use App\Models\AdSlotConfig;
 use App\Models\Administrator;
+use App\Services\AdImageValidatorService;
 use App\Services\FinanceService;
 use App\Services\NotificationService;
 use App\Services\SuperAdminNotificationService;
@@ -72,14 +74,28 @@ class VendorAdController extends Controller
 
     /**
      * TAMBAH IKLAN BARU (User / Admin Pemilik Kost)
+     * Validasi dinamis berdasarkan AdSlotConfig (format, dimensi, rasio, size)
      */
     public function store(Request $request)
     {
+        // Resolve slot config untuk aturan dinamis
+        $placementInput = $request->input('placement');
+        $slotConfig = AdSlotConfig::where('placement', $placementInput)->first()
+            ?? AdSlotConfig::where('placement', 'custom')->first();
+
+        // Build mimes & max size dari config jika tersedia
+        $mimeRule = 'image|mimes:jpeg,png,jpg,webp';
+        $maxRule = 'max:2048';
+        if ($slotConfig) {
+            $mimeRule = 'image|mimes:' . implode(',', $slotConfig->allowed_extensions);
+            $maxRule = 'max:' . $slotConfig->max_file_size_kb;
+        }
+
         $validated = $request->validate([
             'vendor_name'     => 'required|string|max:255',
             'description'     => 'nullable|string',
             'banner_images'   => 'required|array|min:1',
-            'banner_images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'banner_images.*' => $mimeRule . '|' . $maxRule,
             'link_url'        => 'nullable|url|max:255',
             'placement'       => 'required|string|max:100',
             'price'           => 'nullable|numeric|min:0',
@@ -87,6 +103,26 @@ class VendorAdController extends Controller
             'end_date'        => 'required|date|after_or_equal:start_date',
             'is_active'       => 'boolean'
         ]);
+
+        // --- VALIDASI KETAT: dimensi & rasio aspek per file ---
+        if ($request->hasFile('banner_images')) {
+            $validator = app(AdImageValidatorService::class);
+            $files = $request->file('banner_images');
+            $batch = $validator->validateBatch($files, $validated['placement']);
+            if (!$batch['all_valid']) {
+                $errors = [];
+                foreach ($batch['results'] as $idx => $res) {
+                    if (!$res['valid']) {
+                        $errors["banner_images.{$idx}"] = $res['errors'];
+                    }
+                }
+                return response()->json([
+                    'message' => 'Validasi gambar gagal. Periksa format, dimensi, rasio, atau ukuran file.',
+                    'errors' => $errors,
+                    'details' => $batch['results'],
+                ], 422);
+            }
+        }
 
         // Simpan semua file foto ke storage
         $uploadedImages = [];
@@ -212,11 +248,22 @@ class VendorAdController extends Controller
             return response()->json(['message' => 'Iklan tidak ditemukan'], 404);
         }
 
+        // Resolve slot config untuk aturan dinamis (jika placement diubah)
+        $targetPlacement = $request->input('placement', $ad->placement);
+        $slotConfig = AdSlotConfig::where('placement', $targetPlacement)->first()
+            ?? AdSlotConfig::where('placement', 'custom')->first();
+        $mimeRule = 'image|mimes:jpeg,png,jpg,webp';
+        $maxRule = 'max:2048';
+        if ($slotConfig) {
+            $mimeRule = 'image|mimes:' . implode(',', $slotConfig->allowed_extensions);
+            $maxRule = 'max:' . $slotConfig->max_file_size_kb;
+        }
+
         $validated = $request->validate([
             'vendor_name'      => 'sometimes|required|string|max:255',
             'description'      => 'nullable|string',
             'banner_images'    => 'nullable|array',
-            'banner_images.*'  => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'banner_images.*'  => $mimeRule . '|' . $maxRule,
             'link_url'         => 'nullable|url|max:255',
             'placement'        => 'sometimes|required|string|max:100',
             'price'            => 'nullable|numeric|min:0',
@@ -230,6 +277,24 @@ class VendorAdController extends Controller
             'rejection_reason' => 'nullable|string',
             'admin_notes'      => 'nullable|string',
         ]);
+
+        // Validasi dimensi/rasio jika ada file baru
+        if ($request->hasFile('banner_images')) {
+            $validator = app(AdImageValidatorService::class);
+            $files = $request->file('banner_images');
+            $batch = $validator->validateBatch($files, $targetPlacement);
+            if (!$batch['all_valid']) {
+                $errors = [];
+                foreach ($batch['results'] as $idx => $res) {
+                    if (!$res['valid']) $errors["banner_images.{$idx}"] = $res['errors'];
+                }
+                return response()->json([
+                    'message' => 'Validasi gambar gagal.',
+                    'errors' => $errors,
+                    'details' => $batch['results'],
+                ], 422);
+            }
+        }
 
         // Jika ada unggahan gambar baru
         if ($request->hasFile('banner_images')) {

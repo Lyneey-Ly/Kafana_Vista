@@ -60,6 +60,7 @@ import SettingsPage from './pages/superadmin/SettingsPage';
 import VerifikasiIklanAdmin from './pages/VerifikasiIklanAdmin';
 import VerifikasiPropertiSuperAdmin from './pages/VerifikasiPropertiSuperAdmin'; 
 import ManagePackages from './pages/superadmin/ManagePackages';
+import AdSlotConfigs from './pages/superadmin/AdSlotConfigs';
 import NotificationBell from './components/NotificationBell';
 import Footer from './components/footer';
 import RandomizerMakan from './pages/RandomizerMakan';
@@ -171,6 +172,7 @@ export default function App() {
                 <Route path="bank-accounts" element={<BankAccountsPage />} />
                 <Route path="finance-tracker" element={<FinanceTrackerPage />} />
                 <Route path="packages" element={<ManagePackages />} />
+                <Route path="ad-slots" element={<AdSlotConfigs />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="VerifikasiIklanAdmin" element={<VerifikasiIklanAdmin />} />
                 <Route path="SuperAdminSubscriptions" element={<SuperAdminSubscriptions />} />

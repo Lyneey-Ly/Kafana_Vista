@@ -143,7 +143,21 @@ export default function PembayaranIklan() {
       navigate('/riwayat-iklan');
     } catch (err) {
       console.error(err);
-      Swal.fire('Gagal Mengirim', err.response?.data?.message || 'Terjadi kesalahan sistem', 'error');
+      const data = err.response?.data;
+      let msg = data?.message || 'Terjadi kesalahan sistem';
+      if (data?.errors) {
+        const details = Object.entries(data.errors).map(([k, v]) => `<li><b>${k}:</b> ${Array.isArray(v) ? v.join('; ') : v}</li>`).join('');
+        msg = `<p class="text-xs mb-2">${msg}</p><ul class="text-[11px] text-rose-600 text-left bg-rose-50 p-3 rounded-lg border border-rose-200 list-disc list-inside">${details}</ul>`;
+        Swal.fire({ title: 'Validasi Gagal', html: msg, icon: 'error', confirmButtonColor: '#B38E5D', width: 560 });
+      } else if (data?.details) {
+        const details = (Array.isArray(data.details) ? data.details : Object.values(data.details))
+          .filter(d => d && d.errors)
+          .flatMap(d => d.errors)
+          .join('; ');
+        Swal.fire('Gagal Mengirim', `${msg}${details ? ': ' + details : ''}`, 'error');
+      } else {
+        Swal.fire('Gagal Mengirim', msg, 'error');
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -16,6 +16,7 @@ const TAB_TITLES = {
   'finance-tracker': 'Finance Tracker Superadmin',
   packages: 'Manajemen Harga Paket Premium',
   settings: 'Pengaturan Website',
+  'ad-slots': 'Kelola Slot Iklan (Image Rules)',
 };
 
 const SUBTITLES = {
@@ -30,6 +31,7 @@ const SUBTITLES = {
   'finance-tracker': 'Catat arus kas pemasukan dan pengeluaran operasional.',
   packages: 'Atur harga, badge, fitur & status paket premium. Perubahan langsung tayang di Upgrade Premium pengguna.',
   settings: 'Atur nama, logo, kontak, biaya slot, dan komisi platform.',
+  'ad-slots': 'Atur format, dimensi, rasio aspek, dan batas ukuran file per slot iklan. Validasi dinamis di FE & BE.',
 };
 
 export default function SuperAdminLayout() {
