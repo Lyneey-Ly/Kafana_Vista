@@ -64,4 +64,14 @@ class Properti extends Model
     {
         return $this->hasMany(Chat::class, 'properti_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'properti_id');
+    }
+
+    public function testimonis()
+    {
+        return $this->hasMany(Testimoni::class, 'properti_id');
+    }
 }

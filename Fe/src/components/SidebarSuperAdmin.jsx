@@ -13,6 +13,7 @@ import {
   Megaphone,
   UserCheck
 } from 'lucide-react';
+import SuperAdminNotificationBell from './superadmin/SuperAdminNotificationBell';
 
 const SUPERADMIN_ROUTES = [
   'overview',
@@ -128,6 +129,27 @@ export default function SidebarSuperAdmin({ children }) {
 
       {/* KONTEN HALAMAN UTAMA */}
       <main className="flex-1 w-full relative min-h-screen overflow-x-hidden">
+        {/* TOP BAR SUPERADMIN (Notifikasi real-time, sticky di semua halaman) */}
+        <header className="sticky top-0 z-30 bg-[#261C19]/95 backdrop-blur-md text-white px-4 md:px-6 py-3 flex items-center justify-between shadow-md border-b border-[#B38E5D]/25">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#B38E5D] to-[#8F6E45] flex items-center justify-center text-white shadow-md">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h1 className="font-serif font-bold text-sm md:text-base tracking-wider leading-none">
+                KAFANA<span className="text-[#B38E5D]">VISTA</span>
+              </h1>
+              <p className="text-[9px] text-[#D7C4B0] uppercase tracking-widest font-semibold mt-0.5">
+                Superadmin Control Center
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <SuperAdminNotificationBell />
+          </div>
+        </header>
+
         {children}
       </main>
     </div>

@@ -19,7 +19,8 @@ import {
   Sparkles,
   CreditCard,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  ClipboardList,
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
@@ -124,12 +125,12 @@ export default function SidebarAdmin({ children }) {
     { name: 'Kelola Properti', path: '/admin/properti', icon: Building2 },
     { name: 'Penyewa Aktif', path: '/adminpenyewa', icon: Users },
     { name: 'Tagihan & Order', path: '/adminTO', icon: Receipt },
+    { name: 'Riwayat Pembayaran', path: '/admin/riwayat-pembayaran', icon: ClipboardList },
     { name: 'Laporan Keuangan', path: '/adminlaporan', icon: TrendingUp },
     { name: 'Kelola Komplain', path: '/admin/komplain', icon: AlertTriangle },
     { name: 'Dokumen Sewa', path: '/admin/dokumen-sewa', icon: FileText },
     { name: 'Pusat Bantuan', path: '/pusatbantuanadmin', icon: HelpCircle },
     { name: 'Room Chat', path: '/AdminRoomChat', icon: MessageSquare },
-    { name: 'Riwayat Pembayaran', path: '/admin/riwayat-pembayaran', icon: MessageSquare },
   ];
 
   // Helper Foto Profil
@@ -344,11 +345,6 @@ export default function SidebarAdmin({ children }) {
 
         {/* Mobile Logout */}
         <div className="p-4 border-t border-[#B38E5D]/20 bg-[#1C1412] space-y-3">
-          <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#261C19] border border-[#B38E5D]/20">
-            <span className="text-xs font-semibold text-[#D7C4B0]">Pemberitahuan System</span>
-            <NotificationBell />
-          </div>
-
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer shadow-lg transition active:scale-95"
@@ -371,7 +367,7 @@ export default function SidebarAdmin({ children }) {
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#B38E5D] to-[#8F6E45] flex items-center justify-center text-white shadow-md">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#B38E5D] to-[#8F6E45] flex items-center justify-center text-[#FAF5EF] shadow-md">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <h1 className="font-serif font-bold text-base md:text-lg tracking-wider">
@@ -384,8 +380,9 @@ export default function SidebarAdmin({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1412]/60 border border-[#B38E5D]/20 text-xs text-[#FAF5EF]">
-              <NotificationBell />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1412]/60 border border-[#B38E5D]/20 text-xs text-[#FAF5EF]">
+              {/* Endpoint Admin dipasang langsung di komponen NotificationBell */}
+              <NotificationBell endpoint="http://localhost:8000/api/notifications" />
             </div>
           </div>
         </header>

@@ -67,11 +67,52 @@ class PembayaranController extends Controller
             $pemesanan->save();
         }
 
-        $owner = $pemesanan->properti->pemilik ?? Administrator::whereNotNull('banks')->orWhereNotNull('bank_name')->first() ?? Administrator::first();
+        // PRIORITAS: Rekening/bank milik PEMILIK properti yang bersangkutan (pemilik_id)
+        $owner = null;
+        if ($pemesanan->properti && $pemesanan->properti->pemilik) {
+            $owner = $pemesanan->properti->pemilik;
+        }
+
+        // Deteksi apakah pemilik properti sudah mengatur rekening/bank
+        $ownerHasBank = false;
+        if ($owner) {
+            $ownerBanksRaw = [];
+            if (!empty($owner->banks)) {
+                $ownerBanksRaw = is_string($owner->banks) ? (json_decode($owner->banks, true) ?? []) : $owner->banks;
+            } elseif (!empty($owner->bank_name) || !empty($owner->account_number)) {
+                $ownerBanksRaw = [[
+                    'bank_name'      => $owner->bank_name,
+                    'account_number' => $owner->account_number,
+                    'account_holder' => $owner->account_holder,
+                ]];
+            }
+            $ownerBanksRaw = (array) $ownerBanksRaw;
+            $ownerHasBank = count($ownerBanksRaw) > 0 && !empty($ownerBanksRaw[0]['account_number']);
+        }
+
+        // FALLBACK: Gunakan rekening SuperAdmin/Admin global HANYA jika pemilik belum mengatur rekening
+        if (!$ownerHasBank) {
+            $superAdmin = Administrator::whereIn('role', ['superadmin', 'super_admin'])
+                ->where(function ($q) {
+                    $q->whereNotNull('banks')
+                      ->orWhereNotNull('bank_name')
+                      ->orWhereNotNull('account_number');
+                })
+                ->first();
+
+            if (!$superAdmin) {
+                $superAdmin = Administrator::whereNotNull('banks')
+                    ->orWhereNotNull('bank_name')
+                    ->orWhereNotNull('account_number')
+                    ->first();
+            }
+
+            $owner = $superAdmin ?? $owner ?? Administrator::first();
+        }
 
         $banks = [];
         if ($owner && !empty($owner->banks)) {
-            $banks = is_string($owner->banks) ? json_decode($owner->banks, true) : $owner->banks;
+            $banks = is_string($owner->banks) ? (json_decode($owner->banks, true) ?? []) : $owner->banks;
         } elseif ($owner && $owner->bank_name) {
             $banks = [[
                 'bank_name'      => $owner->bank_name,

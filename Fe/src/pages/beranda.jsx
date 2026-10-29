@@ -141,23 +141,7 @@ export default function HomeUser() {
     <SidebarUser>
       <div className="min-h-screen bg-[#FAF5EF] text-[#1E1614] font-sans pb-20 selection:bg-[#B38E5D] selection:text-white">
         
-        {/* TOP NAVBAR */}
-        <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-[#E5D7C5]/60 px-6 md:px-12 py-4 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#261C19] to-[#1E1614] text-[#B38E5D] flex items-center justify-center shadow-lg border border-[#C5A059]/30">
-              <Building2 size={20} />
-            </div>
-            <span className="text-lg font-black tracking-widest uppercase text-[#261C19]">
-              Kafana<span className="text-[#B38E5D] font-light">Vista</span>
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-full border-2 border-[#B38E5D]/50 overflow-hidden shadow-md">
-            <img 
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name)}&background=261C19&color=B38E5D&bold=true`} 
-              alt="Avatar" 
-            />
-          </div>
-        </nav>
+       
 
         <motion.main 
           className="max-w-7xl mx-auto px-6 md:px-12 py-8 space-y-16"
@@ -243,12 +227,7 @@ export default function HomeUser() {
                       <p className="text-3xl font-black text-white">{formatRupiah(currentLease.billAmount)}</p>
                     </div>
                     
-                    <button className="w-full py-4 bg-gradient-to-r from-[#B38E5D] to-[#C5A059] hover:opacity-90 text-[#1E1614] text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(197,160,89,0.3)] hover:shadow-[0_0_25px_rgba(197,160,89,0.5)] hover:-translate-y-0.5 active:scale-95 flex justify-center items-center gap-2">
-                      <Calendar size={16} /> Perpanjang Sewa
-                    </button>
-                    <button className="w-full py-4 bg-white/10 hover:bg-white/15 backdrop-blur-md text-white text-xs font-black uppercase tracking-widest rounded-xl border border-white/20 transition-all hover:-translate-y-0.5 active:scale-95 flex justify-center items-center gap-2">
-                      <Wallet size={16} /> Bayar Tagihan
-                    </button>
+
                   </div>
                 </div>
               </div>

@@ -15,7 +15,9 @@ class PropertyController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Properti::with(['pemilik', 'kamars']); 
+        $query = Properti::with(['pemilik', 'kamars'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews'); 
 
         $user = Auth::guard('sanctum')->user();
 
@@ -93,7 +95,9 @@ class PropertyController extends Controller
             ], 401);
         }
 
-        $query = Properti::with(['pemilik', 'kamars']);
+        $query = Properti::with(['pemilik', 'kamars'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews');
 
         $role = strtolower($user->role ?? '');
         $isSuperAdmin = in_array($role, ['superadmin', 'super_admin']);
@@ -220,7 +224,10 @@ class PropertyController extends Controller
      */
     public function show($id)
     {
-        $property = Properti::with(['pemilik', 'kamars'])->find($id);
+        $property = Properti::with(['pemilik', 'kamars'])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->find($id);
 
         if (!$property) {
             return response()->json(['message' => 'Property not found'], 404);

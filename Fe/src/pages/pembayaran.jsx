@@ -24,38 +24,54 @@ export default function Pembayaran() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 1. Fetch Pengaturan Pembayaran (Gunakan Rute User Tanpa Admin Prefix)
+  // 1. Fetch Instruksi Pembayaran Spesifik Pemesanan (Rekening milik Pemilik Properti)
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setLoadingSettings(true);
-        const res = await API.get('/payment-settings');
-        const data = res.data?.data;
 
-        if (data) {
+        const pemesananId = itemTransaksi?.pemesananId || itemTransaksi?.pemesanan_id || itemTransaksi?.id;
+        if (!pemesananId) {
+          setBanks([]);
+          setQrisImageUrl('');
+          setErrorMessage('Data pemesanan tidak lengkap. ID pemesanan tidak ditemukan.');
+          return;
+        }
+
+        const res = await API.get(`/pemesanan/${pemesananId}/payment-instruction`);
+        const data = res.data?.data;
+        const ownerPayment = data?.owner_payment;
+
+        if (ownerPayment) {
           let loadedBanks = [];
-          if (data.banks) {
-            loadedBanks = typeof data.banks === 'string' ? JSON.parse(data.banks) : data.banks;
-          } else if (data.bank_name || data.account_number) {
+          if (Array.isArray(ownerPayment.banks) && ownerPayment.banks.length > 0) {
+            loadedBanks = ownerPayment.banks;
+          } else if (ownerPayment.bank_name || ownerPayment.account_number) {
             loadedBanks = [{
-              bank_name: data.bank_name || 'BCA',
-              account_number: data.account_number || '',
-              account_holder: data.account_holder || '',
+              bank_name: ownerPayment.bank_name || 'BCA',
+              account_number: ownerPayment.account_number || '',
+              account_holder: ownerPayment.account_holder || '',
             }];
           }
 
           setBanks(loadedBanks);
-          setQrisImageUrl(data.qris_image_url || '');
+          setQrisImageUrl(ownerPayment.qris_image || '');
+        } else {
+          setBanks([]);
+          setQrisImageUrl('');
         }
       } catch (error) {
-        console.error('Gagal memuat pengaturan pembayaran dari DB:', error);
+        console.error('Gagal memuat instruksi pembayaran dari DB:', error);
+        setBanks([]);
+        setQrisImageUrl('');
+        setErrorMessage(error.response?.data?.message || 'Gagal memuat instruksi pembayaran.');
       } finally {
         setLoadingSettings(false);
       }
     };
 
     fetchSettings();
-  }, []);
+  }, [itemTransaksi]);
 
   const activeBank = banks[selectedBankIndex] || {
     bank_name: 'BCA',

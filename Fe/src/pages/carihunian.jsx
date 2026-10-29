@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import SidebarUser from '../components/SidebarUser';
@@ -81,8 +81,8 @@ export default function CariHunian() {
       location: 'Bojongsoang, Bandung',
       price: 'Rp 1.500.000',
       period: 'bulan',
-      rating: '4.8',
-      reviews: 24,
+      rating: '0.0',
+      reviews: 0,
       image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
       tags: ['Wifi', 'AC', 'KM Dalam'],
       isAvailable: true,
@@ -98,8 +98,8 @@ export default function CariHunian() {
       location: 'Buahbatu, Bandung',
       price: 'Rp 24.000.000',
       period: 'tahun',
-      rating: '4.9',
-      reviews: 12,
+      rating: '0.0',
+      reviews: 0,
       image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80',
       tags: ['2 KT', 'Parkir Mobil', 'Dapur'],
       isAvailable: true,
@@ -115,8 +115,8 @@ export default function CariHunian() {
       location: 'Coblong, Bandung',
       price: 'Rp 2.100.000',
       period: 'bulan',
-      rating: '4.7',
-      reviews: 30,
+      rating: '0.0',
+      reviews: 0,
       image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
       tags: ['Wi-Fi', 'Water Heater', 'AC'],
       isAvailable: false,
@@ -132,8 +132,8 @@ export default function CariHunian() {
       location: 'Nanggleng, Sukabumi',
       price: 'Rp 1.200.000',
       period: 'bulan',
-      rating: '5.0',
-      reviews: 18,
+      rating: '0.0',
+      reviews: 0,
       image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=600&q=80',
       tags: ['Wi-Fi', 'Kasur', 'Parkir Mobil'],
       isAvailable: true,
@@ -168,6 +168,9 @@ export default function CariHunian() {
           const priceVal = item?.price_per_month ?? item?.harga ?? item?.price ?? 0;
           const numPrice = Number(String(priceVal).replace(/[^0-9]/g, '')) || 0;
 
+          const avgRating = item?.reviews_avg_rating ?? item?.avg_rating ?? item?.rating ?? 0;
+          const reviewsCount = item?.reviews_count ?? item?.total_reviews ?? item?.reviews ?? 0;
+
           const getLatLng = (location) => {
             const loc = location.toLowerCase();
             if (loc.includes('bojongsoang')) return { lat: -6.9745, lng: 107.6338 };
@@ -196,19 +199,19 @@ export default function CariHunian() {
             rawPrice: numPrice,
             price: formatPrice(priceVal),
             period: item?.periode || item?.period || 'bulan',
-            rating: item?.rating || (4.5 + (idx % 5) * 0.1).toFixed(1),
-            reviews: item?.reviews || (10 + idx * 3),
+            rating: Number(avgRating).toFixed(1),
+            reviews: Number(reviewsCount),
             image: formatImage(item),
             tags: tagsArray,
             isAvailable: item?.is_available !== undefined ? Boolean(item.is_available) : (item?.status !== 'Penuh'),
-            desc: item?.facilities || item?.deskripsi || 'Tidak ada deskripsi tambahan.',
+            desc: item?.description || item?.deskripsi || item?.facilities || 'Tidak ada deskripsi tambahan.',
             lat: coords.lat,
             lng: coords.lng
           };
         });
 
         setProperties(formatted);
-      } catch (error) {
+      } catch {
         setProperties(getFallbackData());
       } finally {
         setLoading(false);
@@ -677,7 +680,13 @@ export default function CariHunian() {
                             <div className="flex justify-between items-center text-xs">
                               <span className="font-bold text-[#C5A059] truncate pr-2">📍 {item.location}</span>
                               <span className="font-extrabold text-[#261C19] flex-shrink-0 bg-[#FAF6F0] px-2 py-1 rounded-lg">
-                                ★ {item.rating} <span className="text-slate-500 font-medium text-[10px]">({item.reviews})</span>
+                                {item.reviews > 0 ? (
+                                  <>
+                                    ★ {item.rating} <span className="text-slate-500 font-medium text-[10px]">({item.reviews} ulasan)</span>
+                                  </>
+                                ) : (
+                                  '★ Baru'
+                                )}
                               </span>
                             </div>
 
@@ -793,7 +802,15 @@ export default function CariHunian() {
                 <div className="grid grid-cols-2 gap-4 bg-[#FAF6F0] p-4 rounded-2xl border border-[#E5D7C5]/50">
                     <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400">Rating Properti</p>
-                        <p className="text-sm font-black text-[#261C19]">⭐ {selectedRoom.rating} <span className="font-normal text-slate-500">({selectedRoom.reviews} ulasan)</span></p>
+                        <p className="text-sm font-black text-[#261C19]">
+                          {selectedRoom.reviews > 0 ? (
+                            <>
+                              ⭐ {selectedRoom.rating} <span className="font-normal text-slate-500">({selectedRoom.reviews} ulasan)</span>
+                            </>
+                          ) : (
+                            '★ Baru'
+                          )}
+                        </p>
                     </div>
                     <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400">Status Ketersediaan</p>
